@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generador Guepardo</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --naranja: #F26722; --naranja-durazno-2: #FEEDE2;
+  --verde: #0F7A43; --verde-oscuro: #1B4D3E; --verde-menta: #F1F8F3; --verde-menta-2: #E1F0E6;
+  --navy: #1F2A44; --navy-2: #0A2540;
+  --gris-texto: #475569; --gris-borde: #E9EEF5; --gris-fondo: #EEF2F6;
+}
+* { box-sizing: border-box; }
+body { margin:0; padding:0; background:var(--gris-fondo); font-family:'Segoe UI', Arial, sans-serif; color:var(--navy); }
+h1, h2, h3, .heading { font-family:'Poppins','Segoe UI',Arial,sans-serif; font-weight:800; letter-spacing:-.3px; color:var(--navy); margin:0; }
+.app-header { background:#FFFFFF; border-bottom:1px solid var(--gris-borde); padding:16px 30px; display:flex; align-items:center; gap:12px; }
+.app-header img { height:40px; width:auto; display:block; }
+.app-header .titulo { font-family:'Poppins',sans-serif; font-weight:900; font-size:15px; }
+.app-header .subtitulo { font-size:11px; color:#94A3B8; letter-spacing:.4px; text-transform:uppercase; }
+.wrap { max-width:960px; margin:0 auto; padding:34px 24px 80px 24px; }
+.view { display:none; }
+.selector-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:26px; }
+@media (max-width:700px) { .selector-grid { grid-template-columns:1fr; } }
+.selector-card { background:#FFFFFF; border:1px solid var(--gris-borde); border-radius:16px; padding:26px; cursor:pointer; box-shadow:0 6px 18px rgba(15,23,42,.06); transition:transform .12s ease, box-shadow .12s ease; }
+.selector-card:hover { transform:translateY(-2px); box-shadow:0 10px 26px rgba(15,23,42,.1); }
+.selector-card.disabled { opacity:.55; cursor:not-allowed; pointer-events:none; }
+.selector-card .icon-box { width:52px; height:52px; border-radius:12px; background:var(--naranja-durazno-2); display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+.selector-card.verde .icon-box { background:var(--verde-menta-2); }
+.selector-card h2 { font-size:19px; margin-bottom:6px; }
+.selector-card p { font-size:13.5px; color:var(--gris-texto); line-height:1.55; margin:0; }
+.pill { display:inline-flex; align-items:center; gap:6px; background:var(--navy); color:#fff; font-size:10.5px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; padding:4px 10px; border-radius:999px; margin-top:12px; }
+.panel { background:#FFFFFF; border:1px solid var(--gris-borde); border-radius:16px; padding:22px 26px; margin-bottom:18px; box-shadow:0 6px 18px rgba(15,23,42,.05); }
+.panel h3 { font-size:14px; display:flex; align-items:center; gap:8px; margin-bottom:16px; }
+.panel h3 .num { width:22px; height:22px; border-radius:999px; background:var(--navy-2); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900; flex-shrink:0; }
+label { display:block; font-size:12px; font-weight:700; color:var(--navy); margin:12px 0 5px 0; }
+label .hint { font-weight:400; color:#94A3B8; text-transform:none; letter-spacing:0; }
+input[type="text"], select, textarea { width:100%; border:1px solid var(--gris-borde); border-radius:10px; padding:9px 12px; font-size:13.5px; font-family:inherit; color:var(--navy); background:#FFFFFF; }
+input[type="text"]:focus, select:focus, textarea:focus { outline:none; border-color:var(--naranja); box-shadow:0 0 0 3px rgba(242,103,34,.12); }
+textarea { resize:vertical; min-height:64px; line-height:1.5; }
+.row { display:flex; gap:14px; } .row > * { flex:1; }
+.bloque-card { border:1px dashed #CBD5E1; border-radius:12px; padding:14px 16px; margin-top:12px; position:relative; background:#FBFCFE; }
+.bloque-card .bloque-remove { position:absolute; top:10px; right:10px; }
+.btn { display:inline-flex; align-items:center; gap:8px; font-family:inherit; font-weight:700; font-size:13px; border-radius:10px; padding:10px 18px; border:none; cursor:pointer; transition:filter .12s ease; }
+.btn:hover { filter:brightness(0.95); } .btn:disabled { opacity:.5; cursor:not-allowed; }
+.btn-primary { background:var(--naranja); color:#fff; }
+.btn-secondary { background:var(--navy); color:#fff; }
+.btn-ghost { background:#F1F5F9; color:var(--navy); }
+.btn-sm { padding:6px 12px; font-size:12px; }
+.btn-danger-ghost { background:#FEEDE2; color:#C0451B; }
+.actions { display:flex; gap:10px; margin-top:8px; flex-wrap:wrap; }
+.status-msg { font-size:13px; border-radius:10px; padding:10px 14px; margin-top:12px; }
+.status-msg.error { background:#FEEDE2; color:#B23A12; border:1px solid #FBCBA8; }
+.status-msg.warn { background:#FFF7E6; color:#92600A; border:1px solid #FCE3A8; }
+.status-msg.ok { background:var(--verde-menta); color:var(--verde-oscuro); border:1px solid #D6EADD; }
+.preview-card { background:#fff; border:1px solid var(--gris-borde); border-radius:14px; overflow:hidden; box-shadow:0 6px 18px rgba(15,23,42,.06); max-width:460px; }
+.preview-card iframe { width:100%; height:520px; border:0; display:block; background:var(--gris-fondo); }
+.section-divider { border:none; border-top:1px solid var(--gris-borde); margin:26px 0; }
+.back-link { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--gris-texto); text-decoration:none; margin-bottom:14px; cursor:pointer; }
+.back-link:hover { color:var(--navy); }
+.prompt-box { width:100%; min-height:160px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11.5px; display:none; }
+.paste-box { width:100%; min-height:120px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11.5px; display:none; margin-top:10px; }
+.lang-block { border:1px solid var(--gris-borde); border-radius:14px; padding:20px; margin-bottom:20px; background:#fff; }
+.lang-block h3 { font-size:15px; margin-bottom:4px; }
+.step-hint { font-size:12.5px; color:#94A3B8; margin:0 0 10px 0; }
+</style>
+</head>
+<body>
+
+  <header class="app-header">
+    <img src="%%BUILD_LOGO_B64%%" alt="Guepardo">
+    <div>
+      <div class="titulo">Generador Guepardo</div>
+      <div class="subtitulo">Herramienta HTML — corre 100% en tu navegador</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- ============ SELECTOR ============ -->
+    <div class="view" id="view-selector" style="display:block;">
+      <h1 style="font-size:26px;">¿Qué quieres generar?</h1>
+      <p style="color:#475569; font-size:14px; margin-top:6px;">
+        Comunicados del Proyecto Guepardo, en español (master) con export a inglés y portugués,
+        con preview y descarga de HTML/PNG — sin instalar nada, todo corre en este archivo.
+      </p>
+      <div class="selector-grid">
+        <div class="selector-card" id="card-comunicado">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 2 C7.5 2 5 5 5 9 V14 L2.5 18 H21.5 L19 14 V9 C19 5 16.5 2 12 2 Z" fill="none" stroke="#F26722" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.5 18 C9.5 20 10.5 21.2 12 21.2 C13.5 21.2 14.5 20 14.5 18" fill="none" stroke="#F26722" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </div>
+          <h2>Comunicado</h2>
+          <p>Anuncio corto de una o dos actualizaciones puntuales: badge, título, tarjetas con viñetas, vigencia y contacto de dudas.</p>
+          <span class="pill">Disponible</span>
+        </div>
+        <div class="selector-card verde disabled">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" width="26" height="26"><path d="M4 5 H20 V17 H4 Z" fill="none" stroke="#0F7A43" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 5 L12 12 L20 5" fill="none" stroke="#0F7A43" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          </div>
+          <h2>Boletín</h2>
+          <p>Resumen mensual con hero, stats, jugadas destacadas, voces de la operación, roster del equipo y trivia.</p>
+          <span class="pill" style="background:#94A3B8;">Próximamente</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ COMUNICADO ============ -->
+    <div class="view" id="view-comunicado">
+      <a class="back-link">&larr; Volver al inicio</a>
+      <h1 style="font-size:24px;">Nuevo Comunicado</h1>
+      <p style="color:#475569; font-size:13.5px; margin-top:6px; max-width:640px;">
+        El español es siempre la versión master. Revisa el preview antes de pasar a inglés/portugués.
+      </p>
+
+      <form id="form-comunicado">
+        <section class="panel">
+          <h3><span class="num">1</span> Datos generales</h3>
+          <label for="titulo">Tema / título del comunicado <span class="hint">(máx. 10 palabras)</span></label>
+          <input type="text" id="titulo" placeholder="Ej. Fuera del sistema. Ya no." required>
+          <div id="titulo-count" style="font-size:11px; color:#94A3B8; margin-top:3px;"></div>
+
+          <label for="tituloResaltado">Fragmento a resaltar en naranja <span class="hint">(opcional — debe ser el inicio exacto del título)</span></label>
+          <input type="text" id="tituloResaltado" placeholder="Ej. Fuera del sistema.">
+
+          <label for="bajada">Bajada / subtítulo <span class="hint">(1 frase, no repite el título)</span></label>
+          <input type="text" id="bajada" placeholder="Ej. Nuevos flujos para inversiones que antes operaban fuera del sistema." required>
+
+          <div class="row">
+            <div>
+              <label for="badgeType">Tipo de badge</label>
+              <select id="badgeType">
+                <option value="actualizacion">Actualización</option>
+                <option value="aviso">Aviso</option>
+                <option value="recordatorio">Recordatorio</option>
+              </select>
+            </div>
+            <div>
+              <label for="bandera">País / región <span class="hint">(opcional)</span></label>
+              <select id="bandera">
+                <option value="">— Sin bandera —</option>
+                <option value="mx">México</option>
+                <option value="ar">Argentina</option>
+                <option value="br">Brasil</option>
+                <option value="co">Colombia</option>
+                <option value="pe">Perú</option>
+                <option value="es">España</option>
+                <option value="cl">Chile</option>
+                <option value="us">USA</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h3><span class="num">2</span> Bloques de contenido</h3>
+          <p style="font-size:12.5px; color:#94A3B8; margin:0 0 4px 0;">Un bloque sin título ni viñetas se omite del comunicado — no se rellena con texto genérico.</p>
+          <div id="bloques-list"></div>
+          <div class="actions"><button type="button" class="btn btn-ghost btn-sm" id="btn-add-bloque">+ Agregar bloque</button></div>
+        </section>
+
+        <section class="panel">
+          <h3><span class="num">3</span> Vigencia</h3>
+          <select id="vigenciaTipo">
+            <option value="">— Omitir esta sección —</option>
+            <option value="vigente">Ya está en vigor</option>
+            <option value="fecha">Entra en vigor el [fecha]</option>
+            <option value="custom">Texto personalizado</option>
+          </select>
+          <div id="vigencia-fecha-wrap" style="display:none;">
+            <label for="vigenciaFecha">Fecha</label>
+            <input type="text" id="vigenciaFecha" placeholder="Ej. 1 de septiembre de 2026">
+          </div>
+          <div id="vigencia-custom-wrap" style="display:none;">
+            <label for="vigenciaCustom">Texto <span class="hint">(usa **texto** para negrita)</span></label>
+            <textarea id="vigenciaCustom" placeholder="Ej. Vigente **solo** para Revestimientos."></textarea>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h3><span class="num">4</span> Contacto de dudas</h3>
+          <select id="contactoSelect">
+            <option value="">— Omitir esta sección —</option>
+            <option value="Reyna Olmeda">Reyna Olmeda</option>
+            <option value="Aida Treviño">Aida Treviño</option>
+            <option value="__custom__">Otro (especificar)</option>
+          </select>
+          <div id="contacto-custom-wrap" style="display:none;">
+            <label for="contactoCustom">Nombre</label>
+            <input type="text" id="contactoCustom" placeholder="Nombre del contacto">
+          </div>
+        </section>
+
+        <section class="panel">
+          <h3><span class="num">5</span> Nota de cierre <span class="hint">(opcional)</span></h3>
+          <textarea id="notaCierre" placeholder="Ej. Estas son solo algunas de las actualizaciones recientes; consulta el manual completo en..."></textarea>
+        </section>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary">Generar ES</button>
+        </div>
+      </form>
+      <div id="es-status-msg"></div>
+
+      <section id="es-preview-section" style="display:none;">
+        <hr class="section-divider">
+        <h2 style="font-size:18px;">Preview — Español (master)</h2>
+        <div class="preview-card">
+          <iframe id="es-preview-frame"></iframe>
+        </div>
+        <div class="actions" style="margin-top:16px;">
+          <button type="button" class="btn btn-ghost" id="btn-download-html-es">Descargar HTML</button>
+          <button type="button" class="btn btn-ghost" id="btn-download-png-es">Descargar PNG</button>
+          <button type="button" class="btn btn-secondary" id="btn-goto-translate">Ir a traducción EN / PT →</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ TRADUCCION (manual, copy/paste a Claude.ai) ============ -->
+    <div class="view" id="view-translate">
+      <a class="back-link" onclick="document.getElementById('view-comunicado').style.display='block';document.getElementById('view-translate').style.display='none';window.scrollTo(0,0);">&larr; Volver al comunicado</a>
+      <h1 style="font-size:24px;">Traducción EN / PT-BR</h1>
+      <p style="color:#475569; font-size:13.5px; margin-top:6px; max-width:680px;">
+        Esta herramienta no llama a ninguna API por su cuenta. Prepara el HTML + las reglas de estilo,
+        tú lo pegas en una conversación con Claude (claude.ai), y pegas la respuesta de vuelta aquí para
+        generar el preview y las descargas.
+      </p>
+
+      <div class="lang-block">
+        <h3>Inglés (EN)</h3>
+        <p class="step-hint">1. Prepara el prompt → 2. Cópialo y pégalo en claude.ai → 3. Pega la respuesta abajo → 4. Genera el preview.</p>
+        <div class="actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-prepare-en">1. Preparar prompt EN</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-copy-en" style="display:none;">2. Copiar prompt</button>
+        </div>
+        <textarea class="prompt-box" id="prompt-en" readonly></textarea>
+        <textarea class="paste-box" id="paste-en" placeholder="Pega aquí la respuesta HTML completa de Claude..."></textarea>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-render-en" style="display:none;">3. Generar preview EN</button>
+        </div>
+        <div id="status-en"></div>
+        <div id="preview-section-en" style="display:none; margin-top:14px;">
+          <div class="preview-card"><iframe id="preview-frame-en"></iframe></div>
+          <div class="actions" style="margin-top:12px;">
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-download-html-en">Descargar HTML</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-download-png-en">Descargar PNG</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="lang-block">
+        <h3>Portugués (PT-BR)</h3>
+        <p class="step-hint">1. Prepara el prompt → 2. Cópialo y pégalo en claude.ai → 3. Pega la respuesta abajo → 4. Genera el preview.</p>
+        <div class="actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-prepare-pt">1. Preparar prompt PT</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-copy-pt" style="display:none;">2. Copiar prompt</button>
+        </div>
+        <textarea class="prompt-box" id="prompt-pt" readonly></textarea>
+        <textarea class="paste-box" id="paste-pt" placeholder="Pega aquí la respuesta HTML completa de Claude..."></textarea>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-render-pt" style="display:none;">3. Generar preview PT</button>
+        </div>
+        <div id="status-pt"></div>
+        <div id="preview-section-pt" style="display:none; margin-top:14px;">
+          <div class="preview-card"><iframe id="preview-frame-pt"></iframe></div>
+          <div class="actions" style="margin-top:12px;">
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-download-html-pt">Descargar HTML</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-download-png-pt">Descargar PNG</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    window.ASSET_LOGO_URI = "%%BUILD_LOGO_B64%%";
+    window.ASSET_WORDMARK_ES_URI = "%%BUILD_WORDMARK_ES_B64%%";
+  </script>
+  <script>/* __HTML2CANVAS__ */</script>
+  <script>/* __APP_JS__ */</script>
+</body>
+</html>
