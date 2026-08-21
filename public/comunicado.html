@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generador Guepardo — Comunicado</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <img src="/assets/guepardo_logo_crop.jpg" alt="Guepardo">
+    <div>
+      <div class="titulo">Generador Guepardo</div>
+      <div class="subtitulo">Comunicado</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <a class="back-link" href="/index.html">&larr; Volver al inicio</a>
+    <h1 style="font-size:24px;">Nuevo Comunicado</h1>
+    <p style="color:#475569; font-size:13.5px; margin-top:6px; max-width:640px;">
+      El español es siempre la versión master. Revisa y aprueba el preview en español
+      antes de generar las versiones en inglés y portugués — la traducción nunca se
+      dispara automáticamente.
+    </p>
+
+    <div id="api-key-warning" class="status-msg warn" style="display:none; max-width:640px;">
+      No se detectó <code>ANTHROPIC_API_KEY</code> en el servidor. Podrás generar el ES y su
+      preview, pero el paso de traducción EN/PT fallará hasta que configures la clave en <code>.env</code>.
+    </div>
+
+    <form id="form-comunicado">
+      <!-- 1. Datos generales -->
+      <section class="panel">
+        <h3><span class="num">1</span> Datos generales</h3>
+
+        <label for="titulo">Tema / título del comunicado <span class="hint">(máx. 10 palabras)</span></label>
+        <input type="text" id="titulo" name="titulo" placeholder="Ej. Fuera del sistema. Ya no." required>
+        <div id="titulo-count" style="font-size:11px; color:#94A3B8; margin-top:3px;"></div>
+
+        <label for="tituloResaltado">Fragmento a resaltar en naranja <span class="hint">(opcional — debe ser el inicio exacto del título)</span></label>
+        <input type="text" id="tituloResaltado" name="tituloResaltado" placeholder="Ej. Fuera del sistema.">
+
+        <label for="bajada">Bajada / subtítulo <span class="hint">(1 frase, no repite el título)</span></label>
+        <input type="text" id="bajada" name="bajada" placeholder="Ej. Nuevos flujos para inversiones que antes operaban fuera del sistema." required>
+
+        <div class="row">
+          <div>
+            <label for="badgeType">Tipo de badge</label>
+            <select id="badgeType" name="badgeType">
+              <option value="actualizacion">Actualización</option>
+              <option value="aviso">Aviso</option>
+              <option value="recordatorio">Recordatorio</option>
+            </select>
+          </div>
+          <div>
+            <label for="bandera">País / región <span class="hint">(opcional)</span></label>
+            <select id="bandera" name="bandera">
+              <option value="">— Sin bandera —</option>
+              <option value="mx">México</option>
+              <option value="ar">Argentina</option>
+              <option value="br">Brasil</option>
+              <option value="co">Colombia</option>
+              <option value="pe">Perú</option>
+              <option value="es">España</option>
+              <option value="cl">Chile</option>
+              <option value="us">USA</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Bloques -->
+      <section class="panel">
+        <h3><span class="num">2</span> Bloques de contenido</h3>
+        <p style="font-size:12.5px; color:#94A3B8; margin:0 0 4px 0;">
+          Un bloque sin título ni viñetas se omite del comunicado — no se rellena con texto genérico.
+        </p>
+        <div id="bloques-list"></div>
+        <div class="actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-add-bloque">+ Agregar bloque</button>
+        </div>
+      </section>
+
+      <!-- 3. Vigencia -->
+      <section class="panel">
+        <h3><span class="num">3</span> Vigencia</h3>
+        <select id="vigenciaTipo" name="vigenciaTipo">
+          <option value="">— Omitir esta sección —</option>
+          <option value="vigente">Ya está en vigor</option>
+          <option value="fecha">Entra en vigor el [fecha]</option>
+          <option value="custom">Texto personalizado</option>
+        </select>
+        <div id="vigencia-fecha-wrap" style="display:none;">
+          <label for="vigenciaFecha">Fecha</label>
+          <input type="text" id="vigenciaFecha" name="vigenciaFecha" placeholder="Ej. 1 de septiembre de 2026">
+        </div>
+        <div id="vigencia-custom-wrap" style="display:none;">
+          <label for="vigenciaCustom">Texto <span class="hint">(usa **texto** para negrita)</span></label>
+          <textarea id="vigenciaCustom" name="vigenciaCustom" placeholder="Ej. Vigente **solo** para Revestimientos."></textarea>
+        </div>
+      </section>
+
+      <!-- 4. Contacto de dudas -->
+      <section class="panel">
+        <h3><span class="num">4</span> Contacto de dudas</h3>
+        <select id="contactoSelect">
+          <option value="">— Omitir esta sección —</option>
+          <option value="Reyna Olmeda">Reyna Olmeda</option>
+          <option value="Aida Treviño">Aida Treviño</option>
+          <option value="__custom__">Otro (especificar)</option>
+        </select>
+        <div id="contacto-custom-wrap" style="display:none;">
+          <label for="contactoCustom">Nombre</label>
+          <input type="text" id="contactoCustom" name="contactoCustom" placeholder="Nombre del contacto">
+        </div>
+      </section>
+
+      <!-- 5. Nota de cierre -->
+      <section class="panel">
+        <h3><span class="num">5</span> Nota de cierre <span class="hint">(opcional)</span></h3>
+        <textarea id="notaCierre" name="notaCierre" placeholder="Ej. Estas son solo algunas de las actualizaciones recientes; consulta el manual completo en..."></textarea>
+      </section>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary" id="btn-generate-es">Generar ES</button>
+        <span id="es-status"></span>
+      </div>
+    </form>
+
+    <div id="es-status-msg"></div>
+
+    <section id="es-preview-section" style="display:none;">
+      <hr class="section-divider">
+      <h2 style="font-size:18px;">Preview — Español (master)</h2>
+      <p style="color:#475569; font-size:13px;">Revisa con calma. Si algo no cuadra, edita el formulario y vuelve a generar ES.</p>
+      <div class="preview-grid" style="grid-template-columns: 1fr;">
+        <div class="preview-card" style="max-width:460px;">
+          <div class="preview-head"><span class="lang-tag">ES</span></div>
+          <img id="es-preview-img" alt="Preview ES">
+          <div class="preview-links">
+            <a id="es-html-link" href="#" target="_blank">Ver HTML</a>
+            <a id="es-png-link" href="#" target="_blank" download>Descargar PNG</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:20px;">
+        <button type="button" class="btn btn-secondary" id="btn-translate">
+          Generar EN + PT
+        </button>
+      </div>
+      <div id="translate-status-msg"></div>
+    </section>
+
+    <section id="translations-section" style="display:none;">
+      <hr class="section-divider">
+      <h2 style="font-size:18px;">Preview — EN / PT-BR</h2>
+      <div class="preview-grid" id="translations-grid"></div>
+
+      <div class="actions" style="margin-top:20px;">
+        <a class="btn btn-ghost" id="btn-download-zip" href="#">Descargar todo (.zip)</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/comunicado.js"></script>
+</body>
+</html>

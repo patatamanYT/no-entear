@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generador Guepardo</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <img src="/assets/guepardo_logo_crop.jpg" alt="Guepardo">
+    <div>
+      <div class="titulo">Generador Guepardo</div>
+      <div class="subtitulo">Proyecto Guepardo &middot; Grupo Lamosa</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h1 style="font-size:26px;">¿Qué quieres generar?</h1>
+    <p style="color:#475569; font-size:14px; margin-top:6px;">
+      Comunicados y Boletines del Proyecto Guepardo, en español (master), inglés y portugués,
+      con preview automático listo para revisar antes de publicar.
+    </p>
+
+    <div class="selector-grid">
+      <a class="selector-card" href="/comunicado.html">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 2 C7.5 2 5 5 5 9 V14 L2.5 18 H21.5 L19 14 V9 C19 5 16.5 2 12 2 Z" fill="none" stroke="#F26722" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.5 18 C9.5 20 10.5 21.2 12 21.2 C13.5 21.2 14.5 20 14.5 18" fill="none" stroke="#F26722" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <h2>Comunicado</h2>
+        <p>Anuncio corto de una o dos actualizaciones puntuales: badge, título, tarjetas con viñetas, vigencia y contacto de dudas.</p>
+        <span class="pill">Disponible</span>
+      </a>
+
+      <div class="selector-card verde disabled">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" width="26" height="26"><path d="M4 5 H20 V17 H4 Z" fill="none" stroke="#0F7A43" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 5 L12 12 L20 5" fill="none" stroke="#0F7A43" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        </div>
+        <h2>Boletín</h2>
+        <p>Resumen mensual con hero, stats, jugadas destacadas, voces de la operación, roster del equipo y trivia.</p>
+        <span class="pill" style="background:#94A3B8;">Próximamente</span>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
