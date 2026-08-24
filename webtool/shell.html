@@ -79,6 +79,15 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
 .add-inline { display:flex; gap:8px; margin-top:10px; }
 .add-inline input { flex:1; }
 .add-inline .btn { flex:0 0 auto; }
+
+.template-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:20px; margin-top:24px; }
+.template-card { background:#fff; border:1px solid var(--gris-borde); border-radius:16px; overflow:hidden; box-shadow:0 6px 18px rgba(15,23,42,.06); display:flex; flex-direction:column; }
+.template-card .template-thumb { height:200px; overflow:hidden; background:var(--gris-fondo); position:relative; }
+.template-card .template-thumb::after { content:''; position:absolute; left:0; right:0; bottom:0; height:56px; background:linear-gradient(to bottom, rgba(238,242,246,0), rgba(238,242,246,.95)); pointer-events:none; }
+.template-card .template-body { padding:16px 18px 18px; display:flex; flex-direction:column; gap:8px; flex:1; }
+.template-card h3 { font-size:14.5px; }
+.template-card p { font-size:12.5px; color:var(--gris-texto); line-height:1.5; margin:0; flex:1; }
+.template-card.blank .template-thumb { display:flex; align-items:center; justify-content:center; }
 </style>
 </head>
 <body>
@@ -120,9 +129,19 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
       </div>
     </div>
 
+    <!-- ============ PLANTILLAS ============ -->
+    <div class="view" id="view-templates">
+      <a class="back-link" id="back-from-templates">&larr; Volver al inicio</a>
+      <h1 style="font-size:24px;">Elige una plantilla</h1>
+      <p style="color:#475569; font-size:13.5px; margin-top:6px; max-width:640px;">
+        Arrancan con contenido de ejemplo real — úsalas como punto de partida y edita todo después.
+      </p>
+      <div class="template-grid" id="template-grid"></div>
+    </div>
+
     <!-- ============ COMUNICADO ============ -->
     <div class="view" id="view-comunicado">
-      <a class="back-link">&larr; Volver al inicio</a>
+      <a class="back-link" id="back-from-comunicado">&larr; Volver a plantillas</a>
       <h1 style="font-size:24px;">Nuevo Comunicado</h1>
       <p style="color:#475569; font-size:13.5px; margin-top:6px; max-width:640px;">
         El español es siempre la versión master. El preview de la derecha se actualiza mientras escribes.
@@ -140,7 +159,7 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
               <label for="tituloResaltado">Fragmento a resaltar en naranja <span class="hint">(opcional — debe ser el inicio exacto del título)</span></label>
               <input type="text" id="tituloResaltado" placeholder="Ej. Fuera del sistema.">
 
-              <label for="bajada">Bajada / subtítulo <span class="hint">(1 frase, no repite el título)</span></label>
+              <label for="bajada">Bajada / subtítulo <span class="hint">(1 frase, no repite el título — usa **texto** para negrita)</span></label>
               <input type="text" id="bajada" placeholder="Ej. Nuevos flujos para inversiones que antes operaban fuera del sistema.">
 
               <label for="badgeType">Tipo de badge</label>
@@ -148,6 +167,7 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
                 <option value="actualizacion">Actualización</option>
                 <option value="aviso">Aviso</option>
                 <option value="recordatorio">Recordatorio</option>
+                <option value="nuevo_reporte">Nuevo Reporte</option>
               </select>
 
               <label>País / región <span class="hint">(opcional, puedes elegir varios — a dónde aplica el comunicado)</span></label>
@@ -156,26 +176,40 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
                 <input type="text" id="paisNuevoInput" placeholder="Otro país/región... (Ej. Perú)">
                 <button type="button" class="btn btn-ghost btn-sm" id="btn-add-pais">+ Agregar</button>
               </div>
+
+              <label for="headerKicker">Etiqueta del header <span class="hint">(opcional — ej. "GUEPARDO", junto al logo)</span></label>
+              <input type="text" id="headerKicker" placeholder="Ej. GUEPARDO">
             </section>
 
             <section class="panel">
-              <h3><span class="num">2</span> Bloques de contenido</h3>
+              <h3><span class="num">2</span> Contexto <span class="hint">(opcional)</span></h3>
+              <p style="font-size:12.5px; color:#94A3B8; margin:0 0 4px 0;">Caja de aviso debajo de la bajada — para explicar el "por qué" antes de las tarjetas.</p>
+              <textarea id="notaContexto" placeholder="Ej. La Matriz de Control Compras exige bloquear proveedores sin operación durante **18 meses**."></textarea>
+            </section>
+
+            <section class="panel">
+              <h3><span class="num">3</span> Bloques de contenido</h3>
               <p style="font-size:12.5px; color:#94A3B8; margin:0 0 4px 0;">Un bloque sin título ni viñetas se omite del comunicado — no se rellena con texto genérico.</p>
               <div id="bloques-list"></div>
               <div class="actions"><button type="button" class="btn btn-ghost btn-sm" id="btn-add-bloque">+ Agregar bloque</button></div>
             </section>
 
             <section class="panel">
-              <h3><span class="num">3</span> Vigencia</h3>
+              <h3><span class="num">4</span> Vigencia / Acceso</h3>
               <select id="vigenciaTipo">
                 <option value="">— Omitir esta sección —</option>
                 <option value="vigente">Ya está en vigor</option>
                 <option value="fecha">Entra en vigor el [fecha]</option>
                 <option value="custom">Texto personalizado</option>
+                <option value="acceso">Acceso / restricción (a quién aplica)</option>
               </select>
               <div id="vigencia-fecha-wrap" style="display:none;">
                 <label for="vigenciaFecha">Fecha</label>
                 <input type="text" id="vigenciaFecha" placeholder="Ej. 1 de septiembre de 2026">
+              </div>
+              <div id="vigencia-etiqueta-wrap" style="display:none;">
+                <label for="vigenciaEtiqueta">Etiqueta <span class="hint">(opcional, por defecto "Acceso")</span></label>
+                <input type="text" id="vigenciaEtiqueta" placeholder="Acceso">
               </div>
               <div id="vigencia-custom-wrap" style="display:none;">
                 <label for="vigenciaCustom">Texto <span class="hint">(usa **texto** para negrita)</span></label>
@@ -184,18 +218,21 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
             </section>
 
             <section class="panel">
-              <h3><span class="num">4</span> Contacto de dudas</h3>
+              <h3><span class="num">5</span> Contacto de dudas</h3>
               <label for="contactoSelect" class="hint" style="margin-top:0;">Precargados — elige "+ Agregar nuevo..." para sumar uno y que quede guardado</label>
               <select id="contactoSelect"></select>
               <div id="contacto-add-wrap" style="display:none;" class="add-inline">
                 <input type="text" id="contactoNuevoInput" placeholder="Nombre del nuevo contacto">
                 <button type="button" class="btn btn-ghost btn-sm" id="btn-add-contacto">Guardar</button>
               </div>
+              <label for="contactoHeader">Encabezado de la caja <span class="hint">(opcional, por defecto "¿TIENES DUDAS?")</span></label>
+              <input type="text" id="contactoHeader" placeholder="¿TIENES DUDAS?">
             </section>
 
             <section class="panel">
-              <h3><span class="num">5</span> Nota de cierre <span class="hint">(opcional)</span></h3>
+              <h3><span class="num">6</span> Nota de cierre <span class="hint">(opcional)</span></h3>
               <textarea id="notaCierre" placeholder="Ej. Estas son solo algunas de las actualizaciones recientes; consulta el manual completo en..."></textarea>
+              <label class="chip-check" style="margin-top:10px;"><input type="checkbox" id="notaCierreIcono"> Mostrar con ícono (megáfono)</label>
             </section>
           </form>
           <div id="es-status-msg"></div>

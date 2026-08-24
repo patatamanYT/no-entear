@@ -19,6 +19,9 @@
     tendencia: (s) => `<svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 17 L9.5 10.5 L13.5 14.5 L21 6.5" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 6.5 H21 V12.5" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
     alerta: (s) => `<svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 3 L22 20 H2 Z" fill="none" stroke="${s}" stroke-width="1.8" stroke-linejoin="round"/><line x1="12" y1="9.5" x2="12" y2="14.5" stroke="${s}" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1" fill="${s}"/></svg>`,
     calendario: (s) => `<svg viewBox="0 0 24 24" width="22" height="22"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="${s}" stroke-width="1.8"/><line x1="3" y1="10" x2="21" y2="10" stroke="${s}" stroke-width="1.8"/><line x1="7" y1="3" x2="7" y2="6.5" stroke="${s}" stroke-width="1.8" stroke-linecap="round"/><line x1="17" y1="3" x2="17" y2="6.5" stroke="${s}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+    buscar: (s) => `<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="${s}" stroke-width="1.8"/><line x1="15.3" y1="15.3" x2="20.5" y2="20.5" stroke="${s}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+    candado: (s) => `<svg viewBox="0 0 24 24" width="22" height="22"><rect x="4.5" y="11" width="15" height="10" rx="2" fill="none" stroke="${s}" stroke-width="1.8"/><path d="M7.5 11 V7.5 A4.5 4.5 0 0 1 16.5 7.5 V11" fill="none" stroke="${s}" stroke-width="1.8"/><circle cx="12" cy="15.7" r="1.4" fill="${s}"/></svg>`,
+    megafono: (s) => `<svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 10 V14 H6.5 L14 18 V6 L6.5 10 Z" fill="none" stroke="${s}" stroke-width="1.8" stroke-linejoin="round"/><path d="M17 9.5 A4 4 0 0 1 17 14.5" fill="none" stroke="${s}" stroke-width="1.8" stroke-linecap="round"/><path d="M6.5 14 V18 A1.5 1.5 0 0 1 3.5 18 V14" fill="none" stroke="${s}" stroke-width="1.8"/></svg>`,
   };
 
   const ICON_COLORS = {
@@ -31,12 +34,13 @@
     actualizacion: `<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 2 C7.5 2 5 5 5 9 V14 L2.5 18 H21.5 L19 14 V9 C19 5 16.5 2 12 2 Z" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/><path d="M9.5 18 C9.5 20 10.5 21.2 12 21.2 C13.5 21.2 14.5 20 14.5 18" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg>`,
     aviso: `<svg viewBox="0 0 24 24" width="13" height="13"><path d="M12 3 L22 20 H2 Z" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/><line x1="12" y1="9.5" x2="12" y2="14.5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1" fill="#FFFFFF"/></svg>`,
     recordatorio: `<svg viewBox="0 0 24 24" width="13" height="13"><circle cx="12" cy="13" r="8" fill="none" stroke="#FFFFFF" stroke-width="2"/><path d="M12 9 V13 L15 15.5" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 2.5 H15" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg>`,
+    nuevo_reporte: `<svg viewBox="0 0 24 24" width="13" height="13"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="#FFFFFF" stroke-width="2"/><line x1="15.3" y1="15.3" x2="20.5" y2="20.5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg>`,
   };
-  const BADGE_BG = { actualizacion: '#F26722', aviso: '#DC5D2E', recordatorio: '#1F2A44' };
+  const BADGE_BG = { actualizacion: '#F26722', aviso: '#DC5D2E', recordatorio: '#1F2A44', nuevo_reporte: '#F26722' };
   const BADGE_LABEL = {
-    es: { actualizacion: 'Actualización', aviso: 'Aviso', recordatorio: 'Recordatorio' },
-    en: { actualizacion: 'Update', aviso: 'Notice', recordatorio: 'Reminder' },
-    pt: { actualizacion: 'Atualização', aviso: 'Aviso', recordatorio: 'Lembrete' },
+    es: { actualizacion: 'Actualización', aviso: 'Aviso', recordatorio: 'Recordatorio', nuevo_reporte: 'Nuevo Reporte' },
+    en: { actualizacion: 'Update', aviso: 'Notice', recordatorio: 'Reminder', nuevo_reporte: 'New Report' },
+    pt: { actualizacion: 'Atualização', aviso: 'Aviso', recordatorio: 'Lembrete', nuevo_reporte: 'Novo Relatório' },
   };
 
   function renderIcon(type, colorKey) {
@@ -107,6 +111,17 @@
     const label = (BADGE_LABEL[lang] || BADGE_LABEL.es)[type];
     return `<span class="badge" style="background:${bg};">${BADGE_ICON[type]}${escapeHtml(label)}</span>`;
   }
+  // "impacto": callout chico (icono + "Etiqueta: texto") entre el titulo del
+  // bloque y sus vinetas -- visto en comunicados reales para resaltar un
+  // resultado/impacto puntual sin que se pierda entre las vinetas.
+  function renderImpacto(impacto) {
+    if (!impacto || !impacto.texto || !impacto.texto.trim()) return '';
+    const etiqueta = (impacto.etiqueta || 'Impacto').trim();
+    return `        <div style="background:#FFF9F5; border:1px solid #FCE4D2; border-radius:10px; padding:9px 13px; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" style="flex-shrink:0;"><path d="M3 17 L9.5 10.5 L13.5 14.5 L21 6.5" fill="none" stroke="#F26722" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 6.5 H21 V12.5" fill="none" stroke="#F26722" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span style="font-size:12.5px; color:#475569; line-height:1.4;"><b style="color:#1F2A44;">${escapeHtml(etiqueta)}:</b> ${mdBold(impacto.texto)}</span>
+        </div>`;
+  }
   function renderBloques(bloques) {
     const items = (bloques || []).filter((b) => b && b.titulo && b.vinetas && b.vinetas.some((v) => v && v.trim()));
     if (!items.length) return '';
@@ -118,12 +133,14 @@
           .filter((v) => v && v.trim())
           .map((v) => `<span style="color:${stroke};">&#10004;</span> ${mdBold(v)}`)
           .join('<br>\n            ');
+        const numHtml = bloque.sinNumero ? '' : `<div class="num">${i + 1}</div>`;
         return `      <!-- Tarjeta ${i + 1} -->
       <div class="card">
         <div style="display:flex; align-items:center; gap:9px; margin-bottom:9px;">
-          <div class="num">${i + 1}</div>
+          ${numHtml}
           <div class="heading" style="font-size:15px; line-height:1.25;">${escapeHtml(bloque.titulo)}</div>
         </div>
+${renderImpacto(bloque.impacto)}
         <div style="display:flex; gap:14px; align-items:flex-start;">
           <div style="width:44px; height:44px; background:${bg}; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
             ${svg}
@@ -142,8 +159,33 @@ ${cards}
 
     </div>`;
   }
+  // Caja de contexto/alerta debajo de la bajada -- para el aviso corto que
+  // explica "por qué" antes de entrar a las tarjetas (ej. la regla de
+  // negocio que motiva el cambio).
+  function renderNotaContexto(notaContexto) {
+    if (!notaContexto || !notaContexto.trim()) return '';
+    return `    <!-- Contexto -->
+    <div style="margin:10px 30px 4px 30px; background:#FFF9F5; border:1px solid #FCE4D2; border-radius:14px; padding:16px; display:flex; gap:12px; align-items:flex-start;">
+      <div style="width:40px; height:40px; background:#FEEDE2; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2 C7.5 2 5 5 5 9 V14 L2.5 18 H21.5 L19 14 V9 C19 5 16.5 2 12 2 Z" fill="none" stroke="#F26722" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.5 18 C9.5 20 10.5 21.2 12 21.2 C13.5 21.2 14.5 20 14.5 18" fill="none" stroke="#F26722" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </div>
+      <div style="font-size:13.5px; color:#475569; line-height:1.6; padding-top:2px;">${mdBold(notaContexto)}</div>
+    </div>`;
+  }
   function renderVigenciaCard(vigencia) {
     if (!vigencia || !vigencia.tipo) return '';
+    if (vigencia.tipo === 'acceso') {
+      if (!vigencia.custom || !vigencia.custom.trim()) return '';
+      return `      <div style="flex:1; background:#FFF9F5; border:1px solid #FCE4D2; border-radius:14px; padding:16px; display:flex; gap:12px; align-items:center;">
+        <div style="width:44px; height:44px; background:#FEEDE2; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <svg viewBox="0 0 24 24" width="22" height="22"><rect x="4.5" y="11" width="15" height="10" rx="2" fill="none" stroke="#F26722" stroke-width="1.8"/><path d="M7.5 11 V7.5 A4.5 4.5 0 0 1 16.5 7.5 V11" fill="none" stroke="#F26722" stroke-width="1.8"/><circle cx="12" cy="15.7" r="1.4" fill="#F26722"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:11.5px; color:#F26722; font-weight:900; letter-spacing:.6px; text-transform:uppercase; margin-bottom:5px;">${escapeHtml(vigencia.etiqueta || 'Acceso')}</div>
+          <div style="font-size:13px; color:#475569; line-height:1.5;">${mdBold(vigencia.custom)}</div>
+        </div>
+      </div>`;
+    }
     let texto;
     if (vigencia.tipo === 'fecha' && vigencia.fecha) {
       texto = `Entra en vigor el<br><b style="color:#1F2A44; font-weight:700;">${escapeHtml(vigencia.fecha)}.</b>`;
@@ -159,37 +201,63 @@ ${cards}
         <div style="font-size:13.5px; font-weight:400; color:#475569; line-height:1.6;">${texto}</div>
       </div>`;
   }
-  function renderContactoCard(contacto) {
+  function renderContactoCard(contacto, contactoHeader) {
     if (!contacto) return '';
+    const header = (contactoHeader && contactoHeader.trim()) || '¿TIENES DUDAS?';
     return `      <div style="flex:1; background:#F1F8F3; border:1px solid #D6EADD; border-radius:14px; padding:16px; display:flex; gap:12px; align-items:center;">
         <div style="width:44px; height:44px; background:#E1F0E6; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
           <svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 13 V11 A8 8 0 0 1 20 11 V13" fill="none" stroke="#0F7A43" stroke-width="2" stroke-linecap="round"/><rect x="2.5" y="12" width="4.5" height="7" rx="2" fill="none" stroke="#0F7A43" stroke-width="2"/><rect x="17" y="12" width="4.5" height="7" rx="2" fill="none" stroke="#0F7A43" stroke-width="2"/><path d="M19.2 19 V20 A3 3 0 0 1 16.2 23 H13.5" fill="none" stroke="#0F7A43" stroke-width="2" stroke-linecap="round"/></svg>
         </div>
         <div style="flex:1;">
-          <div style="font-size:11.5px; color:#0F7A43; font-weight:900; letter-spacing:.6px; text-transform:uppercase; margin-bottom:5px;">¿TIENES DUDAS?</div>
+          <div style="font-size:11.5px; color:#0F7A43; font-weight:900; letter-spacing:.6px; text-transform:uppercase; margin-bottom:5px;">${escapeHtml(header)}</div>
           <div style="font-size:13px; color:#475569; line-height:1.5;">
             Repórtalas directamente a <b style="color:#1F2A44;">${escapeHtml(contacto)}</b>.
           </div>
         </div>
       </div>`;
   }
-  function renderVigenciaDudasRow(vigencia, contacto) {
+  function renderVigenciaDudasRow(vigencia, contacto, contactoHeader) {
     const v = renderVigenciaCard(vigencia);
-    const c = renderContactoCard(contacto);
+    const c = renderContactoCard(contacto, contactoHeader);
     if (!v && !c) return '';
     return `    <!-- Vigencia + Dudas -->
     <div style="padding:14px 30px 16px 30px; display:flex; gap:14px;">
 ${[v, c].filter(Boolean).join('\n')}
     </div>`;
   }
+  // notaCierre puede ser un string (nota gris simple, comportamiento
+  // original) o { texto, icono: 'megafono'|'' } para la variante con
+  // icono en caja -- vista en comunicados reales que cierran invitando a
+  // seguir los proximos avisos.
   function renderNotaCierre(nota) {
-    if (!nota || !nota.trim()) return '';
+    const texto = typeof nota === 'string' ? nota : nota && nota.texto;
+    const icono = typeof nota === 'object' && nota ? nota.icono : '';
+    if (!texto || !texto.trim()) return '';
+    if (icono && ICONS[icono]) {
+      return `    <!-- Nota de cierre -->
+    <div style="margin:0 30px 16px 30px; background:#FFFFFF; border:1px solid #E9EEF5; border-radius:12px; padding:14px 16px; display:flex; gap:12px; align-items:center;">
+      <div style="width:40px; height:40px; background:#FEEDE2; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        ${ICONS[icono]('#F26722').replace('width="22" height="22"', 'width="20" height="20"')}
+      </div>
+      <div style="font-size:12.5px; color:#64748B; line-height:1.6;">${mdBold(texto)}</div>
+    </div>`;
+    }
     return `    <!-- Nota de cierre -->
-    <div style="margin:0 30px 16px 30px; background:#F8FAFC; border:1px solid #E9EEF5; border-radius:12px; padding:12px 16px; font-size:12px; color:#64748B; line-height:1.6;">${mdBold(nota)}</div>`;
+    <div style="margin:0 30px 16px 30px; background:#F8FAFC; border:1px solid #E9EEF5; border-radius:12px; padding:12px 16px; font-size:12px; color:#64748B; line-height:1.6;">${mdBold(texto)}</div>`;
+  }
+
+  function renderHeaderKicker(kicker) {
+    if (!kicker || !kicker.trim()) return '';
+    return `<div style="display:flex; align-items:center; gap:12px; padding-left:12px; margin-left:2px; border-left:1px solid #E2E8F0;">
+          <div>
+            <div style="font-size:10.5px; color:#94A3B8; letter-spacing:1.5px; text-transform:uppercase; font-weight:700;">Comunicado</div>
+            <div class="heading" style="font-size:19px; color:#F26722; line-height:1.1;">${escapeHtml(kicker)}</div>
+          </div>
+        </div>`;
   }
 
   function buildComunicadoHtml(data) {
-    const { titulo, tituloResaltado, bajada, badgeType, banderas, bloques, vigencia, contacto, notaCierre } = data;
+    const { titulo, tituloResaltado, bajada, badgeType, banderas, bloques, vigencia, contacto, contactoHeader, notaCierre, notaContexto, headerKicker } = data;
     const flagHtml = renderFlagsRow(banderas);
     return `<!DOCTYPE html>
 <html lang="es">
@@ -217,6 +285,7 @@ ${[v, c].filter(Boolean).join('\n')}
       <div style="display:flex; align-items:center; gap:12px;">
         <img src="__ASSET_LOGO__" alt="Guepardo" style="height:64px; width:auto; display:block;">
         <img src="__ASSET_WORDMARK__" alt="Lo Mejoramos Juntos" style="height:46px; width:auto; display:block;">
+        ${renderHeaderKicker(headerKicker)}
       </div>
       <div style="display:flex; align-items:center; gap:10px;">
         ${flagHtml}
@@ -227,12 +296,14 @@ ${[v, c].filter(Boolean).join('\n')}
     <!-- Título -->
     <div style="padding:6px 30px 4px 30px;">
       <div class="heading" style="font-size:32px; line-height:1.15; margin-bottom:8px;">${renderTitulo(titulo, tituloResaltado)}</div>
-      <div style="font-size:13.5px; color:#475569; line-height:1.5; max-width:640px;">${escapeHtml(bajada)}</div>
+      <div style="font-size:13.5px; color:#475569; line-height:1.5; max-width:640px;">${mdBold(bajada)}</div>
     </div>
+
+${renderNotaContexto(notaContexto)}
 
 ${renderBloques(bloques)}
 
-${renderVigenciaDudasRow(vigencia, contacto)}
+${renderVigenciaDudasRow(vigencia, contacto, contactoHeader)}
 
 ${renderNotaCierre(notaCierre)}
 
@@ -322,8 +393,9 @@ ${strippedHtml}`;
   }
 
   // --- Selector ---
-  $('#card-comunicado').addEventListener('click', () => showView('view-comunicado'));
-  $$('.back-link').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); showView('view-selector'); }));
+  $('#card-comunicado').addEventListener('click', () => showView('view-templates'));
+  $('#back-from-templates').addEventListener('click', (e) => { e.preventDefault(); showView('view-selector'); });
+  $('#back-from-comunicado').addEventListener('click', (e) => { e.preventDefault(); showView('view-templates'); });
 
   // ---------------------------------------------------------------------
   // Listas editables con guardado en localStorage: países y contactos
@@ -484,7 +556,8 @@ ${strippedHtml}`;
   function optionsHtml(options, selected) {
     return options.map(([v, l]) => `<option value="${v}" ${v === selected ? 'selected' : ''}>${l}</option>`).join('');
   }
-  function addBloque() {
+  function addBloque(preset) {
+    preset = preset || {};
     const card = document.createElement('div');
     card.className = 'bloque-card';
     card.innerHTML = `
@@ -496,11 +569,20 @@ ${strippedHtml}`;
         <div><label>Color</label><select class="bloque-color">${optionsHtml(COLOR_OPTIONS, 'naranja')}</select></div>
       </div>
       <label>Viñetas <span class="hint">(una por línea, usa **texto** para negrita)</span></label>
-      <textarea class="bloque-vinetas" placeholder="Nuevo flujo dedicado para la creación de **Showrooms**...&#10;Autoriza el **Country Manager**..."></textarea>`;
+      <textarea class="bloque-vinetas" placeholder="Nuevo flujo dedicado para la creación de **Showrooms**...&#10;Autoriza el **Country Manager**..."></textarea>
+      <label>Impacto <span class="hint">(opcional — resultado destacado en su propio recuadro)</span></label>
+      <input type="text" class="bloque-impacto" placeholder="Ej. Asignación más equitativa y eficiente.">
+      <label class="chip-check" style="margin-top:10px;"><input type="checkbox" class="bloque-sin-numero"> Sin numeración (para bloques únicos)</label>`;
     card.querySelector('.bloque-remove').addEventListener('click', () => {
       card.remove();
       refreshPreview();
     });
+    if (preset.titulo) $('.bloque-titulo', card).value = preset.titulo;
+    if (preset.icono) $('.bloque-icono', card).value = preset.icono;
+    if (preset.color) $('.bloque-color', card).value = preset.color;
+    if (preset.vinetas) $('.bloque-vinetas', card).value = preset.vinetas.join('\n');
+    if (preset.impacto) $('.bloque-impacto', card).value = preset.impacto;
+    if (preset.sinNumero) $('.bloque-sin-numero', card).checked = true;
     $$('input, select, textarea', card).forEach((field) => {
       field.addEventListener('input', refreshPreview);
       field.addEventListener('change', refreshPreview);
@@ -522,10 +604,18 @@ ${strippedHtml}`;
 
   $('#vigenciaTipo').addEventListener('change', (e) => {
     $('#vigencia-fecha-wrap').style.display = e.target.value === 'fecha' ? 'block' : 'none';
-    $('#vigencia-custom-wrap').style.display = e.target.value === 'custom' ? 'block' : 'none';
+    $('#vigencia-custom-wrap').style.display = e.target.value === 'custom' || e.target.value === 'acceso' ? 'block' : 'none';
+    $('#vigencia-etiqueta-wrap').style.display = e.target.value === 'acceso' ? 'block' : 'none';
+    $('#vigenciaCustom').placeholder = e.target.value === 'acceso'
+      ? 'Ej. Asignado a Jefes de Compra y Compradores de Revestimientos.'
+      : 'Ej. Vigente **solo** para Revestimientos.';
   });
 
-  ['titulo', 'tituloResaltado', 'bajada', 'badgeType', 'vigenciaTipo', 'vigenciaFecha', 'vigenciaCustom', 'notaCierre'].forEach((id) => {
+  [
+    'titulo', 'tituloResaltado', 'bajada', 'badgeType', 'headerKicker', 'notaContexto',
+    'vigenciaTipo', 'vigenciaFecha', 'vigenciaCustom', 'vigenciaEtiqueta', 'contactoHeader',
+    'notaCierre', 'notaCierreIcono',
+  ].forEach((id) => {
     const el = $(`#${id}`);
     el.addEventListener('input', refreshPreview);
     el.addEventListener('change', refreshPreview);
@@ -537,6 +627,8 @@ ${strippedHtml}`;
       icono: $('.bloque-icono', card).value,
       color: $('.bloque-color', card).value,
       vinetas: $('.bloque-vinetas', card).value.split('\n').map((v) => v.trim()).filter(Boolean),
+      sinNumero: $('.bloque-sin-numero', card).checked,
+      impacto: { etiqueta: 'Impacto', texto: $('.bloque-impacto', card).value.trim() },
     }));
   }
   function collectData() {
@@ -546,10 +638,18 @@ ${strippedHtml}`;
       bajada: $('#bajada').value.trim(),
       badgeType: $('#badgeType').value,
       banderas: collectBanderas(),
+      headerKicker: $('#headerKicker').value.trim(),
+      notaContexto: $('#notaContexto').value.trim(),
       bloques: collectBloques(),
-      vigencia: { tipo: $('#vigenciaTipo').value, fecha: $('#vigenciaFecha').value.trim(), custom: $('#vigenciaCustom').value.trim() },
+      vigencia: {
+        tipo: $('#vigenciaTipo').value,
+        fecha: $('#vigenciaFecha').value.trim(),
+        custom: $('#vigenciaCustom').value.trim(),
+        etiqueta: $('#vigenciaEtiqueta').value.trim(),
+      },
       contacto: collectContacto(),
-      notaCierre: $('#notaCierre').value.trim(),
+      contactoHeader: $('#contactoHeader').value.trim(),
+      notaCierre: { texto: $('#notaCierre').value.trim(), icono: $('#notaCierreIcono').checked ? 'megafono' : '' },
     };
   }
 
@@ -574,8 +674,12 @@ ${strippedHtml}`;
   // EN/PT) se renderiza a tamaño natural dentro del iframe y se escala
   // hacia abajo con CSS transform, igual que un "zoom to fit". Se hace con
   // polling de ".container" (no con el evento "load") para no depender de
-  // que Google Fonts termine de cargar.
-  function fitScaledIframe(iframe, wrap, tries) {
+  // que Google Fonts termine de cargar. Encontrar ".container" no basta:
+  // en el primer tick puede existir el nodo pero no todo su contenido
+  // (bloques/vigencia/footer) todavia insertado/layouteado -- por eso se
+  // exige que la altura medida se repita en dos ticks seguidos antes de
+  // darla por buena (si no, se mide a mitad de parseo y sale recortada).
+  function fitScaledIframe(iframe, wrap, tries, lastHeight) {
     tries = tries || 0;
     let doc;
     try {
@@ -584,8 +688,9 @@ ${strippedHtml}`;
       doc = null;
     }
     const el = doc && doc.querySelector('.container');
-    if (el) {
-      const naturalHeight = Math.ceil(el.getBoundingClientRect().height) + 48;
+    const h = el ? Math.ceil(el.getBoundingClientRect().height) : 0;
+    if (h > 0 && h === lastHeight) {
+      const naturalHeight = h + 48;
       const scale = wrap.clientWidth > 0 ? wrap.clientWidth / 820 : 1;
       iframe.style.width = '820px';
       iframe.style.height = `${naturalHeight}px`;
@@ -593,7 +698,7 @@ ${strippedHtml}`;
       wrap.style.height = `${Math.max(120, Math.round(naturalHeight * scale))}px`;
       return;
     }
-    if (tries < 60) setTimeout(() => fitScaledIframe(iframe, wrap, tries + 1), 50);
+    if (tries < 80) setTimeout(() => fitScaledIframe(iframe, wrap, tries + 1, h), 40);
   }
   window.addEventListener('resize', () => {
     fitScaledIframe($('#es-preview-frame'), $('#preview-scale-wrap'));
@@ -836,6 +941,209 @@ ${strippedHtml}`;
     if (!validateMinimal()) return;
     showView('view-translate');
   });
+
+  // ---------------------------------------------------------------------
+  // Plantillas: puntos de partida basados en comunicados reales -- se
+  // eligen antes del formulario y precargan todos los campos (incluidos
+  // los nuevos: contexto, impacto, sin numeración, acceso, header kicker,
+  // nota de cierre con ícono). El usuario edita todo después.
+  // ---------------------------------------------------------------------
+  const TEMPLATES = [
+    {
+      id: 'nuevo-reporte',
+      nombre: 'Nuevo reporte / herramienta',
+      descripcion: 'Anuncia una herramienta nueva que resuelve una tarea manual, con el motivo (contexto) y quién tiene acceso.',
+      data: {
+        titulo: 'Proveedor por proveedor, SAP ya lo hizo por ti',
+        tituloResaltado: '',
+        bajada: 'Un nuevo reporte (**ZMM_BLOQ_PROV**) en **SAP ECC/S4H** identifica en un clic a los proveedores inactivos que deben bloquearse.',
+        badgeType: 'nuevo_reporte',
+        headerKicker: 'GUEPARDO',
+        banderas: [],
+        notaContexto: 'La **Matriz de Control Compras** exige bloquear proveedores sin operación durante **18 meses**. Hasta ahora, el Responsable del Maestro de Proveedores debía identificarlos uno por uno, de forma manual.',
+        bloques: [
+          {
+            titulo: 'El reporte hace la búsqueda por ti',
+            icono: 'check',
+            color: 'verde',
+            sinNumero: true,
+            impacto: '',
+            vinetas: [
+              'El reporte sugiere proveedores sin actividad en el periodo de días que tú defines, revisando:',
+              'Sin **órdenes de compra vigentes**',
+              'Sin **entrada de mercancía pendiente**',
+              'Sin **pendiente de registro de factura**',
+            ],
+          },
+        ],
+        vigencia: { tipo: 'acceso', etiqueta: 'Acceso', custom: 'Asignado a **Jefes de Compra** y **Compradores de Revestimientos**.' },
+        contacto: 'Reyna Olmeda',
+        contactoHeader: '',
+        notaCierre: { texto: '', icono: '' },
+      },
+    },
+    {
+      id: 'actualizacion-dos-bloques',
+      nombre: 'Actualización con dos ajustes',
+      descripcion: 'Dos cambios relacionados en un mismo comunicado, cada uno con su propio ícono y color.',
+      data: {
+        titulo: 'Una cosa menos que subir a SAPI',
+        tituloResaltado: 'Una cosa menos',
+        bajada: 'Ajustes en documentos soporte y herramientas de captura de inversiones.',
+        badgeType: 'actualizacion',
+        headerKicker: '',
+        banderas: [],
+        notaContexto: '',
+        bloques: [
+          {
+            titulo: 'Documentos de soporte para inversiones menores',
+            icono: 'documento',
+            color: 'verde',
+            sinNumero: false,
+            impacto: '',
+            vinetas: [
+              '**Plan de Negocio** opcional en inversiones menores a $20,000 USD.',
+              'El **Calendario de Pagos** se sustituye: Administración y Finanzas debe notificar a Tesorería Corporativa los desembolsos de inversión con **al menos 3 meses de anticipación**.',
+              'Basta **una cotización base** con oferta técnica.',
+            ],
+          },
+          {
+            titulo: 'Herramientas de captura',
+            icono: 'tendencia',
+            color: 'naranja',
+            sinNumero: false,
+            impacto: '',
+            vinetas: [
+              'Nuevos formatos de Plan de Negocio por subcategoría y guía del **Modelo Económico**, disponibles en **Ayudas** del Sistema Ebavel.',
+            ],
+          },
+        ],
+        vigencia: { tipo: 'vigente' },
+        contacto: 'Reyna Olmeda',
+        contactoHeader: '',
+        notaCierre: { texto: '', icono: '' },
+      },
+    },
+    {
+      id: 's4h-cuotas',
+      nombre: 'Funcionalidad ya activa (con impacto)',
+      descripcion: 'Un solo bloque sin numerar, con un impacto destacado y nota de cierre invitando a los próximos comunicados.',
+      data: {
+        titulo: 'S4H – Cuotas para Asignación',
+        tituloResaltado: '',
+        bajada: 'El sistema distribuye automáticamente el inventario disponible, entre las áreas de venta y los clientes que comparten un mismo producto para la clase de documento ZNA2.',
+        badgeType: 'actualizacion',
+        headerKicker: 'GUEPARDO',
+        banderas: [{ code: 'mx', label: 'México' }],
+        notaContexto: '',
+        bloques: [
+          {
+            titulo: 'Determinación del Inventario',
+            icono: 'check',
+            color: 'naranja',
+            sinNumero: true,
+            impacto: 'asignación más equitativa y eficiente de productos compartidos entre marcas.',
+            vinetas: [
+              'Se establece una **cuota (% de asignación)** para las áreas de venta que comparten un mismo producto (SKU).',
+              'El **pronóstico de cliente** reparte ese inventario entre los clientes de la misma **organización de venta**: si el material tiene cuota, esa cantidad es la base; si no, no hay restricción.',
+              'Se definen **prioridades** que establecen la secuencia para confirmar inventario en los pedidos, por área de venta.',
+            ],
+          },
+        ],
+        vigencia: { tipo: 'custom', custom: 'Esta funcionalidad ya está **activa en S4H.**' },
+        contacto: 'Aida Treviño y Reyna Olmeda',
+        contactoHeader: 'SI TIENES DUDAS',
+        notaCierre: {
+          texto: 'Esta es solo una de las actualizaciones implementadas en nuestros sistemas. Sigue nuestros próximos **comunicados** para conocer las siguientes mejoras.',
+          icono: 'megafono',
+        },
+      },
+    },
+  ];
+
+  function setVal(id, val) {
+    const el = $(`#${id}`);
+    if (el) el.value = val || '';
+  }
+
+  function loadTemplateData(data) {
+    setVal('titulo', data.titulo);
+    setVal('tituloResaltado', data.tituloResaltado);
+    setVal('bajada', data.bajada);
+    setVal('badgeType', data.badgeType || 'actualizacion');
+    setVal('headerKicker', data.headerKicker);
+    setVal('notaContexto', data.notaContexto);
+    setVal('vigenciaFecha', data.vigencia && data.vigencia.fecha);
+    setVal('vigenciaCustom', data.vigencia && data.vigencia.custom);
+    setVal('vigenciaEtiqueta', data.vigencia && data.vigencia.etiqueta);
+    setVal('vigenciaTipo', (data.vigencia && data.vigencia.tipo) || '');
+    $('#vigenciaTipo').dispatchEvent(new Event('change'));
+    setVal('contactoHeader', data.contactoHeader);
+    setVal('notaCierre', (data.notaCierre && data.notaCierre.texto) || '');
+    $('#notaCierreIcono').checked = Boolean(data.notaCierre && data.notaCierre.icono);
+
+    selectedPaisCodes.clear();
+    (data.banderas || []).forEach((b) => {
+      let entry = getAllPaises().find((p) => p.code === b.code || p.label === b.label);
+      if (!entry) entry = addCustomPais(b.label);
+      if (entry) selectedPaisCodes.add(entry.code);
+    });
+    renderPaisesChecks();
+
+    if (data.contacto && !getAllContactos().includes(data.contacto)) addCustomContacto(data.contacto);
+    renderContactoOptions(data.contacto || '');
+
+    bloquesList.innerHTML = '';
+    (data.bloques && data.bloques.length ? data.bloques : [{}]).forEach((b) => addBloque(b));
+
+    $('#titulo').dispatchEvent(new Event('input'));
+    refreshPreview();
+  }
+
+  const templateGrid = $('#template-grid');
+  function renderTemplateGrid() {
+    templateGrid.innerHTML = '';
+
+    TEMPLATES.forEach((tpl) => {
+      const card = document.createElement('div');
+      card.className = 'template-card';
+      card.innerHTML = `
+        <div class="template-thumb"><div class="preview-scale-wrap" style="height:100%;"><iframe style="pointer-events:none;"></iframe></div></div>
+        <div class="template-body">
+          <h3>${escapeHtml(tpl.nombre)}</h3>
+          <p>${escapeHtml(tpl.descripcion)}</p>
+          <button type="button" class="btn btn-primary btn-sm" style="justify-content:center;">Usar esta plantilla</button>
+        </div>`;
+      const iframe = card.querySelector('iframe');
+      const wrap = card.querySelector('.preview-scale-wrap');
+      const rawHtml = buildComunicadoHtml(tpl.data);
+      iframe.srcdoc = resolveAssets(rawHtml, 'es').html;
+      fitScaledIframe(iframe, wrap);
+      card.querySelector('button').addEventListener('click', () => {
+        showView('view-comunicado');
+        loadTemplateData(tpl.data);
+      });
+      templateGrid.appendChild(card);
+    });
+
+    const blank = document.createElement('div');
+    blank.className = 'template-card blank';
+    blank.innerHTML = `
+      <div class="template-thumb">
+        <svg viewBox="0 0 24 24" width="40" height="40"><path d="M12 5 V19 M5 12 H19" fill="none" stroke="#CBD5E1" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </div>
+      <div class="template-body">
+        <h3>Empezar en blanco</h3>
+        <p>Formulario vacío, sin contenido de ejemplo.</p>
+        <button type="button" class="btn btn-ghost btn-sm" style="justify-content:center;">Empezar en blanco</button>
+      </div>`;
+    blank.querySelector('button').addEventListener('click', () => {
+      showView('view-comunicado');
+      loadTemplateData({ bloques: [{}] });
+    });
+    templateGrid.appendChild(blank);
+  }
+  renderTemplateGrid();
 
   // --- Arranque: precargar países/contactos guardados y pintar el
   // preview en vivo desde el primer instante (aunque esté vacío, ya se ve
