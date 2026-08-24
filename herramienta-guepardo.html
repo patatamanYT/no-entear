@@ -622,8 +622,8 @@ ${[v, c].filter(Boolean).join('\n')}
     <!-- Header -->
     <div style="padding:20px 30px 8px 30px; background:#FFFFFF; display:flex; justify-content:space-between; align-items:center;">
       <div style="display:flex; align-items:center; gap:12px;">
-        <img src="__ASSET_LOGO__" alt="Guepardo" style="height:64px; width:auto; display:block;">
-        <img src="__ASSET_WORDMARK__" alt="Lo Mejoramos Juntos" style="height:46px; width:auto; display:block;">
+        <img src="[[ASSET_LOGO]]" alt="Guepardo" style="height:64px; width:auto; display:block;">
+        <img src="[[ASSET_WORDMARK]]" alt="Lo Mejoramos Juntos" style="height:46px; width:auto; display:block;">
         ${renderHeaderKicker(headerKicker)}
       </div>
       <div style="display:flex; align-items:center; gap:10px;">
@@ -660,14 +660,17 @@ ${renderNotaCierre(notaCierre)}
 
   // ---------------------------------------------------------------------
   // Placeholders de imagen: la plantilla arriba ya sale con
-  // __ASSET_LOGO__ / __ASSET_WORDMARK__ en vez de base64 -- se resuelven
+  // [[ASSET_LOGO]] / [[ASSET_WORDMARK]] en vez de base64 -- se resuelven
   // aqui mismo (nunca se manda un base64 de 100KB+ a Claude al preparar
-  // la traduccion).
+  // la traduccion). Se usan corchetes dobles y NO guiones bajos dobles
+  // porque "__texto__" es sintaxis markdown de negrita: si el marcador
+  // pasara por un renderer de markdown (como el chat de claude.ai) los
+  // guiones bajos se pierden y el marcador queda roto sin que se note.
   // ---------------------------------------------------------------------
   function resolveAssets(html, lang) {
     const wordmark = lang === 'es' ? WORDMARK_ES_URI : (window.customWordmarks && window.customWordmarks[lang]) || WORDMARK_ES_URI;
     const fellBack = lang !== 'es' && !(window.customWordmarks && window.customWordmarks[lang]);
-    const resolved = html.split('__ASSET_LOGO__').join(LOGO_URI).split('__ASSET_WORDMARK__').join(wordmark);
+    const resolved = html.split('[[ASSET_LOGO]]').join(LOGO_URI).split('[[ASSET_WORDMARK]]').join(wordmark);
     return { html: resolved, fellBack };
   }
 
@@ -693,8 +696,8 @@ REGLAS GENERALES (obligatorias):
 - Nunca alteres el significado, alcance, fechas, montos, responsables, condiciones ni el nivel de compromiso del texto fuente.
 - No agregues ni omitas información.
 - No traduzcas nombres propios de personas, ni las marcas "Proyecto Guepardo" / "Grupo Lamosa".
-- Los marcadores literales __ASSET_LOGO__ y __ASSET_WORDMARK__ deben quedar EXACTAMENTE igual, en su misma posición dentro del atributo src. No los traduzcas, no los muevas, no los elimines.
-- No agregues comentarios, explicaciones, notas ni bloques de código markdown (nada de \`\`\`). Responde ÚNICAMENTE con el HTML completo, empezando en "<!DOCTYPE html>" y terminando en "</html>".`;
+- Los marcadores literales [[ASSET_LOGO]] y [[ASSET_WORDMARK]] deben quedar EXACTAMENTE igual, en su misma posición dentro del atributo src. No los traduzcas, no los muevas, no los elimines, no les quites ni agregues corchetes.
+- No agregues comentarios, explicaciones, notas ni bloques de código markdown (nada de \`\`\`). Responde ÚNICAMENTE con el HTML completo, empezando en "<!DOCTYPE html>" y terminando en "</html>", sin nada antes ni después.`;
 
   const LANG_RULES = {
     en: `Inglés (EN corporativo, US-native):
@@ -1206,9 +1209,29 @@ ${strippedHtml}`;
 
   // --- Preparar traduccion (copy/paste manual, sin API) ---
   function strippedHtmlForPrompt() {
-    // el HTML ya sale con __ASSET_LOGO__/__ASSET_WORDMARK__ en vez de
+    // el HTML ya sale con [[ASSET_LOGO]]/[[ASSET_WORDMARK]] en vez de
     // base64 -- eso es justo lo que se manda a traducir.
     return currentEsHtmlWithPlaceholders;
+  }
+
+  // Claude casi siempre envuelve el HTML en un bloque ```html ... ``` al
+  // responder en el chat (por mas que el prompt pida no hacerlo), y a
+  // veces agrega una frase antes o despues ("Aqui esta la traduccion:").
+  // Si el usuario pega la respuesta completa tal cual, eso queda pegado
+  // antes de "<!DOCTYPE html>" y rompe el documento (el <head>/<style> ya
+  // no aplican bien porque el parser HTML los ve despues de texto suelto
+  // en el body). Esta funcion limpia todo eso antes de usar el HTML.
+  function cleanPastedHtml(text) {
+    let t = (text || '').trim();
+    const fenced = t.match(/^```[a-z]*\s*([\s\S]*?)\s*```$/i);
+    if (fenced) t = fenced[1].trim();
+    const startMatch = t.match(/<!doctype\s+html[^>]*>/i) || t.match(/<html[\s>]/i);
+    const start = startMatch ? t.indexOf(startMatch[0]) : -1;
+    const end = t.toLowerCase().lastIndexOf('</html>');
+    if (start !== -1 && end !== -1 && end > start) {
+      t = t.slice(start, end + '</html>'.length);
+    }
+    return t;
   }
 
   function setupTranslateLang(lang) {
@@ -1247,10 +1270,15 @@ ${strippedHtml}`;
     });
 
     btnRender.addEventListener('click', () => {
-      const pasted = pasteBox.value.trim();
-      if (!pasted) return showMsg(statusEl, 'error', 'Pega la respuesta de Claude primero.');
-      if (!pasted.includes('__ASSET_LOGO__') || !pasted.includes('__ASSET_WORDMARK__')) {
-        showMsg(statusEl, 'error', 'El HTML pegado no conserva los marcadores __ASSET_LOGO__/__ASSET_WORDMARK__ — revisa que hayas copiado la respuesta completa de Claude, sin recortar.');
+      const raw = pasteBox.value.trim();
+      if (!raw) return showMsg(statusEl, 'error', 'Pega la respuesta de Claude primero.');
+      const pasted = cleanPastedHtml(raw);
+      if (!pasted.includes('<!DOCTYPE') && !pasted.toLowerCase().includes('<!doctype')) {
+        showMsg(statusEl, 'error', 'No se encontró un documento HTML completo en lo que pegaste — revisa que hayas copiado toda la respuesta de Claude de principio a fin, no solo un fragmento.');
+        return;
+      }
+      if (!pasted.includes('[[ASSET_LOGO]]') || !pasted.includes('[[ASSET_WORDMARK]]')) {
+        showMsg(statusEl, 'error', 'El HTML pegado no conserva los marcadores [[ASSET_LOGO]]/[[ASSET_WORDMARK]] — Claude pudo haberlos alterado al traducir. Pídele que responda de nuevo dejando esos marcadores exactamente igual, entre corchetes dobles.');
         return;
       }
       const { html: withAssets, fellBack } = resolveAssets(pasted, lang);
