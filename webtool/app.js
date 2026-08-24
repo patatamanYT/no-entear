@@ -67,6 +67,20 @@
     if (!f) return '';
     return `<span style="display:inline-flex; width:22px; height:22px; border-radius:999px; overflow:hidden; border:1px solid rgba(15,23,42,.12); flex-shrink:0;" title="${f.label}"><svg viewBox="0 0 28 28" width="22" height="22">${f.svg}</svg></span>`;
   }
+  // banderas: [{code, label, custom}]. Los codigos con SVG propio (built-in)
+  // se muestran como chip circular; los agregados por el usuario (sin SVG
+  // real) se muestran como pill de texto -- se degrada bien sin inventar
+  // una bandera que no existe.
+  function renderFlagsRow(banderas) {
+    if (!banderas || !banderas.length) return '';
+    const chips = banderas
+      .map((b) => {
+        if (!b.custom && FLAGS[b.code]) return flagChip(b.code);
+        return `<span style="display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; border:1px solid #E9EEF5; background:#F8FAFC; font-size:10.5px; font-weight:700; color:#475569; white-space:nowrap;">${escapeHtml(b.label)}</span>`;
+      })
+      .join('');
+    return `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:flex-end;">${chips}</div>`;
+  }
 
   // ---------------------------------------------------------------------
   // Template del Comunicado (idéntico al de la version servidor).
@@ -175,8 +189,8 @@ ${[v, c].filter(Boolean).join('\n')}
   }
 
   function buildComunicadoHtml(data) {
-    const { titulo, tituloResaltado, bajada, badgeType, bandera, bloques, vigencia, contacto, notaCierre } = data;
-    const flagHtml = bandera ? flagChip(bandera) : '';
+    const { titulo, tituloResaltado, bajada, badgeType, banderas, bloques, vigencia, contacto, notaCierre } = data;
+    const flagHtml = renderFlagsRow(banderas);
     return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -311,6 +325,154 @@ ${strippedHtml}`;
   $('#card-comunicado').addEventListener('click', () => showView('view-comunicado'));
   $$('.back-link').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); showView('view-selector'); }));
 
+  // ---------------------------------------------------------------------
+  // Listas editables con guardado en localStorage: países y contactos
+  // vienen precargados, y lo que se agrega vía "+ Agregar" queda guardado
+  // para la próxima vez que se abra esta misma herramienta en este
+  // navegador (no hay backend -- el archivo vive solo, así que el
+  // guardado es local al navegador que lo abre).
+  // ---------------------------------------------------------------------
+  const STORAGE_KEYS = { paises: 'guepardo_paises_custom_v1', contactos: 'guepardo_contactos_custom_v1' };
+
+  function loadCustomList(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  function saveCustomList(key, list) {
+    try {
+      localStorage.setItem(key, JSON.stringify(list));
+    } catch {
+      // localStorage puede fallar (modo privado, storage lleno, etc.) --
+      // la opción agregada sigue funcionando en esta sesión, solo no
+      // sobrevive a un reload. No es motivo para romper la herramienta.
+    }
+  }
+
+  // --- Países (multi-select con chips + agregar nuevo) ---
+  const BUILTIN_PAISES = Object.keys(FLAGS).map((code) => ({ code, label: FLAGS[code].label, custom: false }));
+  function getAllPaises() {
+    const custom = loadCustomList(STORAGE_KEYS.paises);
+    return [...BUILTIN_PAISES, ...custom.map((p) => ({ ...p, custom: true }))];
+  }
+  function addCustomPais(rawLabel) {
+    const label = (rawLabel || '').trim();
+    if (!label) return null;
+    const all = getAllPaises();
+    const existing = all.find((p) => p.label.toLowerCase() === label.toLowerCase());
+    if (existing) return existing;
+    const codes = new Set(all.map((p) => p.code));
+    let code = slugify(label) || 'pais';
+    let n = 1;
+    while (codes.has(code)) code = `${slugify(label) || 'pais'}-${++n}`;
+    const entry = { code, label };
+    const custom = loadCustomList(STORAGE_KEYS.paises);
+    custom.push(entry);
+    saveCustomList(STORAGE_KEYS.paises, custom);
+    return { ...entry, custom: true };
+  }
+
+  const paisesListEl = $('#paises-list');
+  const selectedPaisCodes = new Set();
+  function renderPaisesChecks() {
+    const all = getAllPaises();
+    paisesListEl.innerHTML = all
+      .map(
+        (p) => `<label class="chip-check${selectedPaisCodes.has(p.code) ? ' checked' : ''}">
+          <input type="checkbox" value="${escapeHtml(p.code)}" ${selectedPaisCodes.has(p.code) ? 'checked' : ''}>
+          ${escapeHtml(p.label)}
+        </label>`
+      )
+      .join('');
+    $$('input[type="checkbox"]', paisesListEl).forEach((cb) => {
+      cb.addEventListener('change', () => {
+        if (cb.checked) selectedPaisCodes.add(cb.value);
+        else selectedPaisCodes.delete(cb.value);
+        cb.closest('.chip-check').classList.toggle('checked', cb.checked);
+        refreshPreview();
+      });
+    });
+  }
+  $('#btn-add-pais').addEventListener('click', () => {
+    const input = $('#paisNuevoInput');
+    const entry = addCustomPais(input.value);
+    if (!entry) return;
+    input.value = '';
+    selectedPaisCodes.add(entry.code);
+    renderPaisesChecks();
+    refreshPreview();
+  });
+  $('#paisNuevoInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      $('#btn-add-pais').click();
+    }
+  });
+  function collectBanderas() {
+    const all = getAllPaises();
+    return all.filter((p) => selectedPaisCodes.has(p.code)).map((p) => ({ code: p.code, label: p.label, custom: p.custom }));
+  }
+
+  // --- Contacto de dudas (select editable con agregar nuevo) ---
+  const BUILTIN_CONTACTOS = ['Reyna Olmeda', 'Aida Treviño'];
+  function getAllContactos() {
+    return [...BUILTIN_CONTACTOS, ...loadCustomList(STORAGE_KEYS.contactos)];
+  }
+  function addCustomContacto(rawName) {
+    const name = (rawName || '').trim();
+    if (!name) return null;
+    const all = getAllContactos();
+    const existing = all.find((c) => c.toLowerCase() === name.toLowerCase());
+    if (existing) return existing;
+    const custom = loadCustomList(STORAGE_KEYS.contactos);
+    custom.push(name);
+    saveCustomList(STORAGE_KEYS.contactos, custom);
+    return name;
+  }
+  const contactoSelectEl = $('#contactoSelect');
+  function renderContactoOptions(selectValue) {
+    const all = getAllContactos();
+    contactoSelectEl.innerHTML = [
+      '<option value="">— Omitir esta sección —</option>',
+      ...all.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`),
+      '<option value="__add__">+ Agregar nuevo...</option>',
+    ].join('');
+    if (selectValue !== undefined) contactoSelectEl.value = selectValue;
+  }
+  renderContactoOptions('');
+  contactoSelectEl.addEventListener('change', () => {
+    if (contactoSelectEl.value === '__add__') {
+      $('#contacto-add-wrap').style.display = 'flex';
+      $('#contactoNuevoInput').focus();
+    } else {
+      $('#contacto-add-wrap').style.display = 'none';
+      refreshPreview();
+    }
+  });
+  $('#btn-add-contacto').addEventListener('click', () => {
+    const input = $('#contactoNuevoInput');
+    const name = addCustomContacto(input.value);
+    if (!name) return;
+    input.value = '';
+    $('#contacto-add-wrap').style.display = 'none';
+    renderContactoOptions(name);
+    refreshPreview();
+  });
+  $('#contactoNuevoInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      $('#btn-add-contacto').click();
+    }
+  });
+  function collectContacto() {
+    const v = contactoSelectEl.value;
+    return v === '__add__' ? '' : v;
+  }
+
   // --- Bloques dinamicos ---
   const ICON_OPTIONS = [
     ['check', 'Check / aprobación'], ['showroom', 'Showroom / tienda'], ['escudo', 'Escudo / contingencia'],
@@ -335,10 +497,20 @@ ${strippedHtml}`;
       </div>
       <label>Viñetas <span class="hint">(una por línea, usa **texto** para negrita)</span></label>
       <textarea class="bloque-vinetas" placeholder="Nuevo flujo dedicado para la creación de **Showrooms**...&#10;Autoriza el **Country Manager**..."></textarea>`;
-    card.querySelector('.bloque-remove').addEventListener('click', () => card.remove());
+    card.querySelector('.bloque-remove').addEventListener('click', () => {
+      card.remove();
+      refreshPreview();
+    });
+    $$('input, select, textarea', card).forEach((field) => {
+      field.addEventListener('input', refreshPreview);
+      field.addEventListener('change', refreshPreview);
+    });
     bloquesList.appendChild(card);
   }
-  $('#btn-add-bloque').addEventListener('click', addBloque);
+  $('#btn-add-bloque').addEventListener('click', () => {
+    addBloque();
+    refreshPreview();
+  });
   addBloque();
 
   $('#titulo').addEventListener('input', (e) => {
@@ -352,8 +524,11 @@ ${strippedHtml}`;
     $('#vigencia-fecha-wrap').style.display = e.target.value === 'fecha' ? 'block' : 'none';
     $('#vigencia-custom-wrap').style.display = e.target.value === 'custom' ? 'block' : 'none';
   });
-  $('#contactoSelect').addEventListener('change', (e) => {
-    $('#contacto-custom-wrap').style.display = e.target.value === '__custom__' ? 'block' : 'none';
+
+  ['titulo', 'tituloResaltado', 'bajada', 'badgeType', 'vigenciaTipo', 'vigenciaFecha', 'vigenciaCustom', 'notaCierre'].forEach((id) => {
+    const el = $(`#${id}`);
+    el.addEventListener('input', refreshPreview);
+    el.addEventListener('change', refreshPreview);
   });
 
   function collectBloques() {
@@ -364,18 +539,13 @@ ${strippedHtml}`;
       vinetas: $('.bloque-vinetas', card).value.split('\n').map((v) => v.trim()).filter(Boolean),
     }));
   }
-  function collectContacto() {
-    const sel = $('#contactoSelect').value;
-    if (sel === '__custom__') return $('#contactoCustom').value.trim();
-    return sel || '';
-  }
   function collectData() {
     return {
       titulo: $('#titulo').value.trim(),
       tituloResaltado: $('#tituloResaltado').value.trim(),
       bajada: $('#bajada').value.trim(),
       badgeType: $('#badgeType').value,
-      bandera: $('#bandera').value,
+      banderas: collectBanderas(),
       bloques: collectBloques(),
       vigencia: { tipo: $('#vigenciaTipo').value, fecha: $('#vigenciaFecha').value.trim(), custom: $('#vigenciaCustom').value.trim() },
       contacto: collectContacto(),
@@ -397,6 +567,73 @@ ${strippedHtml}`;
 
   function slugify(str) {
     return (str || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 40) || 'comunicado';
+  }
+
+  // El documento real mide 820px de ancho -- para que quepa en una tarjeta
+  // angosta (barra lateral del preview en vivo, o la tarjeta de preview de
+  // EN/PT) se renderiza a tamaño natural dentro del iframe y se escala
+  // hacia abajo con CSS transform, igual que un "zoom to fit". Se hace con
+  // polling de ".container" (no con el evento "load") para no depender de
+  // que Google Fonts termine de cargar.
+  function fitScaledIframe(iframe, wrap, tries) {
+    tries = tries || 0;
+    let doc;
+    try {
+      doc = iframe.contentDocument;
+    } catch {
+      doc = null;
+    }
+    const el = doc && doc.querySelector('.container');
+    if (el) {
+      const naturalHeight = Math.ceil(el.getBoundingClientRect().height) + 48;
+      const scale = wrap.clientWidth > 0 ? wrap.clientWidth / 820 : 1;
+      iframe.style.width = '820px';
+      iframe.style.height = `${naturalHeight}px`;
+      iframe.style.transform = `scale(${scale})`;
+      wrap.style.height = `${Math.max(120, Math.round(naturalHeight * scale))}px`;
+      return;
+    }
+    if (tries < 60) setTimeout(() => fitScaledIframe(iframe, wrap, tries + 1), 50);
+  }
+  window.addEventListener('resize', () => {
+    fitScaledIframe($('#es-preview-frame'), $('#preview-scale-wrap'));
+    ['en', 'pt'].forEach((lang) => {
+      const wrap = $(`#preview-scale-wrap-${lang}`);
+      if (wrap && wrap.offsetParent) fitScaledIframe($(`#preview-frame-${lang}`), wrap);
+    });
+  });
+
+  // El preview de la derecha se actualiza mientras se escribe (debounced,
+  // no en cada tecla) -- así se ve dónde va cada cosa sin tener que
+  // generar/regenerar a mano.
+  let previewDebounce;
+  function refreshPreview() {
+    clearTimeout(previewDebounce);
+    previewDebounce = setTimeout(() => {
+      const data = collectData();
+      currentSlug = slugify(data.titulo);
+      const rawHtml = buildComunicadoHtml(data);
+      currentEsHtmlWithPlaceholders = rawHtml;
+      currentEsHtml = resolveAssets(rawHtml, 'es').html;
+      const frame = $('#es-preview-frame');
+      frame.srcdoc = currentEsHtml;
+      fitScaledIframe(frame, $('#preview-scale-wrap'));
+    }, 200);
+  }
+
+  function validateMinimal() {
+    const statusEl = $('#es-status-msg');
+    const data = collectData();
+    if (!data.titulo) {
+      showMsg(statusEl, 'error', 'El título del comunicado es obligatorio.');
+      return false;
+    }
+    if (!data.bajada) {
+      showMsg(statusEl, 'error', 'La bajada/subtítulo es obligatoria.');
+      return false;
+    }
+    clearMsg(statusEl);
+    return true;
   }
 
   function downloadBlob(content, filename, mime) {
@@ -508,28 +745,16 @@ ${strippedHtml}`;
     }
   }
 
-  // --- Generar ES ---
-  $('#form-comunicado').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const statusEl = $('#es-status-msg');
-    clearMsg(statusEl);
-    const data = collectData();
-    if (!data.titulo) return showMsg(statusEl, 'error', 'El título del comunicado es obligatorio.');
-    if (!data.bajada) return showMsg(statusEl, 'error', 'La bajada/subtítulo es obligatoria.');
+  // El <form> ya no se "envía" -- el preview es continuo. Se evita igual
+  // el submit nativo (Enter dentro de un input) por si acaso.
+  $('#form-comunicado').addEventListener('submit', (e) => e.preventDefault());
 
-    currentSlug = slugify(data.titulo);
-    const rawHtml = buildComunicadoHtml(data);
-    currentEsHtmlWithPlaceholders = rawHtml;
-    currentEsHtml = resolveAssets(rawHtml, 'es').html;
-
-    $('#es-preview-frame').srcdoc = currentEsHtml;
-    $('#es-preview-section').style.display = 'block';
-    showMsg(statusEl, 'ok', 'ES generado. Revisa el preview antes de traducir.');
-    $('#es-preview-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('#btn-download-html-es').addEventListener('click', () => {
+    if (!validateMinimal()) return;
+    downloadBlob(currentEsHtml, `comunicado_${currentSlug}_es.html`, 'text/html');
   });
-
-  $('#btn-download-html-es').addEventListener('click', () => downloadBlob(currentEsHtml, `comunicado_${currentSlug}_es.html`, 'text/html'));
   $('#btn-download-png-es').addEventListener('click', (e) => {
+    if (!validateMinimal()) return;
     const btn = e.currentTarget;
     btn.disabled = true;
     downloadPng(currentEsHtml, `comunicado_${currentSlug}_es.png`, $('#es-status-msg')).finally(() => (btn.disabled = false));
@@ -586,8 +811,9 @@ ${strippedHtml}`;
       }
       const { html: withAssets, fellBack } = resolveAssets(pasted, lang);
       finalHtml = insertDisclaimer(withAssets, lang);
-      frame.srcdoc = finalHtml;
       previewSection.style.display = 'block';
+      frame.srcdoc = finalHtml;
+      fitScaledIframe(frame, $(`#preview-scale-wrap-${lang}`));
       const warn = fellBack ? ` (aviso: no hay wordmark propio para "${lang}", se usó el de ES como respaldo)` : '';
       showMsg(statusEl, 'ok', 'Preview generado.' + warn);
     });
@@ -606,5 +832,14 @@ ${strippedHtml}`;
   setupTranslateLang('en');
   setupTranslateLang('pt');
 
-  $('#btn-goto-translate').addEventListener('click', () => showView('view-translate'));
+  $('#btn-goto-translate').addEventListener('click', () => {
+    if (!validateMinimal()) return;
+    showView('view-translate');
+  });
+
+  // --- Arranque: precargar países/contactos guardados y pintar el
+  // preview en vivo desde el primer instante (aunque esté vacío, ya se ve
+  // la estructura del comunicado). ---
+  renderPaisesChecks();
+  refreshPreview();
 })();

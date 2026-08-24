@@ -19,7 +19,7 @@ h1, h2, h3, .heading { font-family:'Poppins','Segoe UI',Arial,sans-serif; font-w
 .app-header img { height:40px; width:auto; display:block; }
 .app-header .titulo { font-family:'Poppins',sans-serif; font-weight:900; font-size:15px; }
 .app-header .subtitulo { font-size:11px; color:#94A3B8; letter-spacing:.4px; text-transform:uppercase; }
-.wrap { max-width:960px; margin:0 auto; padding:34px 24px 80px 24px; }
+.wrap { max-width:1120px; margin:0 auto; padding:34px 24px 80px 24px; }
 .view { display:none; }
 .selector-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:26px; }
 @media (max-width:700px) { .selector-grid { grid-template-columns:1fr; } }
@@ -54,8 +54,7 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
 .status-msg.error { background:#FEEDE2; color:#B23A12; border:1px solid #FBCBA8; }
 .status-msg.warn { background:#FFF7E6; color:#92600A; border:1px solid #FCE3A8; }
 .status-msg.ok { background:var(--verde-menta); color:var(--verde-oscuro); border:1px solid #D6EADD; }
-.preview-card { background:#fff; border:1px solid var(--gris-borde); border-radius:14px; overflow:hidden; box-shadow:0 6px 18px rgba(15,23,42,.06); max-width:460px; }
-.preview-card iframe { width:100%; height:520px; border:0; display:block; background:var(--gris-fondo); }
+.preview-card { background:#fff; border:1px solid var(--gris-borde); border-radius:14px; overflow:hidden; box-shadow:0 6px 18px rgba(15,23,42,.06); max-width:520px; }
 .section-divider { border:none; border-top:1px solid var(--gris-borde); margin:26px 0; }
 .back-link { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--gris-texto); text-decoration:none; margin-bottom:14px; cursor:pointer; }
 .back-link:hover { color:var(--navy); }
@@ -64,6 +63,22 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
 .lang-block { border:1px solid var(--gris-borde); border-radius:14px; padding:20px; margin-bottom:20px; background:#fff; }
 .lang-block h3 { font-size:15px; margin-bottom:4px; }
 .step-hint { font-size:12.5px; color:#94A3B8; margin:0 0 10px 0; }
+
+.comunicado-layout { display:grid; grid-template-columns:minmax(0,1fr) 380px; gap:24px; align-items:start; }
+@media (max-width:980px) { .comunicado-layout { grid-template-columns:1fr; } .preview-col { position:static !important; } }
+.preview-col { position:sticky; top:20px; }
+.preview-col .preview-card { max-width:none; }
+.preview-scale-wrap { width:100%; overflow:hidden; background:var(--gris-fondo); }
+.preview-scale-wrap iframe { display:block; border:0; transform-origin:top left; }
+.preview-empty-hint { font-size:12px; color:#94A3B8; padding:10px 14px; }
+
+.chip-check-group { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+.chip-check { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--gris-borde); border-radius:999px; padding:6px 12px 6px 10px; font-size:12.5px; cursor:pointer; user-select:none; background:#fff; transition:border-color .12s ease, background .12s ease; }
+.chip-check:has(input:checked), .chip-check.checked { border-color:var(--naranja); background:var(--naranja-durazno-2); font-weight:700; }
+.chip-check input { margin:0; accent-color:var(--naranja); }
+.add-inline { display:flex; gap:8px; margin-top:10px; }
+.add-inline input { flex:1; }
+.add-inline .btn { flex:0 0 auto; }
 </style>
 </head>
 <body>
@@ -110,110 +125,98 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
       <a class="back-link">&larr; Volver al inicio</a>
       <h1 style="font-size:24px;">Nuevo Comunicado</h1>
       <p style="color:#475569; font-size:13.5px; margin-top:6px; max-width:640px;">
-        El español es siempre la versión master. Revisa el preview antes de pasar a inglés/portugués.
+        El español es siempre la versión master. El preview de la derecha se actualiza mientras escribes.
       </p>
 
-      <form id="form-comunicado">
-        <section class="panel">
-          <h3><span class="num">1</span> Datos generales</h3>
-          <label for="titulo">Tema / título del comunicado <span class="hint">(máx. 10 palabras)</span></label>
-          <input type="text" id="titulo" placeholder="Ej. Fuera del sistema. Ya no." required>
-          <div id="titulo-count" style="font-size:11px; color:#94A3B8; margin-top:3px;"></div>
+      <div class="comunicado-layout">
+        <div class="form-col">
+          <form id="form-comunicado">
+            <section class="panel">
+              <h3><span class="num">1</span> Datos generales</h3>
+              <label for="titulo">Tema / título del comunicado <span class="hint">(máx. 10 palabras)</span></label>
+              <input type="text" id="titulo" placeholder="Ej. Fuera del sistema. Ya no.">
+              <div id="titulo-count" style="font-size:11px; color:#94A3B8; margin-top:3px;"></div>
 
-          <label for="tituloResaltado">Fragmento a resaltar en naranja <span class="hint">(opcional — debe ser el inicio exacto del título)</span></label>
-          <input type="text" id="tituloResaltado" placeholder="Ej. Fuera del sistema.">
+              <label for="tituloResaltado">Fragmento a resaltar en naranja <span class="hint">(opcional — debe ser el inicio exacto del título)</span></label>
+              <input type="text" id="tituloResaltado" placeholder="Ej. Fuera del sistema.">
 
-          <label for="bajada">Bajada / subtítulo <span class="hint">(1 frase, no repite el título)</span></label>
-          <input type="text" id="bajada" placeholder="Ej. Nuevos flujos para inversiones que antes operaban fuera del sistema." required>
+              <label for="bajada">Bajada / subtítulo <span class="hint">(1 frase, no repite el título)</span></label>
+              <input type="text" id="bajada" placeholder="Ej. Nuevos flujos para inversiones que antes operaban fuera del sistema.">
 
-          <div class="row">
-            <div>
               <label for="badgeType">Tipo de badge</label>
               <select id="badgeType">
                 <option value="actualizacion">Actualización</option>
                 <option value="aviso">Aviso</option>
                 <option value="recordatorio">Recordatorio</option>
               </select>
-            </div>
-            <div>
-              <label for="bandera">País / región <span class="hint">(opcional)</span></label>
-              <select id="bandera">
-                <option value="">— Sin bandera —</option>
-                <option value="mx">México</option>
-                <option value="ar">Argentina</option>
-                <option value="br">Brasil</option>
-                <option value="co">Colombia</option>
-                <option value="pe">Perú</option>
-                <option value="es">España</option>
-                <option value="cl">Chile</option>
-                <option value="us">USA</option>
+
+              <label>País / región <span class="hint">(opcional, puedes elegir varios — a dónde aplica el comunicado)</span></label>
+              <div class="chip-check-group" id="paises-list"></div>
+              <div class="add-inline">
+                <input type="text" id="paisNuevoInput" placeholder="Otro país/región... (Ej. Perú)">
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-add-pais">+ Agregar</button>
+              </div>
+            </section>
+
+            <section class="panel">
+              <h3><span class="num">2</span> Bloques de contenido</h3>
+              <p style="font-size:12.5px; color:#94A3B8; margin:0 0 4px 0;">Un bloque sin título ni viñetas se omite del comunicado — no se rellena con texto genérico.</p>
+              <div id="bloques-list"></div>
+              <div class="actions"><button type="button" class="btn btn-ghost btn-sm" id="btn-add-bloque">+ Agregar bloque</button></div>
+            </section>
+
+            <section class="panel">
+              <h3><span class="num">3</span> Vigencia</h3>
+              <select id="vigenciaTipo">
+                <option value="">— Omitir esta sección —</option>
+                <option value="vigente">Ya está en vigor</option>
+                <option value="fecha">Entra en vigor el [fecha]</option>
+                <option value="custom">Texto personalizado</option>
               </select>
+              <div id="vigencia-fecha-wrap" style="display:none;">
+                <label for="vigenciaFecha">Fecha</label>
+                <input type="text" id="vigenciaFecha" placeholder="Ej. 1 de septiembre de 2026">
+              </div>
+              <div id="vigencia-custom-wrap" style="display:none;">
+                <label for="vigenciaCustom">Texto <span class="hint">(usa **texto** para negrita)</span></label>
+                <textarea id="vigenciaCustom" placeholder="Ej. Vigente **solo** para Revestimientos."></textarea>
+              </div>
+            </section>
+
+            <section class="panel">
+              <h3><span class="num">4</span> Contacto de dudas</h3>
+              <label for="contactoSelect" class="hint" style="margin-top:0;">Precargados — elige "+ Agregar nuevo..." para sumar uno y que quede guardado</label>
+              <select id="contactoSelect"></select>
+              <div id="contacto-add-wrap" style="display:none;" class="add-inline">
+                <input type="text" id="contactoNuevoInput" placeholder="Nombre del nuevo contacto">
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-add-contacto">Guardar</button>
+              </div>
+            </section>
+
+            <section class="panel">
+              <h3><span class="num">5</span> Nota de cierre <span class="hint">(opcional)</span></h3>
+              <textarea id="notaCierre" placeholder="Ej. Estas son solo algunas de las actualizaciones recientes; consulta el manual completo en..."></textarea>
+            </section>
+          </form>
+          <div id="es-status-msg"></div>
+        </div>
+
+        <div class="preview-col">
+          <h2 style="font-size:15px; margin-bottom:10px;">Preview en vivo</h2>
+          <div class="preview-card">
+            <div class="preview-scale-wrap" id="preview-scale-wrap">
+              <iframe id="es-preview-frame"></iframe>
             </div>
           </div>
-        </section>
-
-        <section class="panel">
-          <h3><span class="num">2</span> Bloques de contenido</h3>
-          <p style="font-size:12.5px; color:#94A3B8; margin:0 0 4px 0;">Un bloque sin título ni viñetas se omite del comunicado — no se rellena con texto genérico.</p>
-          <div id="bloques-list"></div>
-          <div class="actions"><button type="button" class="btn btn-ghost btn-sm" id="btn-add-bloque">+ Agregar bloque</button></div>
-        </section>
-
-        <section class="panel">
-          <h3><span class="num">3</span> Vigencia</h3>
-          <select id="vigenciaTipo">
-            <option value="">— Omitir esta sección —</option>
-            <option value="vigente">Ya está en vigor</option>
-            <option value="fecha">Entra en vigor el [fecha]</option>
-            <option value="custom">Texto personalizado</option>
-          </select>
-          <div id="vigencia-fecha-wrap" style="display:none;">
-            <label for="vigenciaFecha">Fecha</label>
-            <input type="text" id="vigenciaFecha" placeholder="Ej. 1 de septiembre de 2026">
+          <div class="actions" style="margin-top:16px;">
+            <button type="button" class="btn btn-ghost" id="btn-download-html-es">Descargar HTML</button>
+            <button type="button" class="btn btn-ghost" id="btn-download-png-es">Descargar PNG</button>
           </div>
-          <div id="vigencia-custom-wrap" style="display:none;">
-            <label for="vigenciaCustom">Texto <span class="hint">(usa **texto** para negrita)</span></label>
-            <textarea id="vigenciaCustom" placeholder="Ej. Vigente **solo** para Revestimientos."></textarea>
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" id="btn-goto-translate" style="width:100%; justify-content:center;">Ir a traducción EN / PT →</button>
           </div>
-        </section>
-
-        <section class="panel">
-          <h3><span class="num">4</span> Contacto de dudas</h3>
-          <select id="contactoSelect">
-            <option value="">— Omitir esta sección —</option>
-            <option value="Reyna Olmeda">Reyna Olmeda</option>
-            <option value="Aida Treviño">Aida Treviño</option>
-            <option value="__custom__">Otro (especificar)</option>
-          </select>
-          <div id="contacto-custom-wrap" style="display:none;">
-            <label for="contactoCustom">Nombre</label>
-            <input type="text" id="contactoCustom" placeholder="Nombre del contacto">
-          </div>
-        </section>
-
-        <section class="panel">
-          <h3><span class="num">5</span> Nota de cierre <span class="hint">(opcional)</span></h3>
-          <textarea id="notaCierre" placeholder="Ej. Estas son solo algunas de las actualizaciones recientes; consulta el manual completo en..."></textarea>
-        </section>
-
-        <div class="actions">
-          <button type="submit" class="btn btn-primary">Generar ES</button>
         </div>
-      </form>
-      <div id="es-status-msg"></div>
-
-      <section id="es-preview-section" style="display:none;">
-        <hr class="section-divider">
-        <h2 style="font-size:18px;">Preview — Español (master)</h2>
-        <div class="preview-card">
-          <iframe id="es-preview-frame"></iframe>
-        </div>
-        <div class="actions" style="margin-top:16px;">
-          <button type="button" class="btn btn-ghost" id="btn-download-html-es">Descargar HTML</button>
-          <button type="button" class="btn btn-ghost" id="btn-download-png-es">Descargar PNG</button>
-          <button type="button" class="btn btn-secondary" id="btn-goto-translate">Ir a traducción EN / PT →</button>
-        </div>
-      </section>
+      </div>
     </div>
 
     <!-- ============ TRADUCCION (manual, copy/paste a Claude.ai) ============ -->
@@ -240,7 +243,7 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
         </div>
         <div id="status-en"></div>
         <div id="preview-section-en" style="display:none; margin-top:14px;">
-          <div class="preview-card"><iframe id="preview-frame-en"></iframe></div>
+          <div class="preview-card"><div class="preview-scale-wrap" id="preview-scale-wrap-en"><iframe id="preview-frame-en"></iframe></div></div>
           <div class="actions" style="margin-top:12px;">
             <button type="button" class="btn btn-ghost btn-sm" id="btn-download-html-en">Descargar HTML</button>
             <button type="button" class="btn btn-ghost btn-sm" id="btn-download-png-en">Descargar PNG</button>
@@ -262,7 +265,7 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
         </div>
         <div id="status-pt"></div>
         <div id="preview-section-pt" style="display:none; margin-top:14px;">
-          <div class="preview-card"><iframe id="preview-frame-pt"></iframe></div>
+          <div class="preview-card"><div class="preview-scale-wrap" id="preview-scale-wrap-pt"><iframe id="preview-frame-pt"></iframe></div></div>
           <div class="actions" style="margin-top:12px;">
             <button type="button" class="btn btn-ghost btn-sm" id="btn-download-html-pt">Descargar HTML</button>
             <button type="button" class="btn btn-ghost btn-sm" id="btn-download-png-pt">Descargar PNG</button>
@@ -365,6 +368,20 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
     const f = FLAGS[code];
     if (!f) return '';
     return `<span style="display:inline-flex; width:22px; height:22px; border-radius:999px; overflow:hidden; border:1px solid rgba(15,23,42,.12); flex-shrink:0;" title="${f.label}"><svg viewBox="0 0 28 28" width="22" height="22">${f.svg}</svg></span>`;
+  }
+  // banderas: [{code, label, custom}]. Los codigos con SVG propio (built-in)
+  // se muestran como chip circular; los agregados por el usuario (sin SVG
+  // real) se muestran como pill de texto -- se degrada bien sin inventar
+  // una bandera que no existe.
+  function renderFlagsRow(banderas) {
+    if (!banderas || !banderas.length) return '';
+    const chips = banderas
+      .map((b) => {
+        if (!b.custom && FLAGS[b.code]) return flagChip(b.code);
+        return `<span style="display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; border:1px solid #E9EEF5; background:#F8FAFC; font-size:10.5px; font-weight:700; color:#475569; white-space:nowrap;">${escapeHtml(b.label)}</span>`;
+      })
+      .join('');
+    return `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:flex-end;">${chips}</div>`;
   }
 
   // ---------------------------------------------------------------------
@@ -474,8 +491,8 @@ ${[v, c].filter(Boolean).join('\n')}
   }
 
   function buildComunicadoHtml(data) {
-    const { titulo, tituloResaltado, bajada, badgeType, bandera, bloques, vigencia, contacto, notaCierre } = data;
-    const flagHtml = bandera ? flagChip(bandera) : '';
+    const { titulo, tituloResaltado, bajada, badgeType, banderas, bloques, vigencia, contacto, notaCierre } = data;
+    const flagHtml = renderFlagsRow(banderas);
     return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -610,6 +627,154 @@ ${strippedHtml}`;
   $('#card-comunicado').addEventListener('click', () => showView('view-comunicado'));
   $$('.back-link').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); showView('view-selector'); }));
 
+  // ---------------------------------------------------------------------
+  // Listas editables con guardado en localStorage: países y contactos
+  // vienen precargados, y lo que se agrega vía "+ Agregar" queda guardado
+  // para la próxima vez que se abra esta misma herramienta en este
+  // navegador (no hay backend -- el archivo vive solo, así que el
+  // guardado es local al navegador que lo abre).
+  // ---------------------------------------------------------------------
+  const STORAGE_KEYS = { paises: 'guepardo_paises_custom_v1', contactos: 'guepardo_contactos_custom_v1' };
+
+  function loadCustomList(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  function saveCustomList(key, list) {
+    try {
+      localStorage.setItem(key, JSON.stringify(list));
+    } catch {
+      // localStorage puede fallar (modo privado, storage lleno, etc.) --
+      // la opción agregada sigue funcionando en esta sesión, solo no
+      // sobrevive a un reload. No es motivo para romper la herramienta.
+    }
+  }
+
+  // --- Países (multi-select con chips + agregar nuevo) ---
+  const BUILTIN_PAISES = Object.keys(FLAGS).map((code) => ({ code, label: FLAGS[code].label, custom: false }));
+  function getAllPaises() {
+    const custom = loadCustomList(STORAGE_KEYS.paises);
+    return [...BUILTIN_PAISES, ...custom.map((p) => ({ ...p, custom: true }))];
+  }
+  function addCustomPais(rawLabel) {
+    const label = (rawLabel || '').trim();
+    if (!label) return null;
+    const all = getAllPaises();
+    const existing = all.find((p) => p.label.toLowerCase() === label.toLowerCase());
+    if (existing) return existing;
+    const codes = new Set(all.map((p) => p.code));
+    let code = slugify(label) || 'pais';
+    let n = 1;
+    while (codes.has(code)) code = `${slugify(label) || 'pais'}-${++n}`;
+    const entry = { code, label };
+    const custom = loadCustomList(STORAGE_KEYS.paises);
+    custom.push(entry);
+    saveCustomList(STORAGE_KEYS.paises, custom);
+    return { ...entry, custom: true };
+  }
+
+  const paisesListEl = $('#paises-list');
+  const selectedPaisCodes = new Set();
+  function renderPaisesChecks() {
+    const all = getAllPaises();
+    paisesListEl.innerHTML = all
+      .map(
+        (p) => `<label class="chip-check${selectedPaisCodes.has(p.code) ? ' checked' : ''}">
+          <input type="checkbox" value="${escapeHtml(p.code)}" ${selectedPaisCodes.has(p.code) ? 'checked' : ''}>
+          ${escapeHtml(p.label)}
+        </label>`
+      )
+      .join('');
+    $$('input[type="checkbox"]', paisesListEl).forEach((cb) => {
+      cb.addEventListener('change', () => {
+        if (cb.checked) selectedPaisCodes.add(cb.value);
+        else selectedPaisCodes.delete(cb.value);
+        cb.closest('.chip-check').classList.toggle('checked', cb.checked);
+        refreshPreview();
+      });
+    });
+  }
+  $('#btn-add-pais').addEventListener('click', () => {
+    const input = $('#paisNuevoInput');
+    const entry = addCustomPais(input.value);
+    if (!entry) return;
+    input.value = '';
+    selectedPaisCodes.add(entry.code);
+    renderPaisesChecks();
+    refreshPreview();
+  });
+  $('#paisNuevoInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      $('#btn-add-pais').click();
+    }
+  });
+  function collectBanderas() {
+    const all = getAllPaises();
+    return all.filter((p) => selectedPaisCodes.has(p.code)).map((p) => ({ code: p.code, label: p.label, custom: p.custom }));
+  }
+
+  // --- Contacto de dudas (select editable con agregar nuevo) ---
+  const BUILTIN_CONTACTOS = ['Reyna Olmeda', 'Aida Treviño'];
+  function getAllContactos() {
+    return [...BUILTIN_CONTACTOS, ...loadCustomList(STORAGE_KEYS.contactos)];
+  }
+  function addCustomContacto(rawName) {
+    const name = (rawName || '').trim();
+    if (!name) return null;
+    const all = getAllContactos();
+    const existing = all.find((c) => c.toLowerCase() === name.toLowerCase());
+    if (existing) return existing;
+    const custom = loadCustomList(STORAGE_KEYS.contactos);
+    custom.push(name);
+    saveCustomList(STORAGE_KEYS.contactos, custom);
+    return name;
+  }
+  const contactoSelectEl = $('#contactoSelect');
+  function renderContactoOptions(selectValue) {
+    const all = getAllContactos();
+    contactoSelectEl.innerHTML = [
+      '<option value="">— Omitir esta sección —</option>',
+      ...all.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`),
+      '<option value="__add__">+ Agregar nuevo...</option>',
+    ].join('');
+    if (selectValue !== undefined) contactoSelectEl.value = selectValue;
+  }
+  renderContactoOptions('');
+  contactoSelectEl.addEventListener('change', () => {
+    if (contactoSelectEl.value === '__add__') {
+      $('#contacto-add-wrap').style.display = 'flex';
+      $('#contactoNuevoInput').focus();
+    } else {
+      $('#contacto-add-wrap').style.display = 'none';
+      refreshPreview();
+    }
+  });
+  $('#btn-add-contacto').addEventListener('click', () => {
+    const input = $('#contactoNuevoInput');
+    const name = addCustomContacto(input.value);
+    if (!name) return;
+    input.value = '';
+    $('#contacto-add-wrap').style.display = 'none';
+    renderContactoOptions(name);
+    refreshPreview();
+  });
+  $('#contactoNuevoInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      $('#btn-add-contacto').click();
+    }
+  });
+  function collectContacto() {
+    const v = contactoSelectEl.value;
+    return v === '__add__' ? '' : v;
+  }
+
   // --- Bloques dinamicos ---
   const ICON_OPTIONS = [
     ['check', 'Check / aprobación'], ['showroom', 'Showroom / tienda'], ['escudo', 'Escudo / contingencia'],
@@ -634,10 +799,20 @@ ${strippedHtml}`;
       </div>
       <label>Viñetas <span class="hint">(una por línea, usa **texto** para negrita)</span></label>
       <textarea class="bloque-vinetas" placeholder="Nuevo flujo dedicado para la creación de **Showrooms**...&#10;Autoriza el **Country Manager**..."></textarea>`;
-    card.querySelector('.bloque-remove').addEventListener('click', () => card.remove());
+    card.querySelector('.bloque-remove').addEventListener('click', () => {
+      card.remove();
+      refreshPreview();
+    });
+    $$('input, select, textarea', card).forEach((field) => {
+      field.addEventListener('input', refreshPreview);
+      field.addEventListener('change', refreshPreview);
+    });
     bloquesList.appendChild(card);
   }
-  $('#btn-add-bloque').addEventListener('click', addBloque);
+  $('#btn-add-bloque').addEventListener('click', () => {
+    addBloque();
+    refreshPreview();
+  });
   addBloque();
 
   $('#titulo').addEventListener('input', (e) => {
@@ -651,8 +826,11 @@ ${strippedHtml}`;
     $('#vigencia-fecha-wrap').style.display = e.target.value === 'fecha' ? 'block' : 'none';
     $('#vigencia-custom-wrap').style.display = e.target.value === 'custom' ? 'block' : 'none';
   });
-  $('#contactoSelect').addEventListener('change', (e) => {
-    $('#contacto-custom-wrap').style.display = e.target.value === '__custom__' ? 'block' : 'none';
+
+  ['titulo', 'tituloResaltado', 'bajada', 'badgeType', 'vigenciaTipo', 'vigenciaFecha', 'vigenciaCustom', 'notaCierre'].forEach((id) => {
+    const el = $(`#${id}`);
+    el.addEventListener('input', refreshPreview);
+    el.addEventListener('change', refreshPreview);
   });
 
   function collectBloques() {
@@ -663,18 +841,13 @@ ${strippedHtml}`;
       vinetas: $('.bloque-vinetas', card).value.split('\n').map((v) => v.trim()).filter(Boolean),
     }));
   }
-  function collectContacto() {
-    const sel = $('#contactoSelect').value;
-    if (sel === '__custom__') return $('#contactoCustom').value.trim();
-    return sel || '';
-  }
   function collectData() {
     return {
       titulo: $('#titulo').value.trim(),
       tituloResaltado: $('#tituloResaltado').value.trim(),
       bajada: $('#bajada').value.trim(),
       badgeType: $('#badgeType').value,
-      bandera: $('#bandera').value,
+      banderas: collectBanderas(),
       bloques: collectBloques(),
       vigencia: { tipo: $('#vigenciaTipo').value, fecha: $('#vigenciaFecha').value.trim(), custom: $('#vigenciaCustom').value.trim() },
       contacto: collectContacto(),
@@ -696,6 +869,73 @@ ${strippedHtml}`;
 
   function slugify(str) {
     return (str || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 40) || 'comunicado';
+  }
+
+  // El documento real mide 820px de ancho -- para que quepa en una tarjeta
+  // angosta (barra lateral del preview en vivo, o la tarjeta de preview de
+  // EN/PT) se renderiza a tamaño natural dentro del iframe y se escala
+  // hacia abajo con CSS transform, igual que un "zoom to fit". Se hace con
+  // polling de ".container" (no con el evento "load") para no depender de
+  // que Google Fonts termine de cargar.
+  function fitScaledIframe(iframe, wrap, tries) {
+    tries = tries || 0;
+    let doc;
+    try {
+      doc = iframe.contentDocument;
+    } catch {
+      doc = null;
+    }
+    const el = doc && doc.querySelector('.container');
+    if (el) {
+      const naturalHeight = Math.ceil(el.getBoundingClientRect().height) + 48;
+      const scale = wrap.clientWidth > 0 ? wrap.clientWidth / 820 : 1;
+      iframe.style.width = '820px';
+      iframe.style.height = `${naturalHeight}px`;
+      iframe.style.transform = `scale(${scale})`;
+      wrap.style.height = `${Math.max(120, Math.round(naturalHeight * scale))}px`;
+      return;
+    }
+    if (tries < 60) setTimeout(() => fitScaledIframe(iframe, wrap, tries + 1), 50);
+  }
+  window.addEventListener('resize', () => {
+    fitScaledIframe($('#es-preview-frame'), $('#preview-scale-wrap'));
+    ['en', 'pt'].forEach((lang) => {
+      const wrap = $(`#preview-scale-wrap-${lang}`);
+      if (wrap && wrap.offsetParent) fitScaledIframe($(`#preview-frame-${lang}`), wrap);
+    });
+  });
+
+  // El preview de la derecha se actualiza mientras se escribe (debounced,
+  // no en cada tecla) -- así se ve dónde va cada cosa sin tener que
+  // generar/regenerar a mano.
+  let previewDebounce;
+  function refreshPreview() {
+    clearTimeout(previewDebounce);
+    previewDebounce = setTimeout(() => {
+      const data = collectData();
+      currentSlug = slugify(data.titulo);
+      const rawHtml = buildComunicadoHtml(data);
+      currentEsHtmlWithPlaceholders = rawHtml;
+      currentEsHtml = resolveAssets(rawHtml, 'es').html;
+      const frame = $('#es-preview-frame');
+      frame.srcdoc = currentEsHtml;
+      fitScaledIframe(frame, $('#preview-scale-wrap'));
+    }, 200);
+  }
+
+  function validateMinimal() {
+    const statusEl = $('#es-status-msg');
+    const data = collectData();
+    if (!data.titulo) {
+      showMsg(statusEl, 'error', 'El título del comunicado es obligatorio.');
+      return false;
+    }
+    if (!data.bajada) {
+      showMsg(statusEl, 'error', 'La bajada/subtítulo es obligatoria.');
+      return false;
+    }
+    clearMsg(statusEl);
+    return true;
   }
 
   function downloadBlob(content, filename, mime) {
@@ -807,28 +1047,16 @@ ${strippedHtml}`;
     }
   }
 
-  // --- Generar ES ---
-  $('#form-comunicado').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const statusEl = $('#es-status-msg');
-    clearMsg(statusEl);
-    const data = collectData();
-    if (!data.titulo) return showMsg(statusEl, 'error', 'El título del comunicado es obligatorio.');
-    if (!data.bajada) return showMsg(statusEl, 'error', 'La bajada/subtítulo es obligatoria.');
+  // El <form> ya no se "envía" -- el preview es continuo. Se evita igual
+  // el submit nativo (Enter dentro de un input) por si acaso.
+  $('#form-comunicado').addEventListener('submit', (e) => e.preventDefault());
 
-    currentSlug = slugify(data.titulo);
-    const rawHtml = buildComunicadoHtml(data);
-    currentEsHtmlWithPlaceholders = rawHtml;
-    currentEsHtml = resolveAssets(rawHtml, 'es').html;
-
-    $('#es-preview-frame').srcdoc = currentEsHtml;
-    $('#es-preview-section').style.display = 'block';
-    showMsg(statusEl, 'ok', 'ES generado. Revisa el preview antes de traducir.');
-    $('#es-preview-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('#btn-download-html-es').addEventListener('click', () => {
+    if (!validateMinimal()) return;
+    downloadBlob(currentEsHtml, `comunicado_${currentSlug}_es.html`, 'text/html');
   });
-
-  $('#btn-download-html-es').addEventListener('click', () => downloadBlob(currentEsHtml, `comunicado_${currentSlug}_es.html`, 'text/html'));
   $('#btn-download-png-es').addEventListener('click', (e) => {
+    if (!validateMinimal()) return;
     const btn = e.currentTarget;
     btn.disabled = true;
     downloadPng(currentEsHtml, `comunicado_${currentSlug}_es.png`, $('#es-status-msg')).finally(() => (btn.disabled = false));
@@ -885,8 +1113,9 @@ ${strippedHtml}`;
       }
       const { html: withAssets, fellBack } = resolveAssets(pasted, lang);
       finalHtml = insertDisclaimer(withAssets, lang);
-      frame.srcdoc = finalHtml;
       previewSection.style.display = 'block';
+      frame.srcdoc = finalHtml;
+      fitScaledIframe(frame, $(`#preview-scale-wrap-${lang}`));
       const warn = fellBack ? ` (aviso: no hay wordmark propio para "${lang}", se usó el de ES como respaldo)` : '';
       showMsg(statusEl, 'ok', 'Preview generado.' + warn);
     });
@@ -905,7 +1134,16 @@ ${strippedHtml}`;
   setupTranslateLang('en');
   setupTranslateLang('pt');
 
-  $('#btn-goto-translate').addEventListener('click', () => showView('view-translate'));
+  $('#btn-goto-translate').addEventListener('click', () => {
+    if (!validateMinimal()) return;
+    showView('view-translate');
+  });
+
+  // --- Arranque: precargar países/contactos guardados y pintar el
+  // preview en vivo desde el primer instante (aunque esté vacío, ya se ve
+  // la estructura del comunicado). ---
+  renderPaisesChecks();
+  refreshPreview();
 })();
 </script>
 </body>
