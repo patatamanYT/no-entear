@@ -49,6 +49,10 @@ class FrameDetections:
     frame_index: int
     timestamp: float
     detections: List[Detection] = field(default_factory=list)
+    # Raw BGR frame, populated by process_video() so downstream steps (team
+    # color classification) can extract crops without re-decoding the video.
+    # Not serialized/returned to API consumers — internal pipeline use only.
+    frame_bgr: Optional[np.ndarray] = None
 
 
 class PlayerBallDetector:
@@ -163,6 +167,7 @@ class PlayerBallDetector:
                     frame_index=frame_index,
                     timestamp=frame_index / fps,
                     detections=frame_dets,
+                    frame_bgr=frame,
                 )
                 frame_index += 1
         finally:
