@@ -20,6 +20,22 @@ COCO_BALL_CLASS_ID = 32  # 'sports ball'
 
 DEFAULT_MODEL_WEIGHTS = "yolov8n.pt"
 
+# Class-specific confidence gates. The ball is a small, fast-moving, often
+# motion-blurred object that YOLO reports at much lower confidence than
+# players even when the detection is correct, so it needs its own (lower)
+# threshold rather than sharing the player gate.
+DEFAULT_CONF_PLAYER = 0.45
+DEFAULT_CONF_BALL = 0.15
+
+# ByteTrack tuned for crowded, physical-contact scenes (tackles, crowding in
+# the box): a higher activation threshold avoids spawning tracks off of weak
+# detections, a looser matching threshold tolerates the bbox distortion of a
+# player mid-tackle, and a long lost-track buffer keeps an ID alive through
+# a ~2s occlusion at 30fps instead of re-identifying as a new player.
+BYTETRACK_TRACK_ACTIVATION_THRESHOLD = 0.45
+BYTETRACK_MATCHING_THRESHOLD = 0.75
+BYTETRACK_LOST_TRACK_BUFFER = 60
+
 
 @dataclass
 class Detection:
@@ -67,14 +83,22 @@ class PlayerBallDetector:
     def __init__(
         self,
         weights_path: str = DEFAULT_MODEL_WEIGHTS,
-        confidence_threshold: float = 0.25,
+        conf_player: float = DEFAULT_CONF_PLAYER,
+        conf_ball: float = DEFAULT_CONF_BALL,
         person_class_id: int = COCO_PERSON_CLASS_ID,
         ball_class_id: int = COCO_BALL_CLASS_ID,
+        track_activation_threshold: float = BYTETRACK_TRACK_ACTIVATION_THRESHOLD,
+        matching_threshold: float = BYTETRACK_MATCHING_THRESHOLD,
+        lost_track_buffer: int = BYTETRACK_LOST_TRACK_BUFFER,
     ) -> None:
         self.weights_path = weights_path
-        self.confidence_threshold = confidence_threshold
+        self.conf_player = conf_player
+        self.conf_ball = conf_ball
         self.person_class_id = person_class_id
         self.ball_class_id = ball_class_id
+        self.track_activation_threshold = track_activation_threshold
+        self.matching_threshold = matching_threshold
+        self.lost_track_buffer = lost_track_buffer
         self._model = None
         self._tracker = None
 
@@ -85,11 +109,16 @@ class PlayerBallDetector:
             self._model = YOLO(self.weights_path)
         return self._model
 
-    def _ensure_tracker(self):
+    def _ensure_tracker(self, frame_rate: float):
         if self._tracker is None:
             import supervision as sv  # lazy import
 
-            self._tracker = sv.ByteTrack()
+            self._tracker = sv.ByteTrack(
+                track_activation_threshold=self.track_activation_threshold,
+                lost_track_buffer=self.lost_track_buffer,
+                minimum_matching_threshold=self.matching_threshold,
+                frame_rate=max(1, round(frame_rate)),
+            )
         return self._tracker
 
     def _class_name(self, class_id: int) -> Optional[str]:
@@ -98,6 +127,26 @@ class PlayerBallDetector:
         if class_id == self.ball_class_id:
             return "ball"
         return None
+
+    def _apply_class_confidence_gates(self, detections):
+        """Re-apply the real per-class confidence thresholds after inference
+        ran at the lower of the two (see process_video). Detections of any
+        other class (below the ball's own gate too) are dropped here so
+        ByteTrack never has to track classes we don't care about."""
+        n = len(detections)
+        if n == 0:
+            return detections
+
+        keep = np.zeros(n, dtype=bool)
+        confidences = detections.confidence
+        for i in range(n):
+            class_id = int(detections.class_id[i])
+            conf = float(confidences[i]) if confidences is not None else 0.0
+            if class_id == self.person_class_id:
+                keep[i] = conf >= self.conf_player
+            elif class_id == self.ball_class_id:
+                keep[i] = conf >= self.conf_ball
+        return detections[keep]
 
     def process_video(
         self, video_path: str, stride: int = 1
@@ -113,14 +162,20 @@ class PlayerBallDetector:
         import supervision as sv  # lazy import
 
         model = self._ensure_model()
-        tracker = self._ensure_tracker()
 
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             raise IOError(f"Could not open video: {video_path}")
 
         fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
+        tracker = self._ensure_tracker(frame_rate=fps)
         frame_index = 0
+
+        # Ultralytics applies one `conf` gate at inference time. To honor two
+        # different per-class thresholds we infer at the *lower* of the two
+        # (so no valid ball detection is discarded before we even see it),
+        # then re-apply each class's real threshold ourselves below.
+        infer_conf = min(self.conf_player, self.conf_ball)
 
         try:
             while True:
@@ -132,8 +187,9 @@ class PlayerBallDetector:
                     frame_index += 1
                     continue
 
-                results = model(frame, verbose=False, conf=self.confidence_threshold)[0]
+                results = model(frame, verbose=False, conf=infer_conf)[0]
                 detections = sv.Detections.from_ultralytics(results)
+                detections = self._apply_class_confidence_gates(detections)
                 detections = tracker.update_with_detections(detections)
 
                 frame_dets: List[Detection] = []

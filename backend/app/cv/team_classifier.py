@@ -14,15 +14,24 @@ module can be imported with zero heavy dependencies installed.
 """
 from __future__ import annotations
 
-from typing import Optional, Sequence
+from typing import Dict, Optional, Sequence
 
 import numpy as np
 
 # Grass hue range in OpenCV HSV (H: 0-179, S: 0-255, V: 0-255).
 GRASS_HUE_MIN = 35
-GRASS_HUE_MAX = 90
+GRASS_HUE_MAX = 85
 GRASS_SAT_MIN = 40
-GRASS_VAL_MIN = 30
+GRASS_VAL_MIN = 30  # extra robustness beyond a pure H/S gate: drops near-black
+# shadowed-grass pixels that would otherwise pass the hue/saturation test.
+
+# Upper-torso ROI as a fraction of the player bounding box: skips the head,
+# shorts/legs, and trims the sides so a neighboring player or grass bleeding
+# in from the box edges doesn't contaminate the jersey-color sample.
+TORSO_Y_MIN_FRAC = 0.15
+TORSO_Y_MAX_FRAC = 0.45
+TORSO_X_MIN_FRAC = 0.20
+TORSO_X_MAX_FRAC = 0.80
 
 
 def extract_jersey_color(crop_bgr: np.ndarray) -> np.ndarray:
@@ -41,12 +50,12 @@ def extract_jersey_color(crop_bgr: np.ndarray) -> np.ndarray:
     if h < 2 or w < 2:
         return np.zeros(3, dtype=np.float32)
 
-    # Upper-torso heuristic: skip the head (~top 15%) and legs (~below 55%),
-    # and trim the sides slightly to avoid neighboring players/background.
-    top = int(h * 0.15)
-    bottom = int(h * 0.55)
-    left = int(w * 0.15)
-    right = int(w * 0.85)
+    # Upper-torso ROI: skip the head and shorts/legs, trim the sides to
+    # avoid neighboring players/background (see TORSO_*_FRAC above).
+    top = int(h * TORSO_Y_MIN_FRAC)
+    bottom = int(h * TORSO_Y_MAX_FRAC)
+    left = int(w * TORSO_X_MIN_FRAC)
+    right = int(w * TORSO_X_MAX_FRAC)
     top, bottom = min(top, h - 1), max(bottom, top + 1)
     left, right = min(left, w - 1), max(right, left + 1)
 
@@ -81,13 +90,24 @@ def extract_jersey_color(crop_bgr: np.ndarray) -> np.ndarray:
 
 
 class TeamClassifier:
-    """Clusters player jersey-color feature vectors into 2 team clusters."""
+    """Clusters player jersey-color feature vectors into team clusters.
+
+    `n_clusters=2` is the simple two-team case. `n_clusters=3` additionally
+    separates out a third, minority cluster intended to catch referees and
+    goalkeepers, who typically wear a kit visually distinct from both
+    outfield teams — see `referee_cluster()`. This is a heuristic (it
+    assumes officials are a color-distinct minority, not e.g. a goalkeeper
+    who happens to share a team's exact jersey color) rather than a
+    guarantee, appropriate for the "best-effort without manual labeling"
+    scope of this pipeline.
+    """
 
     def __init__(self, n_clusters: int = 2, random_state: int = 42) -> None:
         self.n_clusters = n_clusters
         self.random_state = random_state
         self._model = None
         self._cluster_to_label: dict[int, int] = {}
+        self.labels_: Optional[np.ndarray] = None
 
     def fit(self, color_features: Sequence[Sequence[float]]) -> "TeamClassifier":
         from sklearn.cluster import KMeans  # lazy import
@@ -101,9 +121,22 @@ class TeamClassifier:
         model = KMeans(n_clusters=self.n_clusters, random_state=self.random_state, n_init=10)
         model.fit(X)
         self._model = model
-        # Identity mapping by default; cluster ids are already 0/1.
+        # Identity mapping by default; cluster ids are already 0..n_clusters-1.
         self._cluster_to_label = {i: i for i in range(self.n_clusters)}
+        self.labels_ = model.labels_
         return self
+
+    def referee_cluster(self) -> Optional[int]:
+        """With n_clusters=3, returns the cluster id most likely to be
+        referees/goalkeepers: the smallest of the three groups, since a
+        match has far more outfield players than officials. Returns None
+        if not fit with exactly 3 clusters."""
+        if self._model is None or self.n_clusters != 3 or self.labels_ is None:
+            return None
+        counts: Dict[int, int] = {}
+        for label in self.labels_:
+            counts[int(label)] = counts.get(int(label), 0) + 1
+        return min(counts, key=lambda c: counts[c])
 
     def predict(self, color_features: Sequence[Sequence[float]]) -> np.ndarray:
         if self._model is None:

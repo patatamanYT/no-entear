@@ -52,8 +52,9 @@ def run_real_pipeline(
 
     try:
         import cv2  # noqa: F401  (validated early: real dependency check)
+        from app.cv.ball_tracker import BallTracker
         from app.cv.detector import PlayerBallDetector
-        from app.cv.homography import PitchHomography, default_pitch_corners
+        from app.cv.homography import PitchHomography, PositionSmoother, default_pitch_corners
         from app.cv.team_classifier import TeamClassifier, extract_jersey_color
     except ImportError as exc:
         raise RuntimeError(
@@ -72,15 +73,16 @@ def run_real_pipeline(
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) or 1080
     cap.release()
 
+    pitch_bounds = (0.0, 0.0, PITCH_LENGTH_M, PITCH_WIDTH_M)
     homography = PitchHomography()
     if homography_src_points and homography_dst_points:
-        homography.fit(homography_src_points, homography_dst_points)
+        homography.fit(homography_src_points, homography_dst_points, bounds=pitch_bounds)
     else:
         # Coarse fallback: map the whole video frame to the whole pitch.
         # Accurate results require real calibration points from the caller.
         src = [(0.0, 0.0), (width, 0.0), (width, height), (0.0, height)]
         dst = default_pitch_corners(PITCH_LENGTH_M, PITCH_WIDTH_M)
-        homography.fit(src, dst)
+        homography.fit(src, dst, bounds=pitch_bounds)
 
     try:
         detector = PlayerBallDetector()
@@ -113,12 +115,22 @@ def run_real_pipeline(
     import numpy as np
 
     mean_colors = {tid: np.mean(samples, axis=0) for tid, samples in track_color_samples.items()}
-    classifier = TeamClassifier(n_clusters=2)
+
+    # 3-way clustering when there are enough distinct tracks to support it:
+    # 2 outfield teams + a 3rd, minority cluster for referees/goalkeepers
+    # (see TeamClassifier.referee_cluster). Falls back to a plain 2-way split
+    # on very short/small clips where a 3rd cluster wouldn't be meaningful.
+    use_three_way = len(track_ids) >= 6
+    classifier = TeamClassifier(n_clusters=3 if use_three_way else 2)
     labels = classifier.fit_predict([mean_colors[tid] for tid in track_ids])
     track_to_cluster = dict(zip(track_ids, labels))
+    referee_cluster = classifier.referee_cluster() if use_three_way else None
 
-    # Canonical team labeling: cluster with the lower average projected X at
-    # first appearance is called "A" (mirrors the mock-data convention).
+    # Canonical team labeling: of the two *outfield* clusters, the one with
+    # the lower average projected X at first appearance is called "A"
+    # (mirrors the mock-data convention). The referee cluster (if any) maps
+    # straight to team "REF".
+    outfield_clusters = [c for c in set(track_to_cluster.values()) if c != referee_cluster]
     cluster_x_sum: Dict[int, float] = defaultdict(float)
     cluster_x_count: Dict[int, int] = defaultdict(int)
     for fd in raw_frames:
@@ -127,19 +139,25 @@ def run_real_pipeline(
         for det in fd.detections:
             if det.class_name != "person" or det.track_id not in track_to_cluster:
                 continue
-            pitch_xy = homography.transform([det.foot_point])[0]
             cluster = int(track_to_cluster[det.track_id])
+            if cluster not in outfield_clusters:
+                continue
+            pitch_xy = homography.transform([det.foot_point])[0]
             cluster_x_sum[cluster] += float(pitch_xy[0])
             cluster_x_count[cluster] += 1
     cluster_avg_x = {
         c: (cluster_x_sum[c] / cluster_x_count[c] if cluster_x_count[c] else PITCH_LENGTH_M / 2)
-        for c in (0, 1)
+        for c in outfield_clusters
     }
-    sorted_clusters = sorted(cluster_avg_x, key=lambda c: cluster_avg_x[c])
-    cluster_to_team = {sorted_clusters[0]: "A", sorted_clusters[1]: "B"}
+    sorted_outfield = sorted(outfield_clusters, key=lambda c: cluster_avg_x[c])
+    cluster_to_team = {sorted_outfield[0]: "A"}
+    if len(sorted_outfield) > 1:
+        cluster_to_team[sorted_outfield[-1]] = "B"
+    if referee_cluster is not None:
+        cluster_to_team[referee_cluster] = "REF"
     track_to_team = {tid: cluster_to_team[int(c)] for tid, c in track_to_cluster.items()}
 
-    jersey_counter = {"A": 0, "B": 0}
+    jersey_counter = {"A": 0, "B": 0, "REF": 0}
     track_to_player_id: Dict[int, str] = {}
     players_meta: List[dict] = []
     for tid in track_ids:
@@ -147,49 +165,62 @@ def run_real_pipeline(
         jersey_counter[team] += 1
         pid = f"{team}{jersey_counter[team]}"
         track_to_player_id[tid] = pid
+        name = "Referee" if team == "REF" and jersey_counter[team] == 1 else f"Player {pid}"
         players_meta.append(
-            {"id": pid, "team": team, "jersey_number": jersey_counter[team], "name": f"Player {pid}"}
+            {"id": pid, "team": team, "jersey_number": jersey_counter[team], "name": name}
         )
 
-    # --- Build per-frame pitch-coordinate frames ----------------------------
-    frames: List[dict] = []
+    # --- Pass 1: project players (smoothed) + collect raw ball candidates ---
+    position_smoother = PositionSmoother(window=4)
     last_positions: Dict[str, Tuple[float, float]] = {}
-    last_ball: Tuple[float, float] = (PITCH_LENGTH_M / 2, PITCH_WIDTH_M / 2)
+    per_frame_players: List[List[dict]] = []
+    per_frame_player_xy: List[Dict[str, Tuple[float, float]]] = []
+    per_frame_ball_candidates: List[List[Tuple[float, float, float]]] = []
+    frame_times: List[float] = []
 
     for fd in raw_frames:
-        players_frame = []
-        ball_xy = None
-        best_ball_conf = -1.0
+        players_frame: List[dict] = []
+        player_xy: Dict[str, Tuple[float, float]] = {}
 
         person_dets = [d for d in fd.detections if d.class_name == "person" and d.track_id in track_to_player_id]
         ball_dets = [d for d in fd.detections if d.class_name == "ball"]
 
         if person_dets:
             pts = [d.foot_point for d in person_dets]
-            pitch_pts = homography.transform(pts)
+            pitch_pts = homography.transform(pts)  # already clamped to pitch bounds
             for det, (px, py) in zip(person_dets, pitch_pts):
                 pid = track_to_player_id[det.track_id]
-                x = float(np.clip(px, 0.0, PITCH_LENGTH_M))
-                y = float(np.clip(py, 0.0, PITCH_WIDTH_M))
+                x, y = position_smoother.smooth(det.track_id, float(px), float(py))
                 prev = last_positions.get(pid, (x, y))
                 v = math.hypot(x - prev[0], y - prev[1]) * fps
                 players_frame.append({"id": pid, "x": x, "y": y, "v": float(v)})
                 last_positions[pid] = (x, y)
+                player_xy[pid] = (x, y)
 
-        for det in ball_dets:
-            if det.confidence > best_ball_conf:
-                best_ball_conf = det.confidence
-                pitch_pt = homography.transform([det.center])[0]
-                ball_xy = (
-                    float(np.clip(pitch_pt[0], 0.0, PITCH_LENGTH_M)),
-                    float(np.clip(pitch_pt[1], 0.0, PITCH_WIDTH_M)),
-                )
+        ball_candidates: List[Tuple[float, float, float]] = []
+        if ball_dets:
+            centers = [d.center for d in ball_dets]
+            ball_pts = homography.transform(centers)  # already clamped to pitch bounds
+            for det, (bx, by) in zip(ball_dets, ball_pts):
+                ball_candidates.append((float(bx), float(by), det.confidence))
 
+        per_frame_players.append(players_frame)
+        per_frame_player_xy.append(player_xy)
+        per_frame_ball_candidates.append(ball_candidates)
+        frame_times.append(fd.timestamp)
+
+    # --- Pass 2: resolve one ball position per frame (kinematic gating +
+    # short-gap interpolation + possession anchoring on occlusion) ----------
+    ball_tracker = BallTracker()
+    resolved_ball = ball_tracker.resolve(per_frame_ball_candidates, frame_times, per_frame_player_xy)
+
+    last_ball: Tuple[float, float] = (PITCH_LENGTH_M / 2, PITCH_WIDTH_M / 2)
+    frames: List[dict] = []
+    for fd, players_frame, ball_xy in zip(raw_frames, per_frame_players, resolved_ball):
         if ball_xy is None:
-            ball_xy = last_ball
+            ball_xy = last_ball  # unresolved gap (clip start, or too long) -> hold
         else:
             last_ball = ball_xy
-
         frames.append(
             {
                 "frame": fd.frame_index,
