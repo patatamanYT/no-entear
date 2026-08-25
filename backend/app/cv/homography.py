@@ -2,7 +2,8 @@
 Pitch calibration via 4-point (or N-point) homography.
 
 Maps pixel coordinates (u, v) from a broadcast/tactical camera view to
-real-world pitch coordinates (X in [0, 105], Y in [0, 68]) in meters.
+real-world pitch coordinates (X in [0, 60], Y in [0, 40] for a fútbol 7
+pitch) in meters.
 
 `cv2` is imported lazily inside methods so that importing this module (and
 therefore `app.main` / the mock-data flow) never requires OpenCV to be
@@ -82,7 +83,7 @@ class PitchHomography:
         return float(result[0, 0]), float(result[0, 1])
 
 
-def default_pitch_corners(pitch_length: float = 105.0, pitch_width: float = 68.0):
+def default_pitch_corners(pitch_length: float = 60.0, pitch_width: float = 40.0):
     """Convenience: the 4 pitch-coordinate corners in a fixed order
     (top-left, top-right, bottom-right, bottom-left) matching a typical
     manual 4-point pixel calibration click order.

@@ -40,38 +40,39 @@ interface RosterEntry extends PlayerMeta {
   phase: number;
 }
 
+// Positions fit a 60x40m fútbol 7 pitch (goal mouth Y in [17, 23]).
 const roster: RosterEntry[] = [
-  { id: "a1", team: "A", jersey_number: 1, name: "A. Keeper", base: { x: 5, y: 34 }, ampX: 1.5, ampY: 2, freq: 0.4, phase: 0 },
-  { id: "a2", team: "A", jersey_number: 2, name: "A. Rios", base: { x: 20, y: 20 }, ampX: 4, ampY: 3, freq: 0.55, phase: 0.6 },
-  { id: "a3", team: "A", jersey_number: 3, name: "A. Diallo", base: { x: 20, y: 48 }, ampX: 4, ampY: 5, freq: 0.5, phase: 1.4 },
-  { id: "a4", team: "A", jersey_number: 8, name: "A. Silva", base: { x: 40, y: 34 }, ampX: 6, ampY: 4, freq: 0.6, phase: 2.1 },
-  { id: "a5", team: "A", jersey_number: 9, name: "A. Torres", base: { x: 55, y: 34 }, ampX: 6, ampY: 6, freq: 0.65, phase: 0.3 },
-  { id: "b1", team: "B", jersey_number: 1, name: "B. Keeper", base: { x: 100, y: 34 }, ampX: 1.5, ampY: 2, freq: 0.4, phase: 0.2 },
-  { id: "b2", team: "B", jersey_number: 4, name: "B. Novak", base: { x: 85, y: 20 }, ampX: 4, ampY: 3, freq: 0.5, phase: 1.1 },
-  { id: "b3", team: "B", jersey_number: 5, name: "B. Costa", base: { x: 85, y: 48 }, ampX: 4, ampY: 5, freq: 0.55, phase: 2.4 },
-  { id: "b4", team: "B", jersey_number: 6, name: "B. Haas", base: { x: 65, y: 34 }, ampX: 8, ampY: 5, freq: 0.6, phase: 0.9 },
-  { id: "b5", team: "B", jersey_number: 11, name: "B. Yilmaz", base: { x: 50, y: 30 }, ampX: 6, ampY: 5, freq: 0.7, phase: 1.8 },
-  { id: "r1", team: "REF", jersey_number: 0, name: "Referee", base: { x: 52, y: 40 }, ampX: 10, ampY: 6, freq: 0.3, phase: 0.5 },
+  { id: "a1", team: "A", jersey_number: 1, name: "A. Keeper", base: { x: 3, y: 20 }, ampX: 1, ampY: 1.5, freq: 0.4, phase: 0 },
+  { id: "a2", team: "A", jersey_number: 2, name: "A. Rios", base: { x: 11, y: 12 }, ampX: 2.5, ampY: 2, freq: 0.55, phase: 0.6 },
+  { id: "a3", team: "A", jersey_number: 3, name: "A. Diallo", base: { x: 11, y: 28 }, ampX: 2.5, ampY: 3, freq: 0.5, phase: 1.4 },
+  { id: "a4", team: "A", jersey_number: 8, name: "A. Silva", base: { x: 23, y: 20 }, ampX: 3.5, ampY: 2.5, freq: 0.6, phase: 2.1 },
+  { id: "a5", team: "A", jersey_number: 9, name: "A. Torres", base: { x: 31, y: 20 }, ampX: 3.5, ampY: 3.5, freq: 0.65, phase: 0.3 },
+  { id: "b1", team: "B", jersey_number: 1, name: "B. Keeper", base: { x: 57, y: 20 }, ampX: 1, ampY: 1.5, freq: 0.4, phase: 0.2 },
+  { id: "b2", team: "B", jersey_number: 4, name: "B. Novak", base: { x: 49, y: 12 }, ampX: 2.5, ampY: 2, freq: 0.5, phase: 1.1 },
+  { id: "b3", team: "B", jersey_number: 5, name: "B. Costa", base: { x: 49, y: 28 }, ampX: 2.5, ampY: 3, freq: 0.55, phase: 2.4 },
+  { id: "b4", team: "B", jersey_number: 6, name: "B. Haas", base: { x: 37, y: 20 }, ampX: 4.5, ampY: 3, freq: 0.6, phase: 0.9 },
+  { id: "b5", team: "B", jersey_number: 11, name: "B. Yilmaz", base: { x: 28, y: 17 }, ampX: 3.5, ampY: 3, freq: 0.7, phase: 1.8 },
+  { id: "r1", team: "REF", jersey_number: 0, name: "Referee", base: { x: 30, y: 23 }, ampX: 5.5, ampY: 3.5, freq: 0.3, phase: 0.5 },
 ];
 
 // --- Ball waypoints (frame index -> pitch position) --------------------
 // Scripted so the ball's motion lines up with the passes/shot below.
 const ballWaypoints: Array<[number, number, number]> = [
-  [0, 40, 34],
-  [9, 40, 34],
-  [10, 40, 34], // pass 1 start (a4 -> a5)
-  [14, 55, 34], // pass 1 end
-  [19, 60, 30], // dribble
-  [20, 60, 30], // pass 2 start (a5 -> a3)
-  [24, 20, 48], // pass 2 end
-  [25, 20, 48], // pass 3 start (a3 -> a4, intercepted)
-  [28, 55, 36], // intercepted by b4
-  [34, 50, 30], // counter to b5
-  [35, 50, 30], // shot start
-  [36, 37, 32],
-  [37, 25, 33],
-  [38, 12, 33.5],
-  [39, 0, 34], // goal
+  [0, 23, 20],
+  [9, 23, 20],
+  [10, 23, 20], // pass 1 start (a4 -> a5)
+  [14, 31, 20], // pass 1 end
+  [19, 34, 17], // dribble
+  [20, 34, 17], // pass 2 start (a5 -> a3)
+  [24, 11, 28], // pass 2 end
+  [25, 11, 28], // pass 3 start (a3 -> a4, intercepted)
+  [28, 33, 21], // intercepted by b4
+  [34, 28, 17], // counter to b5
+  [35, 28, 17], // shot start
+  [36, 21, 18],
+  [37, 14, 19],
+  [38, 7, 19.5],
+  [39, 0, 20], // goal
 ];
 
 function ballAt(frame: number): Point2D {
@@ -128,8 +129,8 @@ const passes: MatchData["passes"] = [
     to_player: "a5",
     team: "A",
     status: "completed",
-    start: { x: 40, y: 34 },
-    end: { x: 55, y: 34 },
+    start: { x: 23, y: 20 },
+    end: { x: 31, y: 20 },
   },
   {
     id: "pass-2",
@@ -141,8 +142,8 @@ const passes: MatchData["passes"] = [
     to_player: "a3",
     team: "A",
     status: "completed",
-    start: { x: 60, y: 30 },
-    end: { x: 20, y: 48 },
+    start: { x: 34, y: 17 },
+    end: { x: 11, y: 28 },
   },
   {
     id: "pass-3",
@@ -154,8 +155,8 @@ const passes: MatchData["passes"] = [
     to_player: null,
     team: "A",
     status: "intercepted",
-    start: { x: 20, y: 48 },
-    end: { x: 55, y: 36 },
+    start: { x: 11, y: 28 },
+    end: { x: 33, y: 21 },
   },
 ];
 
@@ -166,10 +167,10 @@ const shots: MatchData["shots"] = [
     t: 7.0,
     player: "b5",
     team: "B",
-    start: { x: 50, y: 30 },
-    end: { x: 0, y: 34 },
+    start: { x: 28, y: 17 },
+    end: { x: 0, y: 20 },
     outcome: "goal",
-    velocity: 27.5,
+    velocity: 16.0,
   },
 ];
 

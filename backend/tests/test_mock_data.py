@@ -16,7 +16,7 @@ def test_mock_match_validates_against_schema():
 def test_mock_match_shape():
     match = generate_mock_match(n_frames=50, fps=10.0, seed=1)
 
-    assert len(match.players) == 23  # 11 + 11 + 1 referee
+    assert len(match.players) == 15  # 7 + 7 + 1 referee (futbol 7)
     assert len(match.frames) == 50
     assert match.frames[0].frame == 0
     assert match.frames[-1].frame == 49
@@ -24,15 +24,15 @@ def test_mock_match_shape():
     team_a = [p for p in match.players if p.team == "A"]
     team_b = [p for p in match.players if p.team == "B"]
     refs = [p for p in match.players if p.team == "REF"]
-    assert len(team_a) == 11
-    assert len(team_b) == 11
+    assert len(team_a) == 7
+    assert len(team_b) == 7
     assert len(refs) == 1
 
     # heatmaps: one per player + team_A + team_B
-    assert len(match.heatmaps) == 23 + 2
+    assert len(match.heatmaps) == 15 + 2
     for key, matrix in match.heatmaps.items():
-        assert len(matrix) == 68
-        assert len(matrix[0]) == 105
+        assert len(matrix) == 40
+        assert len(matrix[0]) == 60
         assert all(0.0 <= v <= 1.0 for row in matrix for v in row)
 
 

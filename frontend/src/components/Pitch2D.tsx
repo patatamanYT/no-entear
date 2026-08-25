@@ -8,16 +8,19 @@ import { GOAL_Y_MAX, GOAL_Y_MIN } from "@/types/match";
 const LINE = "rgba(226,232,240,0.5)";
 const LINE_STRONG = "rgba(226,232,240,0.65)";
 
-const PEN_BOX_DEPTH = 16.5;
-const PEN_BOX_Y_MIN = (PITCH_VB_HEIGHT - 40.32) / 2;
+// Fútbol 7 (60x40m pitch, 6x2m goal) marking proportions — there is no
+// single universal regulation like 11-a-side's 105x68, so these are
+// reasonable, commonly used fútbol 7 dimensions, not a literal standard.
+const PEN_BOX_DEPTH = 9;
+const PEN_BOX_Y_MIN = (PITCH_VB_HEIGHT - 24) / 2;
 const PEN_BOX_Y_MAX = PITCH_VB_HEIGHT - PEN_BOX_Y_MIN;
-const SIX_YD_DEPTH = 5.5;
-const SIX_YD_Y_MIN = (PITCH_VB_HEIGHT - 18.32) / 2;
+const SIX_YD_DEPTH = 3;
+const SIX_YD_Y_MIN = (PITCH_VB_HEIGHT - 11) / 2;
 const SIX_YD_Y_MAX = PITCH_VB_HEIGHT - SIX_YD_Y_MIN;
-const PEN_SPOT_X_LEFT = 11;
-const PEN_SPOT_X_RIGHT = PITCH_VB_WIDTH - 11;
-const ARC_R = 9.15;
-const CENTER_R = 9.15;
+const PEN_SPOT_X_LEFT = 7;
+const PEN_SPOT_X_RIGHT = PITCH_VB_WIDTH - 7;
+const ARC_R = 5.5;
+const CENTER_R = 5.5;
 
 function penaltyArcPath(spotX: number, side: "left" | "right"): string {
   const boxEdge = side === "left" ? PEN_BOX_DEPTH : PITCH_VB_WIDTH - PEN_BOX_DEPTH;

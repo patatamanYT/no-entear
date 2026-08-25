@@ -1,10 +1,11 @@
 """
 Player/team positional heatmaps.
 
-Builds a 68 (Y, rows) x 105 (X, cols) matrix at 1m resolution from a set of
-pitch-coordinate samples, using a Gaussian-blurred 2D histogram (robust to
-sparse/degenerate point sets, unlike `scipy.stats.gaussian_kde` which can be
-singular on collinear or near-duplicate points).
+Builds a HEATMAP_ROWS (Y) x HEATMAP_COLS (X) matrix at 1m resolution — 40x60
+for the fútbol 7 pitch this app targets — from a set of pitch-coordinate
+samples, using a Gaussian-blurred 2D histogram (robust to sparse/degenerate
+point sets, unlike `scipy.stats.gaussian_kde` which can be singular on
+collinear or near-duplicate points).
 
 Only numpy/scipy are required — these are part of the core (non-lazy) mock
 flow dependency set, so they're imported normally at module level.

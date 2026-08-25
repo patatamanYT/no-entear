@@ -51,15 +51,16 @@ def test_intercepted_pass_opposing_team():
 
 
 def test_shot_toward_goal_scores():
+    # Fútbol 7 pitch: 60x40m, goal mouth Y in [17, 23], goal line at X=60.
     players_meta = [
         {"id": "A9", "team": "A", "jersey_number": 9, "name": "A9"},
         {"id": "B1", "team": "B", "jersey_number": 1, "name": "B1"},
     ]
     frames = [
-        {"frame": 0, "t": 0.0, "ball": {"x": 90, "y": 34}, "players": [_player("A9", 90, 34), _player("B1", 100, 10)]},
-        {"frame": 1, "t": 0.1, "ball": {"x": 90, "y": 34}, "players": [_player("A9", 90, 34), _player("B1", 100, 10)]},
-        {"frame": 2, "t": 0.2, "ball": {"x": 94, "y": 34}, "players": [_player("A9", 90, 34), _player("B1", 100, 10)]},
-        {"frame": 3, "t": 0.3, "ball": {"x": 100, "y": 34}, "players": [_player("A9", 90, 34), _player("B1", 100, 10)]},
+        {"frame": 0, "t": 0.0, "ball": {"x": 50, "y": 20}, "players": [_player("A9", 50, 20), _player("B1", 55, 5)]},
+        {"frame": 1, "t": 0.1, "ball": {"x": 50, "y": 20}, "players": [_player("A9", 50, 20), _player("B1", 55, 5)]},
+        {"frame": 2, "t": 0.2, "ball": {"x": 54, "y": 20}, "players": [_player("A9", 50, 20), _player("B1", 55, 5)]},
+        {"frame": 3, "t": 0.3, "ball": {"x": 58, "y": 20}, "players": [_player("A9", 50, 20), _player("B1", 55, 5)]},
     ]
 
     passes, shots = compute_events(frames, players_meta)

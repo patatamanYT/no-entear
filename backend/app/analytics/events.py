@@ -22,7 +22,7 @@ from app.schemas import (
 POSSESSION_RADIUS_M = 1.2
 PASS_VELOCITY_THRESHOLD_MS = 4.0
 SHOT_VELOCITY_THRESHOLD_MS = 12.0
-SHOT_MAX_RANGE_M = 45.0
+SHOT_MAX_RANGE_M = 28.0  # scaled for a fútbol 7 (60x40m) pitch
 BLOCK_DISTANCE_M = 1.0
 GOAL_Y_CENTER = (GOAL_Y_MIN + GOAL_Y_MAX) / 2.0
 GOAL_MOUTH_WIDTH = GOAL_Y_MAX - GOAL_Y_MIN
@@ -118,7 +118,7 @@ def _runs(possessors: Sequence[Optional[str]]) -> List[Tuple[int, int, Optional[
 def infer_attacking_directions(
     frames: Sequence[dict], team_of_player: Dict[str, str]
 ) -> Dict[str, int]:
-    """Infer +1 (attacks toward X=105) or -1 (attacks toward X=0) per team,
+    """Infer +1 (attacks toward X=60) or -1 (attacks toward X=0) per team,
     from which half of the pitch each team's players spend most time in."""
     sums: Dict[str, float] = {}
     counts: Dict[str, int] = {}

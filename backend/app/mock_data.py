@@ -1,10 +1,11 @@
 """
 Synthetic match generator.
 
-Produces a realistic ~30 second, ~10 fps synthetic football match: 2 teams of
-11 players in a 4-4-2 formation + 1 referee, with smooth noise-perturbed
-formation movement and a continuous ball trajectory that moves between
-players' feet with occasional fast passes and a handful of shots on goal.
+Produces a realistic ~30 second, ~10 fps synthetic fútbol 7 (7-a-side) match:
+2 teams of 7 players in a 1-2-3-1 formation + 1 referee, on a 60x40m pitch,
+with smooth noise-perturbed formation movement and a continuous ball
+trajectory that moves between players' feet with occasional fast passes and
+a handful of shots on goal.
 
 Passes, shots, and heatmaps are DERIVED from the simulated trajectories by
 running them through `app.analytics.events` and `app.analytics.heatmaps` —
@@ -42,20 +43,17 @@ DEFAULT_SEED = 42
 TEAM_COLORS = {"A": "#e63946", "B": "#1d3557"}
 TEAM_NAMES = {"A": "Home FC", "B": "Away United"}
 
-# 4-4-2 formation, defined for the side that defends X=0 / attacks X=105.
-# (role, x, y) — mirrored (105 - x, y) for the side attacking X=0.
-_FORMATION_442: List[Tuple[str, float, float]] = [
-    ("GK", 6.0, 34.0),
-    ("DF", 18.0, 8.0),
-    ("DF", 16.0, 26.0),
-    ("DF", 16.0, 42.0),
-    ("DF", 18.0, 60.0),
-    ("MF", 40.0, 12.0),
-    ("MF", 36.0, 28.0),
-    ("MF", 36.0, 40.0),
-    ("MF", 40.0, 56.0),
-    ("FW", 58.0, 26.0),
-    ("FW", 58.0, 42.0),
+# Fútbol 7 1-2-3-1 formation (GK + 2 DF + 3 MF + 1 FW), defined for the side
+# that defends X=0 / attacks X=60 on a 60x40m pitch.
+# (role, x, y) — mirrored (60 - x, y) for the side attacking X=0.
+_FORMATION_1231: List[Tuple[str, float, float]] = [
+    ("GK", 4.0, 20.0),
+    ("DF", 14.0, 10.0),
+    ("DF", 14.0, 30.0),
+    ("MF", 28.0, 8.0),
+    ("MF", 26.0, 20.0),
+    ("MF", 28.0, 32.0),
+    ("FW", 45.0, 20.0),
 ]
 
 
@@ -67,7 +65,7 @@ def _build_roster() -> Tuple[List[dict], Dict[str, Tuple[float, float]], Dict[st
     team_of: Dict[str, str] = {}
 
     for side in ("A", "B"):
-        for jersey, (role, x, y) in enumerate(_FORMATION_442, start=1):
+        for jersey, (role, x, y) in enumerate(_FORMATION_1231, start=1):
             pid = f"{side}{jersey}"
             bx = x if side == "A" else PITCH_LENGTH_M - x
             by = y
@@ -184,9 +182,9 @@ def _simulate_ball_trajectory(
         dist_to_goal = abs(goal_x - cur[0])
 
         shoot_prob = 0.0
-        if role == "FW" and dist_to_goal < 32:
+        if role == "FW" and dist_to_goal < 18:
             shoot_prob = 0.40
-        elif role == "MF" and dist_to_goal < 24:
+        elif role == "MF" and dist_to_goal < 13:
             shoot_prob = 0.15
 
         if rng.random() < shoot_prob:

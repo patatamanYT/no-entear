@@ -1,8 +1,9 @@
 /**
- * Coordinate transform between pitch-meter space (0..105 x, 0..68 y, origin
+ * Coordinate transform between pitch-meter space (0..60 x, 0..40 y, origin
  * bottom-left / top-left depending on consumer) and SVG viewBox space.
  *
- * We render the pitch in an SVG with viewBox "0 0 W H" where W:H == 105:68.
+ * We render the pitch in an SVG with viewBox "0 0 W H" where W:H == 60:40
+ * (fútbol 7).
  * Pitch meters map 1:1 onto viewBox units, so the transform is a simple
  * identity + optional Y-flip. We keep Y not flipped (SVG y grows downward,
  * same as row-major heatmap data where row 0 = y near 0) so heatmap rows and

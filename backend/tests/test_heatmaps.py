@@ -3,10 +3,10 @@ from app.schemas import HEATMAP_COLS, HEATMAP_ROWS
 
 
 def test_compute_heatmap_shape_and_range():
-    points = [(10.0, 20.0), (10.5, 20.5), (11.0, 19.5), (50.0, 34.0)]
+    points = [(10.0, 15.0), (10.5, 15.5), (11.0, 14.5), (30.0, 20.0)]
     matrix = compute_heatmap(points)
-    assert len(matrix) == HEATMAP_ROWS == 68
-    assert all(len(row) == HEATMAP_COLS == 105 for row in matrix)
+    assert len(matrix) == HEATMAP_ROWS == 40
+    assert all(len(row) == HEATMAP_COLS == 60 for row in matrix)
     flat = [v for row in matrix for v in row]
     assert max(flat) == 1.0  # normalized
     assert all(0.0 <= v <= 1.0 for v in flat)
@@ -14,8 +14,8 @@ def test_compute_heatmap_shape_and_range():
 
 def test_compute_heatmap_empty_points():
     matrix = compute_heatmap([])
-    assert len(matrix) == 68
-    assert len(matrix[0]) == 105
+    assert len(matrix) == 40
+    assert len(matrix[0]) == 60
     assert all(v == 0.0 for row in matrix for v in row)
 
 
@@ -28,10 +28,10 @@ def test_compute_all_heatmaps_keys_and_shapes():
         {
             "frame": i,
             "t": i * 0.1,
-            "ball": {"x": 50.0, "y": 34.0},
+            "ball": {"x": 30.0, "y": 20.0},
             "players": [
-                {"id": "A1", "x": 10.0 + i, "y": 20.0, "v": 1.0},
-                {"id": "B1", "x": 90.0 - i, "y": 40.0, "v": 1.0},
+                {"id": "A1", "x": 10.0 + i, "y": 12.0, "v": 1.0},
+                {"id": "B1", "x": 50.0 - i, "y": 25.0, "v": 1.0},
             ],
         }
         for i in range(5)
@@ -41,8 +41,8 @@ def test_compute_all_heatmaps_keys_and_shapes():
 
     assert set(heatmaps.keys()) == {"player_A1", "player_B1", "team_A", "team_B"}
     for matrix in heatmaps.values():
-        assert len(matrix) == 68
-        assert len(matrix[0]) == 105
+        assert len(matrix) == 40
+        assert len(matrix[0]) == 60
         for row in matrix:
             for v in row:
                 assert 0.0 <= v <= 1.0

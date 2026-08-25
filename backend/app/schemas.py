@@ -13,13 +13,17 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-PITCH_LENGTH_M = 105.0
-PITCH_WIDTH_M = 68.0
-GOAL_Y_MIN = 30.66
-GOAL_Y_MAX = 37.34
+# Fútbol 7 (7-a-side) pitch: this deployment only ever analyzes fútbol 7
+# matches, so these are the fixed, real dimensions (not 11-a-side 105x68).
+# Common fútbol 7 standard: 60m x 40m pitch, 6m x 2m goals.
+PITCH_LENGTH_M = 60.0
+PITCH_WIDTH_M = 40.0
+GOAL_WIDTH_M = 6.0
+GOAL_Y_MIN = (PITCH_WIDTH_M - GOAL_WIDTH_M) / 2  # 17.0
+GOAL_Y_MAX = (PITCH_WIDTH_M + GOAL_WIDTH_M) / 2  # 23.0
 
-HEATMAP_COLS = 105  # X bins, 1m resolution
-HEATMAP_ROWS = 68   # Y bins, 1m resolution
+HEATMAP_COLS = 60  # X bins, 1m resolution
+HEATMAP_ROWS = 40  # Y bins, 1m resolution
 
 
 class Team(str, Enum):

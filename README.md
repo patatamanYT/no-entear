@@ -1,6 +1,8 @@
 # Tactical Football Analytics
 
-A full-stack tactical video analytics platform for football (soccer) match clips. It extracts 2D bird's-eye tracking data from broadcast-style video using computer vision (YOLO + ByteTrack + homography + jersey-color team clustering), computes possession/pass/shot events and heatmaps, and renders it all in an interactive dark-mode dashboard synced to the source video.
+A full-stack tactical video analytics platform for **fútbol 7** (7-a-side) match clips. It extracts 2D bird's-eye tracking data from video using computer vision (YOLO + ByteTrack + homography + jersey-color team clustering), computes possession/pass/shot events and heatmaps, and renders it all in an interactive dark-mode dashboard synced to the source video.
+
+The pitch is modeled as a 60m x 40m fútbol 7 field (6m x 2m goals), not an 11-a-side 105x68 pitch — see `PITCH_LENGTH_M`/`PITCH_WIDTH_M` in `backend/app/schemas.py` (mirrored in `frontend/src/types/match.ts`) if your fields use different dimensions.
 
 A synthetic 30-second match generator is included so the full dashboard works immediately, with zero GPU/model setup.
 
@@ -12,11 +14,11 @@ no-entear/
 │   └── app/
 │       ├── cv/
 │       │   ├── detector.py          YOLO detection + ByteTrack multi-object tracking
-│       │   ├── homography.py        4-point pixel → pitch-meter (105×68) transform
+│       │   ├── homography.py        4-point pixel → pitch-meter (60×40) transform
 │       │   └── team_classifier.py   Jersey color extraction + K-Means team clustering
 │       ├── analytics/
 │       │   ├── events.py            Possession / pass / shot heuristics
-│       │   └── heatmaps.py          2D Gaussian KDE heatmap grids (68×105, 1m bins)
+│       │   └── heatmaps.py          2D Gaussian KDE heatmap grids (40×60, 1m bins)
 │       ├── storage/                 Uploaded videos + generated match JSON
 │       ├── mock_data.py             Synthetic match generator (CLI + importable)
 │       ├── schemas.py               Pydantic data contract (source of truth)
@@ -25,7 +27,7 @@ no-entear/
 └── frontend/                 Next.js 14 + TypeScript + Tailwind CSS
     └── src/
         ├── components/
-        │   ├── Pitch2D.tsx           SVG pitch (105:68) with live player/ball dots
+        │   ├── Pitch2D.tsx           SVG pitch (60:40, fútbol 7) with live player/ball dots
         │   ├── HeatmapCanvas.tsx     Canvas density overlay from KDE matrices
         │   ├── EventOverlay.tsx      Pass arrows + shot trajectories
         │   ├── VideoSyncPlayer.tsx   Video/timeline playback, frame-synced with the pitch
@@ -53,7 +55,7 @@ This installs backend + frontend dependencies (first run only) and starts:
 - Backend: http://localhost:8000 (interactive docs at `/docs`)
 - Frontend: http://localhost:3000
 
-On first request, the backend automatically generates a synthetic 30-second match (23 tracked players + referee, realistic passes/shots/heatmaps) so the dashboard is populated with zero manual steps. Open http://localhost:3000 to explore it.
+On first request, the backend automatically generates a synthetic 30-second fútbol 7 match (14 tracked players + referee, realistic passes/shots/heatmaps) so the dashboard is populated with zero manual steps. Open http://localhost:3000 to explore it.
 
 Stop both servers with `Ctrl+C`.
 
@@ -99,8 +101,8 @@ Full request/response shapes: `backend/app/schemas.py`.
 
 - **Possession:** a player controls the ball when `distance(ball, player) ≤ 1.2m`.
 - **Pass:** ball leaves a player at `>4 m/s` and is next possessed by a teammate (completed) or opponent (intercepted).
-- **Shot:** ball travels at `>12 m/s` toward a goal mouth (`X → 0` or `X → 105`, `Y ∈ [30.66, 37.34]`).
-- **Heatmaps:** 2D Gaussian KDE over a 105×68 (1m) grid per player and per team, normalized to `[0, 1]`.
+- **Shot:** ball travels at `>12 m/s` toward a goal mouth (`X → 0` or `X → 60`, `Y ∈ [17, 23]`).
+- **Heatmaps:** 2D Gaussian KDE over a 60×40 (1m) grid per player and per team, normalized to `[0, 1]`.
 
 ## Testing
 

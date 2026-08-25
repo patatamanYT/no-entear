@@ -5,13 +5,17 @@
  * optionality, enums/unions). If you change one, update the other.
  */
 
-export const PITCH_LENGTH_M = 105;
-export const PITCH_WIDTH_M = 68;
-export const GOAL_Y_MIN = 30.66;
-export const GOAL_Y_MAX = 37.34;
+// Fútbol 7 (7-a-side) pitch: this deployment only ever analyzes fútbol 7
+// matches, so these are the fixed, real dimensions (not 11-a-side 105x68).
+// Common fútbol 7 standard: 60m x 40m pitch, 6m x 2m goals.
+export const PITCH_LENGTH_M = 60;
+export const PITCH_WIDTH_M = 40;
+const GOAL_WIDTH_M = 6;
+export const GOAL_Y_MIN = (PITCH_WIDTH_M - GOAL_WIDTH_M) / 2; // 17
+export const GOAL_Y_MAX = (PITCH_WIDTH_M + GOAL_WIDTH_M) / 2; // 23
 
-export const HEATMAP_COLS = 105; // X bins, 1m resolution
-export const HEATMAP_ROWS = 68; // Y bins, 1m resolution
+export const HEATMAP_COLS = 60; // X bins, 1m resolution
+export const HEATMAP_ROWS = 40; // Y bins, 1m resolution
 
 export type Team = "A" | "B" | "REF";
 export type PassStatus = "completed" | "intercepted";
