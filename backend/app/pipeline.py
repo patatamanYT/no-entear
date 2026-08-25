@@ -14,24 +14,37 @@ GPU cost.
 This is necessarily a best-effort pipeline: without real camera calibration
 input (e.g. clicked pixel<->pitch correspondences for the penalty box), it
 falls back to a coarse whole-frame-corners homography, and team assignment
-uses unsupervised 2-cluster jersey-color KMeans (referees are not separately
-distinguished from players by color alone). Callers needing high accuracy
-should supply `homography_src_points` from a real calibration step.
+uses unsupervised jersey-color KMeans. Callers needing high accuracy should
+supply `homography_src_points` from a real calibration step.
+
+Supports clips up to app.config.MAX_VIDEO_DURATION_SECONDS (20 minutes by
+default) — longer videos are rejected up front with a clear error rather
+than silently running out of memory or taking hours. Detection/tracking
+consumes the video in a SINGLE streaming pass and never retains a decoded
+frame's pixel buffer past the iteration that produced it: a 20-minute clip
+is ~30-40k frames, and holding every frame's full image in memory at once
+(a plausible-looking `list(detector.process_video(...))`) would need tens
+of gigabytes of RAM. Only lightweight per-frame detection records (a
+handful of floats per bounding box, no pixel data) are kept across passes.
 
 Raises RuntimeError with a clear, descriptive message on any failure
-(missing dependencies, unreadable video, no detections found) — callers
-(app.main) are expected to catch this and return a clean error response
-rather than letting it crash the request, and must NOT silently fall back to
-mock data on failure.
+(missing dependencies, unreadable video, video too long, no detections
+found) — callers (app.main) are expected to catch this and return a clean
+error response rather than letting it crash the request, and must NOT
+silently fall back to mock data on failure.
 """
 from __future__ import annotations
 
+import logging
 import math
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
+from app.config import MAX_VIDEO_DURATION_SECONDS, TARGET_MAX_PROCESSED_FRAMES
 from app.schemas import PITCH_LENGTH_M, PITCH_WIDTH_M, MatchData
+
+logger = logging.getLogger(__name__)
 
 TEAM_COLORS = {"A": "#e63946", "B": "#1d3557"}
 TEAM_NAMES = {"A": "Team A", "B": "Team B"}
@@ -41,13 +54,43 @@ TEAM_NAMES = {"A": "Team A", "B": "Team B"}
 TEAM_COLOR_SAMPLE_STRIDE = 5
 
 
+def recommended_frame_stride(
+    fps: float, duration_seconds: float, target_max_frames: int = TARGET_MAX_PROCESSED_FRAMES
+) -> int:
+    """Pick the smallest frame_stride that keeps the total processed-frame
+    count near `target_max_frames`, so a 20-minute clip doesn't silently
+    take hours of YOLO inference at stride=1. Returns 1 (process every
+    frame) for clips already under the target."""
+    total_frames = max(1, round(fps * max(duration_seconds, 0.0)))
+    if total_frames <= target_max_frames:
+        return 1
+    return max(1, math.ceil(total_frames / target_max_frames))
+
+
+def validate_video_duration(
+    duration_seconds: float, max_seconds: int = MAX_VIDEO_DURATION_SECONDS
+) -> None:
+    """Raise RuntimeError if the video exceeds the configured duration
+    ceiling. Pulled out as its own function so it's testable without a real
+    video file."""
+    if duration_seconds > max_seconds:
+        raise RuntimeError(
+            f"Video is {duration_seconds / 60:.1f} min long, which exceeds the "
+            f"{max_seconds / 60:.0f} min limit this pipeline supports "
+            "(set MAX_VIDEO_DURATION_SECONDS to raise it)."
+        )
+
+
 def run_real_pipeline(
     video_path: str | Path,
     match_id: str = "cv-match-001",
     homography_src_points: Optional[Sequence[Tuple[float, float]]] = None,
     homography_dst_points: Optional[Sequence[Tuple[float, float]]] = None,
-    frame_stride: int = 1,
+    frame_stride: Optional[int] = None,
 ) -> MatchData:
+    """`frame_stride=None` (default) auto-picks a stride via
+    recommended_frame_stride so long videos stay bounded in processing
+    time; pass an explicit int to force a specific stride."""
     video_path = str(video_path)
 
     try:
@@ -71,7 +114,24 @@ def run_real_pipeline(
     fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) or 1920
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) or 1080
+    raw_frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0
     cap.release()
+
+    duration_estimate = raw_frame_count / fps if fps > 0 else 0.0
+    validate_video_duration(duration_estimate)
+
+    if frame_stride is None:
+        frame_stride = recommended_frame_stride(fps, duration_estimate)
+    if frame_stride > 1:
+        logger.info(
+            "Video is %.1f min (%d frames @ %.1f fps); using frame_stride=%d "
+            "to keep processing bounded (~%d frames will actually run through YOLO).",
+            duration_estimate / 60,
+            raw_frame_count,
+            fps,
+            frame_stride,
+            math.ceil(raw_frame_count / frame_stride),
+        )
 
     pitch_bounds = (0.0, 0.0, PITCH_LENGTH_M, PITCH_WIDTH_M)
     homography = PitchHomography()
@@ -84,26 +144,40 @@ def run_real_pipeline(
         dst = default_pitch_corners(PITCH_LENGTH_M, PITCH_WIDTH_M)
         homography.fit(src, dst, bounds=pitch_bounds)
 
+    # --- Single streaming pass over the video ---------------------------
+    # Sample jersey colors transiently (only on every TEAM_COLOR_SAMPLE_STRIDE'th
+    # yielded frame, and only for the duration of that iteration) while
+    # collecting lightweight per-frame detection records — bounding boxes and
+    # confidences, no pixel data — for the projection passes below. This is
+    # the difference between O(1) and O(video_length) memory: the previous
+    # `list(detector.process_video(...))` kept every frame's full decoded
+    # image alive simultaneously, which is fine for a 10-second test clip and
+    # not remotely fine for a 20-minute one.
+    from app.cv.detector import FrameDetections
+
+    track_color_samples: Dict[int, List] = defaultdict(list)
+    frame_records: List[FrameDetections] = []
+
     try:
         detector = PlayerBallDetector()
-        raw_frames = list(detector.process_video(video_path, stride=frame_stride))
+        for sample_index, fd in enumerate(detector.process_video(video_path, stride=frame_stride)):
+            if sample_index % TEAM_COLOR_SAMPLE_STRIDE == 0 and fd.frame_bgr is not None:
+                for det in fd.detections:
+                    if det.class_name != "person":
+                        continue
+                    crop = detector.extract_crop(fd.frame_bgr, det)
+                    color = extract_jersey_color(crop)
+                    track_color_samples[det.track_id].append(color)
+            # Keep only the detections (small dataclasses of floats/ints) —
+            # `fd`, and the decoded image it holds, is dropped here.
+            frame_records.append(
+                FrameDetections(frame_index=fd.frame_index, timestamp=fd.timestamp, detections=fd.detections)
+            )
     except Exception as exc:  # ultralytics/model load or decode failures
         raise RuntimeError(f"Detection/tracking failed: {exc}") from exc
 
-    if not raw_frames:
+    if not frame_records:
         raise RuntimeError("No frames could be read/processed from the uploaded video.")
-
-    # --- Team color sampling & clustering -----------------------------------
-    track_color_samples: Dict[int, List] = defaultdict(list)
-    for fd in raw_frames[::TEAM_COLOR_SAMPLE_STRIDE]:
-        if fd.frame_bgr is None:
-            continue
-        for det in fd.detections:
-            if det.class_name != "person":
-                continue
-            crop = detector.extract_crop(fd.frame_bgr, det)
-            color = extract_jersey_color(crop)
-            track_color_samples[det.track_id].append(color)
 
     track_ids = sorted(track_color_samples.keys())
     if len(track_ids) < 2:
@@ -133,9 +207,7 @@ def run_real_pipeline(
     outfield_clusters = [c for c in set(track_to_cluster.values()) if c != referee_cluster]
     cluster_x_sum: Dict[int, float] = defaultdict(float)
     cluster_x_count: Dict[int, int] = defaultdict(int)
-    for fd in raw_frames:
-        if fd.frame_bgr is None and not fd.detections:
-            continue
+    for fd in frame_records:
         for det in fd.detections:
             if det.class_name != "person" or det.track_id not in track_to_cluster:
                 continue
@@ -178,7 +250,7 @@ def run_real_pipeline(
     per_frame_ball_candidates: List[List[Tuple[float, float, float]]] = []
     frame_times: List[float] = []
 
-    for fd in raw_frames:
+    for fd in frame_records:
         players_frame: List[dict] = []
         player_xy: Dict[str, Tuple[float, float]] = {}
 
@@ -216,7 +288,7 @@ def run_real_pipeline(
 
     last_ball: Tuple[float, float] = (PITCH_LENGTH_M / 2, PITCH_WIDTH_M / 2)
     frames: List[dict] = []
-    for fd, players_frame, ball_xy in zip(raw_frames, per_frame_players, resolved_ball):
+    for fd, players_frame, ball_xy in zip(frame_records, per_frame_players, resolved_ball):
         if ball_xy is None:
             ball_xy = last_ball  # unresolved gap (clip start, or too long) -> hold
         else:

@@ -5,7 +5,13 @@
  * developable without the backend running.
  */
 
-import type { MatchData, ProcessRequest, ProcessResponse, UploadResponse } from "@/types/match";
+import type {
+  JobStatusResponse,
+  MatchData,
+  ProcessRequest,
+  ProcessResponse,
+  UploadResponse,
+} from "@/types/match";
 import { mockMatchData } from "@/lib/mockFixture";
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -58,12 +64,23 @@ export function uploadVideo(file: File): Promise<UploadResponse> {
   });
 }
 
-/** POST /api/process — kick off (mock or real) processing pipeline. */
+/**
+ * POST /api/process — kick off (mock or real) processing pipeline.
+ * For `mock: false` this returns immediately with status "processing" —
+ * a real video (up to 20 minutes) can take minutes to run, so the backend
+ * processes it on a background thread rather than blocking the request.
+ * Poll `getProcessStatus(video_id)` until status is "completed"/"failed".
+ */
 export function triggerProcess(payload: ProcessRequest = {}): Promise<ProcessResponse> {
   return request<ProcessResponse>("/api/process", {
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+/** GET /api/process/{video_id}/status — poll a real-pipeline job's progress. */
+export function getProcessStatus(videoId: string): Promise<JobStatusResponse> {
+  return request<JobStatusResponse>(`/api/process/${encodeURIComponent(videoId)}/status`);
 }
 
 export type MatchDataSource = "api" | "fixture";

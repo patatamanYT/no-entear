@@ -80,20 +80,36 @@ Or use the Makefile: `make install`, `make backend`, `make frontend`, `make mock
 
 ## Using real video
 
-1. `POST /api/upload` a video file (multipart) → returns `{video_id, filename}`.
-2. `POST /api/process` with `{"video_id": "...", "mock": false}` to run the real CV pipeline: YOLO detection → ByteTrack → homography calibration → team classification → event/heatmap analytics.
-3. `GET /api/match-data` returns the processed result in the same schema as the mock data, so the frontend needs no changes.
+1. `POST /api/upload` a video file (multipart) → returns `{video_id, filename}`. Rejects non-video extensions (415) and anything over the upload size limit (413).
+2. `POST /api/process` with `{"video_id": "...", "mock": false}` to run the real CV pipeline: YOLO detection → ByteTrack → homography calibration → team classification → event/heatmap analytics. **Returns immediately** with `status: "processing"` — a real clip can take minutes to run, so it's processed on a background thread rather than blocking the request.
+3. Poll `GET /api/process/{video_id}/status` until `status` is `"completed"` or `"failed"` (with an `error` message).
+4. `GET /api/match-data` returns the processed result in the same schema as the mock data once the job completes, so the frontend needs no changes.
 
 `ultralytics`, `supervision`, and `opencv-python-headless` are only imported when the real pipeline actually runs, so the mock flow above works with no model weights, GPU, or internet access required.
 
+### Video limits
+
+Configured centrally in `backend/app/config.py` (override via environment variables):
+
+| Limit | Default | Env var |
+|---|---|---|
+| Max clip duration | 20 minutes | `MAX_VIDEO_DURATION_SECONDS` |
+| Max upload size | 2 GiB | `MAX_UPLOAD_SIZE_BYTES` |
+| Target processed-frame count | 9000 | `TARGET_MAX_PROCESSED_FRAMES` |
+
+A longer video is rejected up front with a clear error instead of failing silently. To keep a 20-minute clip's processing time and memory bounded:
+- **Streaming, single-pass decoding:** the pipeline never holds more than one decoded frame in memory at a time — a naive "collect every frame first" approach would need tens of GB of RAM for a 20-minute clip.
+- **Auto frame-stride:** long clips are automatically sub-sampled (via `recommended_frame_stride`) to keep the total frame count run through YOLO near `TARGET_MAX_PROCESSED_FRAMES`, regardless of the source clip's raw fps/length. Pass an explicit `frame_stride` to `run_real_pipeline` to override.
+
 ## API reference
 
-| Method | Path              | Description                                              |
-|--------|-------------------|------------------------------------------------------------|
-| GET    | `/api/health`     | Liveness check                                              |
-| POST   | `/api/upload`     | Upload a video file                                         |
-| POST   | `/api/process`    | Run the tracking pipeline (`mock: true` for synthetic data) |
-| GET    | `/api/match-data` | Full `MatchData` payload: frames, passes, shots, heatmaps   |
+| Method | Path                              | Description                                                  |
+|--------|-----------------------------------|----------------------------------------------------------------|
+| GET    | `/api/health`                     | Liveness check                                                  |
+| POST   | `/api/upload`                     | Upload a video file (size/type validated)                       |
+| POST   | `/api/process`                    | Start processing (`mock: true` for synthetic data, synchronous; `mock: false` for a real clip, async) |
+| GET    | `/api/process/{video_id}/status`  | Poll a real-pipeline job: `processing` / `completed` / `failed` |
+| GET    | `/api/match-data`                 | Full `MatchData` payload: frames, passes, shots, heatmaps        |
 
 Full request/response shapes: `backend/app/schemas.py`.
 

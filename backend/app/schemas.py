@@ -147,4 +147,17 @@ class ProcessRequest(BaseModel):
 class ProcessResponse(BaseModel):
     match_id: str
     source: str
-    status: str
+    status: str  # "completed" (mock, synchronous) | "processing" (real pipeline, async)
+
+
+class JobStatus(str, Enum):
+    processing = "processing"
+    completed = "completed"
+    failed = "failed"
+
+
+class JobStatusResponse(BaseModel):
+    video_id: str
+    match_id: str
+    status: JobStatus
+    error: Optional[str] = None

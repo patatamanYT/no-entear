@@ -8,7 +8,7 @@ import threading
 from pathlib import Path
 from typing import Dict, Optional
 
-from app.schemas import MatchData, UploadResponse
+from app.schemas import JobStatusResponse, MatchData, UploadResponse
 
 STORAGE_DIR = Path(__file__).parent
 UPLOADS_DIR = STORAGE_DIR / "uploads"
@@ -27,6 +27,10 @@ class MatchStore:
         self._lock = threading.Lock()
         # Upload bookkeeping: video_id -> {filename, path}
         self._uploads: Dict[str, dict] = {}
+        # Background-processing job bookkeeping: video_id -> JobStatusResponse.
+        # Real-pipeline runs can take minutes on a 20-minute clip, so
+        # POST /api/process returns immediately and the caller polls this.
+        self._jobs: Dict[str, JobStatusResponse] = {}
 
     def get(self) -> Optional[MatchData]:
         with self._lock:
@@ -59,6 +63,18 @@ class MatchStore:
         with self._lock:
             entry = self._uploads.get(video_id)
         return Path(entry["path"]) if entry else None
+
+    def set_job_status(
+        self, video_id: str, match_id: str, status: str, error: Optional[str] = None
+    ) -> JobStatusResponse:
+        job = JobStatusResponse(video_id=video_id, match_id=match_id, status=status, error=error)
+        with self._lock:
+            self._jobs[video_id] = job
+        return job
+
+    def get_job_status(self, video_id: str) -> Optional[JobStatusResponse]:
+        with self._lock:
+            return self._jobs.get(video_id)
 
 
 # Process-wide singleton used by app.main.

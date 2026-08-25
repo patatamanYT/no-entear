@@ -123,5 +123,15 @@ export interface ProcessRequest {
 export interface ProcessResponse {
   match_id: string;
   source: string;
+  /** "completed" (mock, synchronous) | "processing" (real pipeline, async) */
   status: string;
+}
+
+export type JobStatus = "processing" | "completed" | "failed";
+
+export interface JobStatusResponse {
+  video_id: string;
+  match_id: string;
+  status: JobStatus;
+  error: string | null;
 }
