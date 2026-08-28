@@ -19,6 +19,8 @@ function dataUri(filename, mime) {
 
 const logoUri = dataUri('guepardo_logo_crop.jpg', 'image/jpeg');
 const wordmarkEsUri = dataUri('lo_mejoramos_juntos_crop.png', 'image/png');
+const wordmarkEnUri = dataUri('we_improve_together_crop.jpg', 'image/jpeg');
+const wordmarkPtUri = dataUri('melhoramos_juntos_crop.jpg', 'image/jpeg');
 
 // Usamos funcion como reemplazo: si se pasa un string literal, "$$", "$&",
 // "$1"... se interpretan como patrones especiales de String.replace y
@@ -29,6 +31,8 @@ let out = shell
 
 out = out.split('%%BUILD_LOGO_B64%%').join(logoUri);
 out = out.split('%%BUILD_WORDMARK_ES_B64%%').join(wordmarkEsUri);
+out = out.split('%%BUILD_WORDMARK_EN_B64%%').join(wordmarkEnUri);
+out = out.split('%%BUILD_WORDMARK_PT_B64%%').join(wordmarkPtUri);
 
 const outPath = process.argv[2] || path.join(ROOT, 'herramienta-guepardo.html');
 fs.writeFileSync(outPath, out, 'utf8');

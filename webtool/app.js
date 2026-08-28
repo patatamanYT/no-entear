@@ -3,10 +3,14 @@
 
   // ---------------------------------------------------------------------
   // Assets embebidos (inyectados por build.js como constantes globales
-  // ASSET_LOGO_URI / ASSET_WORDMARK_ES_URI antes de este script).
+  // antes de este script).
   // ---------------------------------------------------------------------
   const LOGO_URI = window.ASSET_LOGO_URI;
-  const WORDMARK_ES_URI = window.ASSET_WORDMARK_ES_URI;
+  const WORDMARK_URI_BY_LANG = {
+    es: window.ASSET_WORDMARK_ES_URI,
+    en: window.ASSET_WORDMARK_EN_URI,
+    pt: window.ASSET_WORDMARK_PT_URI,
+  };
 
   // ---------------------------------------------------------------------
   // Iconos SVG inline (nunca emojis) — mismo set que la version servidor.
@@ -328,13 +332,18 @@ ${renderNotaCierre(notaCierre)}
   // pasara por un renderer de markdown (como el chat de claude.ai) los
   // guiones bajos se pierden y el marcador queda roto sin que se note.
   //
-  // El wordmark ("Lo Mejoramos Juntos") solo existe como PNG real para
-  // ES -- para EN/PT no hay archivo de imagen, asi que se genera un SVG
-  // inline con el mismo estilo (dos lineas, "Together"/"Juntos" en
-  // naranja bold, swoosh debajo) en vez de reusar el PNG en español o
-  // dejarlo en blanco.
+  // El wordmark ("Lo Mejoramos Juntos") tiene su propio PNG/JPG real por
+  // idioma (ES/EN/PT, en /assets). Si algun dia se agrega un idioma sin
+  // asset todavia, se genera un SVG de respaldo con el mismo estilo (dos
+  // lineas, segunda linea en naranja bold, swoosh debajo) en vez de
+  // reusar el de español o dejarlo en blanco.
   // ---------------------------------------------------------------------
-  const WORDMARK_TEXT = {
+  const WORDMARK_ALT = {
+    es: 'Lo Mejoramos Juntos',
+    en: 'We Improve Together',
+    pt: 'Melhoramos Juntos',
+  };
+  const WORDMARK_TEXT_FALLBACK = {
     en: ['We Improve', 'Together'],
     pt: ['Melhoramos', 'Juntos'],
   };
@@ -347,15 +356,16 @@ ${renderNotaCierre(notaCierre)}
   }
   function resolveAssets(html, lang) {
     let wordmarkHtml;
-    if (lang === 'es' || !WORDMARK_TEXT[lang]) {
-      wordmarkHtml = `<img src="${WORDMARK_ES_URI}" alt="Lo Mejoramos Juntos" style="height:46px; width:auto; display:block;">`;
-    } else {
-      const [l1, l2] = WORDMARK_TEXT[lang];
+    const realUri = WORDMARK_URI_BY_LANG[lang];
+    if (realUri) {
+      wordmarkHtml = `<img src="${realUri}" alt="${escapeHtml(WORDMARK_ALT[lang] || WORDMARK_ALT.es)}" style="height:46px; width:auto; display:block;">`;
+    } else if (WORDMARK_TEXT_FALLBACK[lang]) {
+      const [l1, l2] = WORDMARK_TEXT_FALLBACK[lang];
       wordmarkHtml = buildWordmarkSvg(l1, l2);
+    } else {
+      wordmarkHtml = `<img src="${WORDMARK_URI_BY_LANG.es}" alt="${escapeHtml(WORDMARK_ALT.es)}" style="height:46px; width:auto; display:block;">`;
     }
     const resolved = html.split('[[ASSET_LOGO]]').join(LOGO_URI).split('[[WORDMARK_ELEMENT]]').join(wordmarkHtml);
-    // fellBack ya no aplica: EN/PT generan su propio wordmark siempre.
-    // Se mantiene el campo para no romper a quien lea el resultado.
     return { html: resolved, fellBack: false };
   }
 
