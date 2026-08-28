@@ -623,7 +623,7 @@ ${[v, c].filter(Boolean).join('\n')}
     <div style="padding:20px 30px 8px 30px; background:#FFFFFF; display:flex; justify-content:space-between; align-items:center;">
       <div style="display:flex; align-items:center; gap:12px;">
         <img src="[[ASSET_LOGO]]" alt="Guepardo" style="height:64px; width:auto; display:block;">
-        <img src="[[ASSET_WORDMARK]]" alt="Lo Mejoramos Juntos" style="height:46px; width:auto; display:block;">
+        [[WORDMARK_ELEMENT]]
         ${renderHeaderKicker(headerKicker)}
       </div>
       <div style="display:flex; align-items:center; gap:10px;">
@@ -659,19 +659,43 @@ ${renderNotaCierre(notaCierre)}
   }
 
   // ---------------------------------------------------------------------
-  // Placeholders de imagen: la plantilla arriba ya sale con
-  // [[ASSET_LOGO]] / [[ASSET_WORDMARK]] en vez de base64 -- se resuelven
-  // aqui mismo (nunca se manda un base64 de 100KB+ a Claude al preparar
-  // la traduccion). Se usan corchetes dobles y NO guiones bajos dobles
+  // Placeholders de imagen: la plantilla arriba ya sale con [[ASSET_LOGO]]
+  // y [[WORDMARK_ELEMENT]] en vez de base64 -- se resuelven aqui mismo
+  // (nunca se manda un base64 de 100KB+ a Claude al preparar la
+  // traduccion). Se usan corchetes dobles y NO guiones bajos dobles
   // porque "__texto__" es sintaxis markdown de negrita: si el marcador
   // pasara por un renderer de markdown (como el chat de claude.ai) los
   // guiones bajos se pierden y el marcador queda roto sin que se note.
+  //
+  // El wordmark ("Lo Mejoramos Juntos") solo existe como PNG real para
+  // ES -- para EN/PT no hay archivo de imagen, asi que se genera un SVG
+  // inline con el mismo estilo (dos lineas, "Together"/"Juntos" en
+  // naranja bold, swoosh debajo) en vez de reusar el PNG en español o
+  // dejarlo en blanco.
   // ---------------------------------------------------------------------
+  const WORDMARK_TEXT = {
+    en: ['We Improve', 'Together'],
+    pt: ['Melhoramos', 'Juntos'],
+  };
+  function buildWordmarkSvg(line1, line2) {
+    return `<svg viewBox="0 0 340 118" height="46" style="display:block;" xmlns="http://www.w3.org/2000/svg">
+          <text x="2" y="34" font-family="'Poppins','Segoe UI',Arial,sans-serif" font-weight="700" font-size="30" fill="#0A2540">${escapeHtml(line1)}</text>
+          <text x="0" y="90" font-family="'Poppins','Segoe UI',Arial,sans-serif" font-weight="900" font-size="56" fill="#F26722">${escapeHtml(line2)}</text>
+          <path d="M4 101 Q 170 118 336 96" stroke="#F26722" stroke-width="4" fill="none" stroke-linecap="round"/>
+        </svg>`;
+  }
   function resolveAssets(html, lang) {
-    const wordmark = lang === 'es' ? WORDMARK_ES_URI : (window.customWordmarks && window.customWordmarks[lang]) || WORDMARK_ES_URI;
-    const fellBack = lang !== 'es' && !(window.customWordmarks && window.customWordmarks[lang]);
-    const resolved = html.split('[[ASSET_LOGO]]').join(LOGO_URI).split('[[ASSET_WORDMARK]]').join(wordmark);
-    return { html: resolved, fellBack };
+    let wordmarkHtml;
+    if (lang === 'es' || !WORDMARK_TEXT[lang]) {
+      wordmarkHtml = `<img src="${WORDMARK_ES_URI}" alt="Lo Mejoramos Juntos" style="height:46px; width:auto; display:block;">`;
+    } else {
+      const [l1, l2] = WORDMARK_TEXT[lang];
+      wordmarkHtml = buildWordmarkSvg(l1, l2);
+    }
+    const resolved = html.split('[[ASSET_LOGO]]').join(LOGO_URI).split('[[WORDMARK_ELEMENT]]').join(wordmarkHtml);
+    // fellBack ya no aplica: EN/PT generan su propio wordmark siempre.
+    // Se mantiene el campo para no romper a quien lea el resultado.
+    return { html: resolved, fellBack: false };
   }
 
   const DISCLAIMER = {
@@ -696,7 +720,7 @@ REGLAS GENERALES (obligatorias):
 - Nunca alteres el significado, alcance, fechas, montos, responsables, condiciones ni el nivel de compromiso del texto fuente.
 - No agregues ni omitas información.
 - No traduzcas nombres propios de personas, ni las marcas "Proyecto Guepardo" / "Grupo Lamosa".
-- Los marcadores literales [[ASSET_LOGO]] y [[ASSET_WORDMARK]] deben quedar EXACTAMENTE igual, en su misma posición dentro del atributo src. No los traduzcas, no los muevas, no los elimines, no les quites ni agregues corchetes.
+- El marcador literal [[ASSET_LOGO]] (dentro de un atributo src) y el marcador [[WORDMARK_ELEMENT]] (solo en su propia línea, reemplaza a una imagen) deben quedar EXACTAMENTE igual, en su misma posición. No los traduzcas, no los muevas, no los elimines, no les quites ni agregues corchetes.
 - No agregues comentarios, explicaciones, notas ni bloques de código markdown (nada de \`\`\`). Responde ÚNICAMENTE con el HTML completo, empezando en "<!DOCTYPE html>" y terminando en "</html>", sin nada antes ni después.`;
 
   const LANG_RULES = {
@@ -1209,7 +1233,7 @@ ${strippedHtml}`;
 
   // --- Preparar traduccion (copy/paste manual, sin API) ---
   function strippedHtmlForPrompt() {
-    // el HTML ya sale con [[ASSET_LOGO]]/[[ASSET_WORDMARK]] en vez de
+    // el HTML ya sale con [[ASSET_LOGO]]/[[WORDMARK_ELEMENT]] en vez de
     // base64 -- eso es justo lo que se manda a traducir.
     return currentEsHtmlWithPlaceholders;
   }
@@ -1277,17 +1301,16 @@ ${strippedHtml}`;
         showMsg(statusEl, 'error', 'No se encontró un documento HTML completo en lo que pegaste — revisa que hayas copiado toda la respuesta de Claude de principio a fin, no solo un fragmento.');
         return;
       }
-      if (!pasted.includes('[[ASSET_LOGO]]') || !pasted.includes('[[ASSET_WORDMARK]]')) {
-        showMsg(statusEl, 'error', 'El HTML pegado no conserva los marcadores [[ASSET_LOGO]]/[[ASSET_WORDMARK]] — Claude pudo haberlos alterado al traducir. Pídele que responda de nuevo dejando esos marcadores exactamente igual, entre corchetes dobles.');
+      if (!pasted.includes('[[ASSET_LOGO]]') || !pasted.includes('[[WORDMARK_ELEMENT]]')) {
+        showMsg(statusEl, 'error', 'El HTML pegado no conserva los marcadores [[ASSET_LOGO]]/[[WORDMARK_ELEMENT]] — Claude pudo haberlos alterado al traducir. Pídele que responda de nuevo dejando esos marcadores exactamente igual, entre corchetes dobles.');
         return;
       }
-      const { html: withAssets, fellBack } = resolveAssets(pasted, lang);
+      const { html: withAssets } = resolveAssets(pasted, lang);
       finalHtml = insertDisclaimer(withAssets, lang);
       previewSection.style.display = 'block';
       frame.srcdoc = finalHtml;
       fitScaledIframe(frame, $(`#preview-scale-wrap-${lang}`));
-      const warn = fellBack ? ` (aviso: no hay wordmark propio para "${lang}", se usó el de ES como respaldo)` : '';
-      showMsg(statusEl, 'ok', 'Preview generado.' + warn);
+      showMsg(statusEl, 'ok', 'Preview generado.');
     });
 
     $(`#btn-download-html-${lang}`).addEventListener('click', () => {
