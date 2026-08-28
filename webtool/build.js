@@ -19,8 +19,8 @@ function dataUri(filename, mime) {
 
 const logoUri = dataUri('guepardo_logo_crop.jpg', 'image/jpeg');
 const wordmarkEsUri = dataUri('lo_mejoramos_juntos_crop.png', 'image/png');
-const wordmarkEnUri = dataUri('we_improve_together_crop.jpg', 'image/jpeg');
-const wordmarkPtUri = dataUri('melhoramos_juntos_crop.jpg', 'image/jpeg');
+const wordmarkEnUri = dataUri('we_improve_together_crop.png', 'image/png');
+const wordmarkPtUri = dataUri('melhoramos_juntos_crop.png', 'image/png');
 
 // Usamos funcion como reemplazo: si se pasa un string literal, "$$", "$&",
 // "$1"... se interpretan como patrones especiales de String.replace y
