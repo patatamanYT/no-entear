@@ -11,11 +11,10 @@
     en: window.ASSET_WORDMARK_EN_URI,
     pt: window.ASSET_WORDMARK_PT_URI,
   };
-  // @font-face de Baloo 2 (la tipografia redondeada/gruesa de headings del
-  // comunicado oficial) embebido en woff2/base64: los comunicados no
+  // @font-face de Poppins embebido (woff2 en base64): los comunicados no
   // dependen de fonts.googleapis.com, asi que se ven igual sin internet o
   // detras de un firewall corporativo que bloquee Google Fonts.
-  const HEADING_FONTFACE_CSS = window.ASSET_HEADING_FONTFACE_CSS;
+  const POPPINS_FONTFACE_CSS = window.ASSET_POPPINS_FONTFACE_CSS;
 
   // ---------------------------------------------------------------------
   // Iconos SVG inline (nunca emojis) — mismo set que la version servidor.
@@ -272,14 +271,14 @@ ${[v, c].filter(Boolean).join('\n')}
 <html lang="es">
 <head>
 <meta charset="utf-8">
-[[HEADING_FONTFACE]]
+[[POPPINS_FONTFACE]]
 <style>
   * { box-sizing: border-box; }
   body { margin:0; padding:0; background:#EEF2F6; font-family:'Segoe UI', Arial, sans-serif; }
   .container { width:820px; margin:24px auto; background:#FFFFFF; border-radius:16px; overflow:hidden; box-shadow:0 10px 28px rgba(15,23,42,.12); }
-  .heading { font-family:'Baloo 2','Segoe UI',Arial,sans-serif; font-weight:800; letter-spacing:-.4px; color:#1F2A44; }
+  .heading { font-family:'Poppins','Segoe UI',Arial,sans-serif; font-weight:900; letter-spacing:-.4px; color:#1F2A44; }
   .badge { display:inline-flex; align-items:center; gap:7px; background:#F26722; color:#FFFFFF; font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; padding:8px 14px; border-radius:999px; }
-  .num { width:24px; height:24px; border-radius:999px; background:#0A2540; color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:12px; flex-shrink:0; }
+  .num { width:24px; height:24px; border-radius:999px; background:#0A2540; color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-family:'Poppins',sans-serif; font-weight:900; font-size:12px; flex-shrink:0; }
   .card { background:#FFFFFF; border:1px solid #E9EEF5; border-radius:14px; padding:14px 18px; }
   .card + .card { margin-top:10px; }
   .bullets { font-size:13px; color:#475569; line-height:1.75; padding-top:1px; }
@@ -354,8 +353,8 @@ ${renderNotaCierre(notaCierre)}
   };
   function buildWordmarkSvg(line1, line2) {
     return `<svg viewBox="0 0 340 118" height="46" style="display:block;" xmlns="http://www.w3.org/2000/svg">
-          <text x="2" y="34" font-family="'Baloo 2','Segoe UI',Arial,sans-serif" font-weight="700" font-size="30" fill="#0A2540">${escapeHtml(line1)}</text>
-          <text x="0" y="90" font-family="'Baloo 2','Segoe UI',Arial,sans-serif" font-weight="800" font-size="56" fill="#F26722">${escapeHtml(line2)}</text>
+          <text x="2" y="34" font-family="'Poppins','Segoe UI',Arial,sans-serif" font-weight="700" font-size="30" fill="#0A2540">${escapeHtml(line1)}</text>
+          <text x="0" y="90" font-family="'Poppins','Segoe UI',Arial,sans-serif" font-weight="900" font-size="56" fill="#F26722">${escapeHtml(line2)}</text>
           <path d="M4 101 Q 170 118 336 96" stroke="#F26722" stroke-width="4" fill="none" stroke-linecap="round"/>
         </svg>`;
   }
@@ -373,7 +372,7 @@ ${renderNotaCierre(notaCierre)}
     const resolved = html
       .split('[[ASSET_LOGO]]').join(LOGO_URI)
       .split('[[WORDMARK_ELEMENT]]').join(wordmarkHtml)
-      .split('[[HEADING_FONTFACE]]').join(`<style>${HEADING_FONTFACE_CSS}</style>`);
+      .split('[[POPPINS_FONTFACE]]').join(`<style>${POPPINS_FONTFACE_CSS}</style>`);
     return { html: resolved, fellBack: false };
   }
 
@@ -399,7 +398,7 @@ REGLAS GENERALES (obligatorias):
 - Nunca alteres el significado, alcance, fechas, montos, responsables, condiciones ni el nivel de compromiso del texto fuente.
 - No agregues ni omitas información.
 - No traduzcas nombres propios de personas, ni las marcas "Proyecto Guepardo" / "Grupo Lamosa".
-- Los marcadores literales [[ASSET_LOGO]] (dentro de un atributo src), [[WORDMARK_ELEMENT]] y [[HEADING_FONTFACE]] (estos dos solos en su propia línea, reemplazan a una imagen o a un bloque de estilos) deben quedar EXACTAMENTE iguales, en su misma posición. No los traduzcas, no los muevas, no los elimines, no les quites ni agregues corchetes.
+- Los marcadores literales [[ASSET_LOGO]] (dentro de un atributo src), [[WORDMARK_ELEMENT]] y [[POPPINS_FONTFACE]] (estos dos solos en su propia línea, reemplazan a una imagen o a un bloque de estilos) deben quedar EXACTAMENTE iguales, en su misma posición. No los traduzcas, no los muevas, no los elimines, no les quites ni agregues corchetes.
 - No agregues comentarios, explicaciones, notas ni bloques de código markdown (nada de \`\`\`). Responde ÚNICAMENTE con el HTML completo, empezando en "<!DOCTYPE html>" y terminando en "</html>", sin nada antes ni después.`;
 
   const LANG_RULES = {
@@ -878,8 +877,8 @@ ${strippedHtml}`;
       // foreignObjectRendering:true delega el dibujo de texto al motor
       // nativo del navegador -- el renderer "manual" por default de
       // html2canvas no respeta bien el peso de una fuente @font-face
-      // custom (aplica un bold sintetico y la tipografia se ve mas
-      // "gorda"/tosca que en el preview real).
+      // custom (aplica un bold sintetico y Poppins se ve mas "gordo"/tosco
+      // que en el preview real).
       const canvas = await withTimeout(
         html2canvas(target, {
           scale: 3,
@@ -995,8 +994,8 @@ ${strippedHtml}`;
         showMsg(statusEl, 'error', 'No se encontró un documento HTML completo en lo que pegaste — revisa que hayas copiado toda la respuesta de Claude de principio a fin, no solo un fragmento.');
         return;
       }
-      if (!pasted.includes('[[ASSET_LOGO]]') || !pasted.includes('[[WORDMARK_ELEMENT]]') || !pasted.includes('[[HEADING_FONTFACE]]')) {
-        showMsg(statusEl, 'error', 'El HTML pegado no conserva los marcadores [[ASSET_LOGO]]/[[WORDMARK_ELEMENT]]/[[HEADING_FONTFACE]] — Claude pudo haberlos alterado al traducir. Pídele que responda de nuevo dejando esos marcadores exactamente igual, entre corchetes dobles.');
+      if (!pasted.includes('[[ASSET_LOGO]]') || !pasted.includes('[[WORDMARK_ELEMENT]]') || !pasted.includes('[[POPPINS_FONTFACE]]')) {
+        showMsg(statusEl, 'error', 'El HTML pegado no conserva los marcadores [[ASSET_LOGO]]/[[WORDMARK_ELEMENT]]/[[POPPINS_FONTFACE]] — Claude pudo haberlos alterado al traducir. Pídele que responda de nuevo dejando esos marcadores exactamente igual, entre corchetes dobles.');
         return;
       }
       const { html: withAssets } = resolveAssets(pasted, lang);

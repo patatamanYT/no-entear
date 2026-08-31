@@ -22,19 +22,19 @@ const wordmarkEsUri = dataUri('lo_mejoramos_juntos_crop.png', 'image/png');
 const wordmarkEnUri = dataUri('we_improve_together_crop.png', 'image/png');
 const wordmarkPtUri = dataUri('melhoramos_juntos_crop.png', 'image/png');
 
-// La tipografia de headings (Baloo 2, la misma redondeada/gruesa del
-// comunicado oficial -- Poppins no era la correcta) se embebe como
-// @font-face con los .woff2 en base64 (en vez de depender de un <link> a
-// fonts.googleapis.com): asi se ve igual siempre, incluso sin internet o
-// detras de un firewall corporativo que bloquee Google Fonts. Una sola
-// linea, sin comillas dobles ni saltos de linea, para poder inyectarla tal
-// cual dentro de un literal `"...";` de JS en shell.html sin romperlo.
+// Poppins se embebe como @font-face con los .woff2 en base64 (en vez de
+// depender de un <link> a fonts.googleapis.com): asi el tipo de letra se ve
+// igual siempre, incluso sin internet o detras de un firewall corporativo
+// que bloquee Google Fonts (justo lo que le pasaba a "la herramienta" vs
+// un comunicado oficial abierto como archivo suelto). Una sola linea, sin
+// comillas dobles ni saltos de linea, para poder inyectarla tal cual dentro
+// de un literal `"...";` de JS en shell.html sin romperlo.
 function fontFace(weight, filename) {
   const b64 = fs.readFileSync(path.join(ROOT, 'assets', 'fonts', filename)).toString('base64');
-  return `@font-face{font-family:'Baloo 2';font-style:normal;font-weight:${weight};font-display:swap;src:url(data:font/woff2;base64,${b64}) format('woff2');}`;
+  return `@font-face{font-family:'Poppins';font-style:normal;font-weight:${weight};font-display:swap;src:url(data:font/woff2;base64,${b64}) format('woff2');}`;
 }
-const headingFontFaceCss = [700, 800]
-  .map((w) => fontFace(w, `baloo2-${w}.woff2`))
+const poppinsFontFaceCss = [600, 700, 800, 900]
+  .map((w) => fontFace(w, `poppins-${w}.woff2`))
   .join('');
 
 // Usamos funcion como reemplazo: si se pasa un string literal, "$$", "$&",
@@ -48,7 +48,7 @@ out = out.split('%%BUILD_LOGO_B64%%').join(logoUri);
 out = out.split('%%BUILD_WORDMARK_ES_B64%%').join(wordmarkEsUri);
 out = out.split('%%BUILD_WORDMARK_EN_B64%%').join(wordmarkEnUri);
 out = out.split('%%BUILD_WORDMARK_PT_B64%%').join(wordmarkPtUri);
-out = out.split('%%BUILD_HEADING_FONTFACE%%').join(headingFontFaceCss);
+out = out.split('%%BUILD_POPPINS_FONTFACE%%').join(poppinsFontFaceCss);
 
 const outPath = process.argv[2] || path.join(ROOT, 'herramienta-guepardo.html');
 fs.writeFileSync(outPath, out, 'utf8');
