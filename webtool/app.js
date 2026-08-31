@@ -813,11 +813,11 @@ ${strippedHtml}`;
   }
 
   function renderInHiddenIframe(html) {
-    // No se usa el evento "load" del iframe: ese evento espera a que
-    // terminen TODOS los subrecursos (incluida la fuente de Google Fonts),
-    // asi que si no hay internet nunca dispara. En vez de eso, se hace
-    // polling de ".container" -- el parseo del DOM (que es lo unico que
-    // necesita html2canvas) termina mucho antes que las fuentes externas.
+    // No se usa el evento "load" del iframe para el DOM: con la fuente ya
+    // embebida (base64, sin red) no hay riesgo de que un <link> externo
+    // bloqueado lo cuelgue, pero se hace polling de ".container" de todas
+    // formas porque es mas rapido que esperar "load" (que tambien espera
+    // otros recursos del documento).
     const iframe = document.createElement('iframe');
     iframe.style.position = 'fixed';
     iframe.style.left = '-9999px';
@@ -851,28 +851,43 @@ ${strippedHtml}`;
     });
   }
 
-  // Para la captura PNG se quita el <link> de Google Fonts: html2canvas
-  // puede quedarse esperando minutos si esa fuente no carga (sin internet,
-  // firewall corporativo, adblock). El HTML descargado normal SI la
-  // conserva -- esto solo afecta la copia oculta usada para el PNG.
-  function stripGoogleFontsLink(html) {
-    return html.replace(/<link[^>]*fonts\.googleapis\.com[^>]*>/i, '');
+  // Solo para la copia oculta usada al exportar PNG: quita el
+  // "margin:24px auto" que centra ".container" en el preview normal.
+  // foreignObjectRendering (ver mas abajo) calcula mal el recorte cuando
+  // el elemento a capturar esta centrado con margin:auto -- con el
+  // elemento pegado a (0,0) el problema desaparece.
+  function stripContainerCentering(html) {
+    return html.replace(
+      '.container { width:820px; margin:24px auto;',
+      '.container { width:820px; margin:0;'
+    );
   }
 
   async function downloadPng(html, filename, statusEl) {
     let iframe;
     try {
       iframe = await withTimeout(
-        renderInHiddenIframe(stripGoogleFontsLink(html)),
+        renderInHiddenIframe(stripContainerCentering(html)),
         8000,
         'El documento a exportar tardó demasiado en cargar.'
       );
       const target = iframe.contentDocument.querySelector('.container');
       if (!target) throw new Error('No se encontró ".container" en el documento a exportar.');
+      await withTimeout(iframe.contentDocument.fonts.ready, 4000, 'La fuente tardó demasiado en cargar.').catch(() => {});
+      // foreignObjectRendering:true delega el dibujo de texto al motor
+      // nativo del navegador -- el renderer "manual" por default de
+      // html2canvas no respeta bien el peso de una fuente @font-face
+      // custom (aplica un bold sintetico y Poppins se ve mas "gordo"/tosco
+      // que en el preview real).
       const canvas = await withTimeout(
-        html2canvas(target, { scale: 3, backgroundColor: '#ffffff', useCORS: true }),
+        html2canvas(target, {
+          scale: 3,
+          backgroundColor: '#ffffff',
+          useCORS: true,
+          foreignObjectRendering: true,
+        }),
         15000,
-        'La generación del PNG tardó demasiado (revisa tu conexión si usas Google Fonts).'
+        'La generación del PNG tardó demasiado.'
       );
       await new Promise((resolve) => {
         canvas.toBlob((blob) => {
