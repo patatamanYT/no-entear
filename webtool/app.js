@@ -11,6 +11,10 @@
     en: window.ASSET_WORDMARK_EN_URI,
     pt: window.ASSET_WORDMARK_PT_URI,
   };
+  // @font-face de Poppins embebido (woff2 en base64): los comunicados no
+  // dependen de fonts.googleapis.com, asi que se ven igual sin internet o
+  // detras de un firewall corporativo que bloquee Google Fonts.
+  const POPPINS_FONTFACE_CSS = window.ASSET_POPPINS_FONTFACE_CSS;
 
   // ---------------------------------------------------------------------
   // Iconos SVG inline (nunca emojis) — mismo set que la version servidor.
@@ -267,7 +271,7 @@ ${[v, c].filter(Boolean).join('\n')}
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+[[POPPINS_FONTFACE]]
 <style>
   * { box-sizing: border-box; }
   body { margin:0; padding:0; background:#EEF2F6; font-family:'Segoe UI', Arial, sans-serif; }
@@ -365,7 +369,10 @@ ${renderNotaCierre(notaCierre)}
     } else {
       wordmarkHtml = `<img src="${WORDMARK_URI_BY_LANG.es}" alt="${escapeHtml(WORDMARK_ALT.es)}" style="height:46px; width:auto; display:block;">`;
     }
-    const resolved = html.split('[[ASSET_LOGO]]').join(LOGO_URI).split('[[WORDMARK_ELEMENT]]').join(wordmarkHtml);
+    const resolved = html
+      .split('[[ASSET_LOGO]]').join(LOGO_URI)
+      .split('[[WORDMARK_ELEMENT]]').join(wordmarkHtml)
+      .split('[[POPPINS_FONTFACE]]').join(`<style>${POPPINS_FONTFACE_CSS}</style>`);
     return { html: resolved, fellBack: false };
   }
 
@@ -391,7 +398,7 @@ REGLAS GENERALES (obligatorias):
 - Nunca alteres el significado, alcance, fechas, montos, responsables, condiciones ni el nivel de compromiso del texto fuente.
 - No agregues ni omitas información.
 - No traduzcas nombres propios de personas, ni las marcas "Proyecto Guepardo" / "Grupo Lamosa".
-- El marcador literal [[ASSET_LOGO]] (dentro de un atributo src) y el marcador [[WORDMARK_ELEMENT]] (solo en su propia línea, reemplaza a una imagen) deben quedar EXACTAMENTE igual, en su misma posición. No los traduzcas, no los muevas, no los elimines, no les quites ni agregues corchetes.
+- Los marcadores literales [[ASSET_LOGO]] (dentro de un atributo src), [[WORDMARK_ELEMENT]] y [[POPPINS_FONTFACE]] (estos dos solos en su propia línea, reemplazan a una imagen o a un bloque de estilos) deben quedar EXACTAMENTE iguales, en su misma posición. No los traduzcas, no los muevas, no los elimines, no les quites ni agregues corchetes.
 - No agregues comentarios, explicaciones, notas ni bloques de código markdown (nada de \`\`\`). Responde ÚNICAMENTE con el HTML completo, empezando en "<!DOCTYPE html>" y terminando en "</html>", sin nada antes ni después.`;
 
   const LANG_RULES = {
@@ -972,8 +979,8 @@ ${strippedHtml}`;
         showMsg(statusEl, 'error', 'No se encontró un documento HTML completo en lo que pegaste — revisa que hayas copiado toda la respuesta de Claude de principio a fin, no solo un fragmento.');
         return;
       }
-      if (!pasted.includes('[[ASSET_LOGO]]') || !pasted.includes('[[WORDMARK_ELEMENT]]')) {
-        showMsg(statusEl, 'error', 'El HTML pegado no conserva los marcadores [[ASSET_LOGO]]/[[WORDMARK_ELEMENT]] — Claude pudo haberlos alterado al traducir. Pídele que responda de nuevo dejando esos marcadores exactamente igual, entre corchetes dobles.');
+      if (!pasted.includes('[[ASSET_LOGO]]') || !pasted.includes('[[WORDMARK_ELEMENT]]') || !pasted.includes('[[POPPINS_FONTFACE]]')) {
+        showMsg(statusEl, 'error', 'El HTML pegado no conserva los marcadores [[ASSET_LOGO]]/[[WORDMARK_ELEMENT]]/[[POPPINS_FONTFACE]] — Claude pudo haberlos alterado al traducir. Pídele que responda de nuevo dejando esos marcadores exactamente igual, entre corchetes dobles.');
         return;
       }
       const { html: withAssets } = resolveAssets(pasted, lang);
