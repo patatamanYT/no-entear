@@ -1078,9 +1078,15 @@ ${strippedHtml}`;
     if (h > 0 && h === lastHeight) {
       const naturalHeight = h + 48;
       const scale = wrap.clientWidth > 0 ? wrap.clientWidth / 820 : 1;
+      // zoom (no transform:scale) para achicar el preview: transform solo
+      // reescala los pixeles ya renderizados (como una imagen encogida),
+      // asi que el texto se ve mas delgado/suave que el tamaño real -- zoom
+      // hace que el navegador vuelva a rasterizar el texto a ese tamaño
+      // efectivo, con el mismo grosor relativo que el PNG exportado.
       iframe.style.width = '820px';
       iframe.style.height = `${naturalHeight}px`;
-      iframe.style.transform = `scale(${scale})`;
+      iframe.style.transform = '';
+      iframe.style.zoom = `${scale}`;
       wrap.style.height = `${Math.max(120, Math.round(naturalHeight * scale))}px`;
       return;
     }
