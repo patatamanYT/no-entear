@@ -303,7 +303,7 @@ ${[v, c].filter(Boolean).join('\n')}
 
     <!-- Título -->
     <div style="padding:6px 30px 4px 30px;">
-      <div class="heading" style="font-family:'Poppins700','Segoe UI',Arial,sans-serif; font-size:36px; font-weight:700; line-height:1.15; margin-bottom:8px;">${renderTitulo(titulo, tituloResaltado)}</div>
+      <div class="heading" style="font-family:'Poppins800','Segoe UI',Arial,sans-serif; font-size:36px; font-weight:800; line-height:1.15; margin-bottom:8px;">${renderTitulo(titulo, tituloResaltado)}</div>
       <div style="font-size:13.5px; color:#475569; line-height:1.5; max-width:640px;">${mdBold(bajada)}</div>
     </div>
 
