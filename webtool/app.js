@@ -276,9 +276,9 @@ ${[v, c].filter(Boolean).join('\n')}
   * { box-sizing: border-box; }
   body { margin:0; padding:0; background:#EEF2F6; font-family:'Segoe UI', Arial, sans-serif; }
   .container { width:820px; margin:24px auto; background:#FFFFFF; border-radius:16px; overflow:hidden; box-shadow:0 10px 28px rgba(15,23,42,.12); }
-  .heading { font-family:'Poppins','Segoe UI',Arial,sans-serif; font-weight:900; letter-spacing:-.4px; color:#1F2A44; }
+  .heading { font-family:'Poppins900','Segoe UI',Arial,sans-serif; font-weight:900; letter-spacing:-.4px; color:#1F2A44; }
   .badge { display:inline-flex; align-items:center; gap:7px; background:#F26722; color:#FFFFFF; font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; padding:8px 14px; border-radius:999px; }
-  .num { width:24px; height:24px; border-radius:999px; background:#0A2540; color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-family:'Poppins',sans-serif; font-weight:900; font-size:12px; flex-shrink:0; }
+  .num { width:24px; height:24px; border-radius:999px; background:#0A2540; color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-family:'Poppins900',sans-serif; font-weight:900; font-size:12px; flex-shrink:0; }
   .card { background:#FFFFFF; border:1px solid #E9EEF5; border-radius:14px; padding:14px 18px; }
   .card + .card { margin-top:10px; }
   .bullets { font-size:13px; color:#475569; line-height:1.75; padding-top:1px; }
@@ -303,7 +303,7 @@ ${[v, c].filter(Boolean).join('\n')}
 
     <!-- Título -->
     <div style="padding:6px 30px 4px 30px;">
-      <div class="heading" style="font-size:36px; font-weight:800; line-height:1.15; margin-bottom:8px;">${renderTitulo(titulo, tituloResaltado)}</div>
+      <div class="heading" style="font-family:'Poppins700','Segoe UI',Arial,sans-serif; font-size:36px; font-weight:700; line-height:1.15; margin-bottom:8px;">${renderTitulo(titulo, tituloResaltado)}</div>
       <div style="font-size:13.5px; color:#475569; line-height:1.5; max-width:640px;">${mdBold(bajada)}</div>
     </div>
 
@@ -353,8 +353,8 @@ ${renderNotaCierre(notaCierre)}
   };
   function buildWordmarkSvg(line1, line2) {
     return `<svg viewBox="0 0 340 118" height="46" style="display:block;" xmlns="http://www.w3.org/2000/svg">
-          <text x="2" y="34" font-family="'Poppins','Segoe UI',Arial,sans-serif" font-weight="700" font-size="30" fill="#0A2540">${escapeHtml(line1)}</text>
-          <text x="0" y="90" font-family="'Poppins','Segoe UI',Arial,sans-serif" font-weight="900" font-size="56" fill="#F26722">${escapeHtml(line2)}</text>
+          <text x="2" y="34" font-family="'Poppins700','Segoe UI',Arial,sans-serif" font-weight="700" font-size="30" fill="#0A2540">${escapeHtml(line1)}</text>
+          <text x="0" y="90" font-family="'Poppins900','Segoe UI',Arial,sans-serif" font-weight="900" font-size="56" fill="#F26722">${escapeHtml(line2)}</text>
           <path d="M4 101 Q 170 118 336 96" stroke="#F26722" stroke-width="4" fill="none" stroke-linecap="round"/>
         </svg>`;
   }
@@ -858,10 +858,8 @@ ${strippedHtml}`;
   }
 
   // Solo para la copia oculta usada al exportar PNG: quita el
-  // "margin:24px auto" que centra ".container" en el preview normal.
-  // foreignObjectRendering (ver mas abajo) calcula mal el recorte cuando
-  // el elemento a capturar esta centrado con margin:auto -- con el
-  // elemento pegado a (0,0) el problema desaparece.
+  // "margin:24px auto" que centra ".container" en el preview normal, para
+  // que quede pegado a (0,0) y el recorte de html2canvas sea exacto.
   function stripContainerCentering(html) {
     return html.replace(
       '.container { width:820px; margin:24px auto;',
@@ -880,17 +878,20 @@ ${strippedHtml}`;
       const target = iframe.contentDocument.querySelector('.container');
       if (!target) throw new Error('No se encontró ".container" en el documento a exportar.');
       await withTimeout(iframe.contentDocument.fonts.ready, 4000, 'La fuente tardó demasiado en cargar.').catch(() => {});
-      // foreignObjectRendering:true delega el dibujo de texto al motor
-      // nativo del navegador -- el renderer "manual" por default de
-      // html2canvas no respeta bien el peso de una fuente @font-face
-      // custom (aplica un bold sintetico y Poppins se ve mas "gordo"/tosco
-      // que en el preview real).
+      // NO usar foreignObjectRendering:true -- se probo y confirmo que,
+      // cuando el documento tiene varios pesos de una misma fuente @font-face
+      // embebidos a la vez (Poppins700/800/900, todos base64), html2canvas
+      // no logra distinguir cual usar: exporta siempre el mismo peso sin
+      // importar cual pida el CSS del elemento (verificado comparando el
+      // hash del PNG resultante: era identico pidiendo 700, 800 o 900). El
+      // renderer "manual" por default de html2canvas si respeta el peso
+      // correctamente -- se confirmo midiendo densidad de tinta contra un
+      // PNG de referencia real: con este renderer el resultado coincide.
       const canvas = await withTimeout(
         html2canvas(target, {
           scale: 3,
           backgroundColor: '#ffffff',
           useCORS: true,
-          foreignObjectRendering: true,
         }),
         15000,
         'La generación del PNG tardó demasiado.'

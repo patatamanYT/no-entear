@@ -25,13 +25,19 @@ const wordmarkPtUri = dataUri('melhoramos_juntos_crop.png', 'image/png');
 // Poppins se embebe como @font-face con los .woff2 en base64 (en vez de
 // depender de un <link> a fonts.googleapis.com): asi el tipo de letra se ve
 // igual siempre, incluso sin internet o detras de un firewall corporativo
-// que bloquee Google Fonts (justo lo que le pasaba a "la herramienta" vs
-// un comunicado oficial abierto como archivo suelto). Una sola linea, sin
-// comillas dobles ni saltos de linea, para poder inyectarla tal cual dentro
-// de un literal `"...";` de JS en shell.html sin romperlo.
+// que bloquee Google Fonts. Una sola linea, sin comillas dobles ni saltos de
+// linea, para poder inyectarla tal cual dentro de un literal `"...";` de JS
+// en shell.html sin romperlo.
+//
+// Cada peso usa su PROPIO nombre de familia ("Poppins900", "Poppins800"...)
+// en vez de compartir "Poppins" + font-weight distinto: se confirmo que
+// html2canvas (via foreignObjectRendering) ignora el font-weight cuando hay
+// varios pesos de una misma familia embebidos como @font-face -- exportaba
+// siempre el mismo grosor sin importar que font-weight se pidiera en el
+// CSS. Con un nombre de familia unico por peso no hay nada que confundir.
 function fontFace(weight, filename) {
   const b64 = fs.readFileSync(path.join(ROOT, 'assets', 'fonts', filename)).toString('base64');
-  return `@font-face{font-family:'Poppins';font-style:normal;font-weight:${weight};font-display:swap;src:url(data:font/woff2;base64,${b64}) format('woff2');}`;
+  return `@font-face{font-family:'Poppins${weight}';font-style:normal;font-weight:${weight};font-display:swap;src:url(data:font/woff2;base64,${b64}) format('woff2');}`;
 }
 const poppinsFontFaceCss = [600, 700, 800, 900]
   .map((w) => fontFace(w, `poppins-${w}.woff2`))
