@@ -88,6 +88,40 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
 .template-card h3 { font-size:14.5px; }
 .template-card p { font-size:12.5px; color:var(--gris-texto); line-height:1.5; margin:0; flex:1; }
 .template-card.blank .template-thumb { display:flex; align-items:center; justify-content:center; }
+
+.autosave-indicator { font-size:11.5px; color:#94A3B8; display:inline-flex; align-items:center; gap:5px; }
+.autosave-indicator.saving::before { content:'●'; color:#F2B22B; }
+.autosave-indicator.saved::before { content:'●'; color:#0F7A43; }
+.autosave-indicator.error { color:#B23A12; }
+.autosave-indicator.error::before { content:'●'; color:#B23A12; }
+.autosave-indicator:empty { display:none; }
+
+.flow-stepper { display:flex; align-items:center; flex-wrap:wrap; gap:0; margin:4px 0 18px 0; }
+.flow-step { font-size:12px; font-weight:700; color:#94A3B8; display:flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; }
+.flow-step .flow-num { width:18px; height:18px; border-radius:999px; background:#E9EEF5; color:#94A3B8; display:flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0; }
+.flow-step.done { color:var(--verde-oscuro); }
+.flow-step.done .flow-num { background:var(--verde-menta-2); color:var(--verde-oscuro); }
+.flow-step.active { color:var(--naranja); }
+.flow-step.active .flow-num { background:var(--naranja); color:#fff; }
+.flow-arrow { color:#CBD5E1; font-size:13px; margin:0 2px; }
+
+.draft-banner { display:none; background:#FFF7E6; border:1px solid #FCE3A8; border-radius:14px; padding:16px 20px; margin:20px 0 6px 0; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.draft-banner strong { display:block; font-size:13.5px; color:#92600A; }
+.draft-banner span.meta { font-size:12px; color:#92600A; opacity:.8; }
+.draft-banner .actions { margin:0; }
+.draft-banner .discard-link { font-size:11.5px; color:#B23A12; text-decoration:underline; cursor:pointer; margin-left:4px; }
+
+.review-checklist-group { margin-bottom:10px; }
+.review-checklist-group h4 { font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; color:#94A3B8; margin:0 0 6px 0; }
+.review-item { display:flex; align-items:center; gap:8px; font-size:12.5px; padding:3px 0; color:var(--navy); }
+.review-item .mark { width:16px; flex-shrink:0; text-align:center; font-weight:900; }
+.review-item.ok .mark { color:var(--verde); }
+.review-item.pending .mark { color:#CBD5E1; }
+.review-item.pending { color:#94A3B8; }
+
+.translation-pill { display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; padding:3px 9px; border-radius:999px; margin-left:8px; vertical-align:middle; }
+.translation-pill.pending { background:#F1F5F9; color:#94A3B8; }
+.translation-pill.ready { background:var(--verde-menta-2); color:var(--verde-oscuro); }
 </style>
 </head>
 <body>
@@ -136,16 +170,44 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
       <p style="color:#475569; font-size:13.5px; margin-top:6px; max-width:640px;">
         Arrancan con contenido de ejemplo real — úsalas como punto de partida y edita todo después.
       </p>
+
+      <div class="draft-banner" id="draft-banner">
+        <div>
+          <strong id="draft-banner-title">Tienes un borrador sin terminar</strong>
+          <span class="meta" id="draft-banner-meta"></span>
+          <div><span class="discard-link" id="draft-banner-discard">Descartar borrador</span></div>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="draft-banner-new">Empezar nuevo</button>
+          <button type="button" class="btn btn-primary btn-sm" id="draft-banner-continue">Continuar último comunicado</button>
+        </div>
+      </div>
+
       <div class="template-grid" id="template-grid"></div>
     </div>
 
     <!-- ============ COMUNICADO ============ -->
     <div class="view" id="view-comunicado">
       <a class="back-link" id="back-from-comunicado">&larr; Volver a plantillas</a>
+      <div class="flow-stepper">
+        <span class="flow-step" data-step="crear"><span class="flow-num">1</span> Crear</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step" data-step="revisar"><span class="flow-num">2</span> Revisar</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step" data-step="traducir"><span class="flow-num">3</span> Traducir</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step" data-step="descargar"><span class="flow-num">4</span> Descargar</span>
+      </div>
       <h1 style="font-size:24px;">Nuevo Comunicado</h1>
       <p style="color:#475569; font-size:13.5px; margin-top:6px; max-width:640px;">
         El español es siempre la versión master. El preview de la derecha se actualiza mientras escribes.
       </p>
+      <div class="actions" style="margin-top:2px; align-items:center;">
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-save-project">Guardar proyecto (.guepardo.json)</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-open-project">Abrir proyecto</button>
+        <input type="file" id="input-open-project" accept=".json,.guepardo.json,application/json" style="display:none;">
+        <span class="autosave-indicator" id="autosave-indicator"></span>
+      </div>
 
       <div class="comunicado-layout">
         <div class="form-col">
@@ -245,6 +307,12 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
               <iframe id="es-preview-frame"></iframe>
             </div>
           </div>
+
+          <div class="panel" id="review-checklist-panel" style="margin-top:16px;">
+            <h3><span class="num">✓</span> Revisión final</h3>
+            <div id="review-checklist-body"></div>
+          </div>
+
           <div class="actions" style="margin-top:16px;">
             <button type="button" class="btn btn-ghost" id="btn-download-html-es">Descargar HTML</button>
             <button type="button" class="btn btn-ghost" id="btn-download-png-es">Descargar PNG</button>
@@ -266,8 +334,18 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
         generar el preview y las descargas.
       </p>
 
+      <div class="flow-stepper">
+        <span class="flow-step" data-step="crear"><span class="flow-num">1</span> Crear</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step" data-step="revisar"><span class="flow-num">2</span> Revisar</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step" data-step="traducir"><span class="flow-num">3</span> Traducir</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step" data-step="descargar"><span class="flow-num">4</span> Descargar</span>
+      </div>
+
       <div class="lang-block">
-        <h3>Inglés (EN)</h3>
+        <h3>Inglés (EN) <span class="translation-pill pending" id="pill-en">Pendiente</span></h3>
         <p class="step-hint">1. Prepara el prompt → 2. Cópialo y pégalo en claude.ai → 3. Pega la respuesta abajo → 4. Genera el preview.</p>
         <div class="actions">
           <button type="button" class="btn btn-ghost btn-sm" id="btn-prepare-en">1. Preparar prompt EN</button>
@@ -289,7 +367,7 @@ textarea { resize:vertical; min-height:64px; line-height:1.5; }
       </div>
 
       <div class="lang-block">
-        <h3>Portugués (PT-BR)</h3>
+        <h3>Portugués (PT-BR) <span class="translation-pill pending" id="pill-pt">Pendiente</span></h3>
         <p class="step-hint">1. Prepara el prompt → 2. Cópialo y pégalo en claude.ai → 3. Pega la respuesta abajo → 4. Genera el preview.</p>
         <div class="actions">
           <button type="button" class="btn btn-ghost btn-sm" id="btn-prepare-pt">1. Preparar prompt PT</button>

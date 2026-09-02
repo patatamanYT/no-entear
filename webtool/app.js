@@ -437,9 +437,12 @@ ${strippedHtml}`;
   }
 
   // --- Selector ---
-  $('#card-comunicado').addEventListener('click', () => showView('view-templates'));
+  $('#card-comunicado').addEventListener('click', () => {
+    showView('view-templates');
+    renderDraftBanner();
+  });
   $('#back-from-templates').addEventListener('click', (e) => { e.preventDefault(); showView('view-selector'); });
-  $('#back-from-comunicado').addEventListener('click', (e) => { e.preventDefault(); showView('view-templates'); });
+  $('#back-from-comunicado').addEventListener('click', (e) => { e.preventDefault(); showView('view-templates'); renderDraftBanner(); });
 
   // ---------------------------------------------------------------------
   // Listas editables con guardado en localStorage: países y contactos
@@ -448,7 +451,7 @@ ${strippedHtml}`;
   // navegador (no hay backend -- el archivo vive solo, así que el
   // guardado es local al navegador que lo abre).
   // ---------------------------------------------------------------------
-  const STORAGE_KEYS = { paises: 'guepardo_paises_custom_v1', contactos: 'guepardo_contactos_custom_v1' };
+  const STORAGE_KEYS = { paises: 'guepardo_paises_custom_v1', contactos: 'guepardo_contactos_custom_v1', draft: 'guepardo_draft_v1' };
 
   function loadCustomList(key) {
     try {
@@ -708,10 +711,321 @@ ${strippedHtml}`;
   let currentEsHtml = '';
   let currentEsHtmlWithPlaceholders = '';
   let currentSlug = 'comunicado';
+  let currentTemplateId = null;
+  let draftCreatedAt = null;
+  // Estado de traducción EN/PT: fuente única de verdad para el preview de
+  // cada idioma, los botones de descarga HTML/PNG, el checklist de revisión,
+  // el autoguardado y el export/import de proyecto (.guepardo.json). Antes
+  // ese HTML vivía solo en una variable local dentro de setupTranslateLang()
+  // y no era recuperable desde afuera -- por eso un proyecto importado no
+  // podía "reactivar" los botones de descarga sin volver a pegar la
+  // traducción a mano.
+  const translationState = {
+    en: { status: 'pending', html: '' },
+    pt: { status: 'pending', html: '' },
+  };
 
   function slugify(str) {
     return (str || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 40) || 'comunicado';
   }
+
+  // ---------------------------------------------------------------------
+  // Indicador de flujo (① Crear → ② Revisar → ③ Traducir → ④ Descargar).
+  // Es solo un indicador visual, no bloquea nada -- no hay pasos "cerrados"
+  // ni validación para avanzar más allá de la que ya existía (validateMinimal
+  // antes de ir a traducir). Se pinta en dos lugares (vista comunicado y
+  // vista traducción), por eso opera sobre todos los ".flow-step" del
+  // documento a la vez.
+  // ---------------------------------------------------------------------
+  const FLOW_STEPS = ['crear', 'revisar', 'traducir', 'descargar'];
+  function setFlowStep(step) {
+    const idx = FLOW_STEPS.indexOf(step);
+    if (idx === -1) return;
+    $$('.flow-step').forEach((el) => {
+      const elIdx = FLOW_STEPS.indexOf(el.dataset.step);
+      el.classList.toggle('active', elIdx === idx);
+      el.classList.toggle('done', elIdx < idx);
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Checklist de revisión final: reutiliza collectData()/validateMinimal()
+  // y el estado de traducción existente -- no inventa validaciones nuevas,
+  // solo las muestra como una lista de ✓/— antes de descargar.
+  // ---------------------------------------------------------------------
+  function computeReviewChecklist(data) {
+    const tieneBloqueConContenido = (data.bloques || []).some((b) => b.titulo || (b.vinetas && b.vinetas.length));
+    return {
+      Contenido: [
+        { label: 'Título del comunicado', ok: Boolean(data.titulo) },
+        { label: 'Bajada / subtítulo', ok: Boolean(data.bajada) },
+        { label: 'Al menos un bloque con contenido', ok: tieneBloqueConContenido },
+      ],
+      Información: [
+        { label: 'Contacto de dudas seleccionado', ok: Boolean(data.contacto) },
+        { label: 'País / región elegido', ok: Boolean(data.banderas && data.banderas.length) },
+        { label: 'Vigencia / acceso definida', ok: Boolean(data.vigencia && data.vigencia.tipo) },
+      ],
+      Idiomas: [
+        { label: 'Inglés (EN) traducido', ok: translationState.en.status === 'ready' },
+        { label: 'Portugués (PT) traducido', ok: translationState.pt.status === 'ready' },
+      ],
+    };
+  }
+
+  function renderReviewChecklist(data) {
+    const body = $('#review-checklist-body');
+    if (!body) return;
+    const groups = computeReviewChecklist(data);
+    body.innerHTML = Object.entries(groups)
+      .map(
+        ([groupName, items]) => `
+        <div class="review-checklist-group">
+          <h4>${escapeHtml(groupName)}</h4>
+          ${items
+            .map(
+              (item) => `<div class="review-item ${item.ok ? 'ok' : 'pending'}">
+                <span class="mark">${item.ok ? '✓' : '—'}</span> ${escapeHtml(item.label)}
+              </div>`
+            )
+            .join('')}
+        </div>`
+      )
+      .join('');
+    const allContenido = groups['Contenido'].every((i) => i.ok);
+    setFlowStep(allContenido ? 'revisar' : 'crear');
+  }
+
+  function updateTranslationPill(lang) {
+    const pill = $(`#pill-${lang}`);
+    if (!pill) return;
+    const ready = translationState[lang].status === 'ready';
+    pill.textContent = ready ? 'Listo' : 'Pendiente';
+    pill.classList.toggle('ready', ready);
+    pill.classList.toggle('pending', !ready);
+  }
+
+  // ---------------------------------------------------------------------
+  // Autoguardado (borrador en localStorage) + proyecto exportable
+  // (.guepardo.json). Ambos comparten la misma forma de objeto -- el
+  // "proyecto" es exactamente lo que se autoguarda, solo que uno se
+  // descarga como archivo y el otro se queda en localStorage. Si
+  // localStorage falla (modo privado, cuota llena, bloqueado por política),
+  // la herramienta debe seguir funcionando igual: el autoguardado
+  // simplemente deja de persistir y se muestra un aviso discreto, sin
+  // romper nada del formulario/preview/descarga.
+  // ---------------------------------------------------------------------
+  function isDataEmpty(data) {
+    const tieneBloqueConContenido = (data.bloques || []).some((b) => b.titulo || (b.vinetas && b.vinetas.length));
+    return !(
+      data.titulo || data.bajada || data.notaContexto || data.contactoHeader ||
+      (data.notaCierre && data.notaCierre.texto) || (data.banderas && data.banderas.length) ||
+      (data.vigencia && (data.vigencia.tipo || data.vigencia.custom || data.vigencia.fecha)) ||
+      tieneBloqueConContenido
+    );
+  }
+
+  function buildProjectObject() {
+    const nowIso = new Date().toISOString();
+    return {
+      version: 1,
+      templateId: currentTemplateId || null,
+      createdAt: draftCreatedAt || nowIso,
+      updatedAt: nowIso,
+      data: collectData(),
+      translations: {
+        en: { status: translationState.en.status, html: translationState.en.html },
+        pt: { status: translationState.pt.status, html: translationState.pt.html },
+      },
+    };
+  }
+
+  function loadDraftRaw() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.draft);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || typeof parsed.data !== 'object') return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  }
+
+  function clearDraft() {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.draft);
+    } catch {
+      // Si ni siquiera esto funciona, no hay nada más que hacer -- no es
+      // motivo para romper la herramienta.
+    }
+  }
+
+  let lastSavedAt = null;
+  function setAutosaveIndicator(state) {
+    const el = $('#autosave-indicator');
+    if (!el) return;
+    if (state === 'saving') {
+      el.textContent = 'Guardando…';
+      el.className = 'autosave-indicator saving';
+    } else if (state === 'saved') {
+      lastSavedAt = Date.now();
+      el.textContent = 'Guardado hace unos segundos';
+      el.className = 'autosave-indicator saved';
+    } else if (state === 'error') {
+      el.textContent = 'No se pudo guardar el borrador automáticamente en este navegador.';
+      el.className = 'autosave-indicator error';
+    } else {
+      el.textContent = '';
+      el.className = 'autosave-indicator';
+    }
+  }
+  setInterval(() => {
+    const el = $('#autosave-indicator');
+    if (!el || !lastSavedAt || !el.classList.contains('saved')) return;
+    const secs = Math.round((Date.now() - lastSavedAt) / 1000);
+    el.textContent = secs < 45 ? 'Guardado hace unos segundos' : 'Guardado';
+  }, 8000);
+
+  function saveDraftNow() {
+    const data = collectData();
+    if (isDataEmpty(data)) {
+      setAutosaveIndicator('idle');
+      return;
+    }
+    try {
+      const existing = loadDraftRaw();
+      if (existing && existing.createdAt) draftCreatedAt = existing.createdAt;
+      const draft = buildProjectObject();
+      localStorage.setItem(STORAGE_KEYS.draft, JSON.stringify(draft));
+      draftCreatedAt = draft.createdAt;
+      setAutosaveIndicator('saved');
+    } catch {
+      setAutosaveIndicator('error');
+    }
+  }
+
+  let autosaveTimer;
+  function scheduleAutosave() {
+    if (!$('#autosave-indicator')) return; // no aplica fuera de la vista de comunicado
+    clearTimeout(autosaveTimer);
+    setAutosaveIndicator('saving');
+    autosaveTimer = setTimeout(saveDraftNow, 650);
+  }
+
+  function fmtDraftDate(iso) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return '';
+    }
+  }
+
+  function renderDraftBanner() {
+    const banner = $('#draft-banner');
+    if (!banner) return;
+    const draft = loadDraftRaw();
+    if (!draft) {
+      banner.style.display = 'none';
+      return;
+    }
+    banner.style.display = 'flex';
+    $('#draft-banner-title').textContent = draft.data.titulo
+      ? `Tienes un borrador sin terminar: "${draft.data.titulo}"`
+      : 'Tienes un borrador sin terminar';
+    $('#draft-banner-meta').textContent = draft.updatedAt ? `Última edición: ${fmtDraftDate(draft.updatedAt)}` : '';
+  }
+
+  function restoreTranslations(translations) {
+    ['en', 'pt'].forEach((lang) => {
+      const t = translations && translations[lang];
+      if (t && t.status === 'ready' && t.html) {
+        translationState[lang] = { status: 'ready', html: t.html };
+        const previewSection = $(`#preview-section-${lang}`);
+        const frame = $(`#preview-frame-${lang}`);
+        if (frame) {
+          frame.srcdoc = t.html;
+          previewSection.style.display = 'block';
+          fitScaledIframe(frame, $(`#preview-scale-wrap-${lang}`));
+        }
+        showMsg($(`#status-${lang}`), 'ok', 'Traducción cargada desde el proyecto/borrador.');
+      } else {
+        translationState[lang] = { status: 'pending', html: '' };
+      }
+      updateTranslationPill(lang);
+    });
+  }
+
+  $('#draft-banner-continue').addEventListener('click', () => {
+    const draft = loadDraftRaw();
+    if (!draft) return;
+    currentTemplateId = draft.templateId || null;
+    draftCreatedAt = draft.createdAt || null;
+    showView('view-comunicado');
+    loadTemplateData(draft.data);
+    restoreTranslations(draft.translations);
+    setFlowStep('crear');
+  });
+  $('#draft-banner-new').addEventListener('click', () => {
+    $('#draft-banner').style.display = 'none';
+  });
+  $('#draft-banner-discard').addEventListener('click', () => {
+    if (!confirm('¿Descartar el borrador guardado? Esta acción no se puede deshacer.')) return;
+    clearDraft();
+    renderDraftBanner();
+  });
+
+  // --- Proyecto: guardar/abrir .guepardo.json ---
+  function migrateProject(project) {
+    // Punto centralizado para futuras migraciones de "version". Hoy solo
+    // existe la versión 1, así que no hay nada que transformar -- pero
+    // cualquier cambio de forma del objeto de proyecto en el futuro debe
+    // resolverse aquí, no regado por el resto del código.
+    return project;
+  }
+
+  $('#btn-save-project').addEventListener('click', () => {
+    const project = buildProjectObject();
+    downloadBlob(JSON.stringify(project, null, 2), `comunicado_${currentSlug || 'proyecto'}.guepardo.json`, 'application/json');
+  });
+
+  $('#btn-open-project').addEventListener('click', () => $('#input-open-project').click());
+  $('#input-open-project').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const statusEl = $('#es-status-msg');
+      let parsed;
+      try {
+        parsed = JSON.parse(String(reader.result));
+      } catch {
+        showMsg(statusEl, 'error', 'El archivo no es un JSON válido — no se pudo abrir el proyecto.');
+        return;
+      }
+      if (!parsed || typeof parsed !== 'object' || typeof parsed.version !== 'number' || typeof parsed.data !== 'object' || !parsed.data) {
+        showMsg(statusEl, 'error', 'El archivo no es un proyecto Guepardo válido (.guepardo.json).');
+        return;
+      }
+      if (parsed.version > 1) {
+        showMsg(statusEl, 'error', `Este archivo se creó con una versión más nueva de la herramienta (versión ${parsed.version}) — no se puede abrir aquí para no arriesgar perder información. Actualiza la herramienta a la última versión.`);
+        return;
+      }
+      const project = migrateProject(parsed);
+      currentTemplateId = project.templateId || null;
+      draftCreatedAt = project.createdAt || null;
+      loadTemplateData(project.data);
+      restoreTranslations(project.translations);
+      showView('view-comunicado');
+      setFlowStep('crear');
+      showMsg(statusEl, 'ok', 'Proyecto cargado correctamente.');
+      scheduleAutosave();
+    };
+    reader.onerror = () => showMsg($('#es-status-msg'), 'error', 'No se pudo leer el archivo.');
+    reader.readAsText(file);
+  });
 
   // El documento real mide 820px de ancho -- para que quepa en una tarjeta
   // angosta (barra lateral del preview en vivo, o la tarjeta de preview de
@@ -773,6 +1087,8 @@ ${strippedHtml}`;
       const frame = $('#es-preview-frame');
       frame.srcdoc = currentEsHtml;
       fitScaledIframe(frame, $('#preview-scale-wrap'));
+      renderReviewChecklist(data);
+      scheduleAutosave();
     }, 200);
   }
 
@@ -923,12 +1239,14 @@ ${strippedHtml}`;
   $('#btn-download-html-es').addEventListener('click', () => {
     if (!validateMinimal()) return;
     downloadBlob(currentEsHtml, `comunicado_${currentSlug}_es.html`, 'text/html');
+    setFlowStep('descargar');
   });
   $('#btn-download-png-es').addEventListener('click', (e) => {
     if (!validateMinimal()) return;
     const btn = e.currentTarget;
     btn.disabled = true;
     downloadPng(currentEsHtml, `comunicado_${currentSlug}_es.png`, $('#es-status-msg')).finally(() => (btn.disabled = false));
+    setFlowStep('descargar');
   });
 
   // --- Preparar traduccion (copy/paste manual, sin API) ---
@@ -967,7 +1285,6 @@ ${strippedHtml}`;
     const statusEl = $(`#status-${lang}`);
     const previewSection = $(`#preview-section-${lang}`);
     const frame = $(`#preview-frame-${lang}`);
-    let finalHtml = '';
 
     btnPrepare.addEventListener('click', () => {
       if (!currentEsHtmlWithPlaceholders) {
@@ -1006,22 +1323,28 @@ ${strippedHtml}`;
         return;
       }
       const { html: withAssets } = resolveAssets(pasted, lang);
-      finalHtml = insertDisclaimer(withAssets, lang);
+      const finalHtml = insertDisclaimer(withAssets, lang);
+      translationState[lang] = { status: 'ready', html: finalHtml };
       previewSection.style.display = 'block';
       frame.srcdoc = finalHtml;
       fitScaledIframe(frame, $(`#preview-scale-wrap-${lang}`));
       showMsg(statusEl, 'ok', 'Preview generado.');
+      updateTranslationPill(lang);
+      renderReviewChecklist(collectData());
+      scheduleAutosave();
     });
 
     $(`#btn-download-html-${lang}`).addEventListener('click', () => {
-      if (!finalHtml) return;
-      downloadBlob(finalHtml, `comunicado_${currentSlug}_${lang}.html`, 'text/html');
+      if (!translationState[lang].html) return;
+      downloadBlob(translationState[lang].html, `comunicado_${currentSlug}_${lang}.html`, 'text/html');
+      setFlowStep('descargar');
     });
     $(`#btn-download-png-${lang}`).addEventListener('click', (e) => {
-      if (!finalHtml) return;
+      if (!translationState[lang].html) return;
       const btn = e.currentTarget;
       btn.disabled = true;
-      downloadPng(finalHtml, `comunicado_${currentSlug}_${lang}.png`, statusEl).finally(() => (btn.disabled = false));
+      downloadPng(translationState[lang].html, `comunicado_${currentSlug}_${lang}.png`, statusEl).finally(() => (btn.disabled = false));
+      setFlowStep('descargar');
     });
   }
   setupTranslateLang('en');
@@ -1030,6 +1353,7 @@ ${strippedHtml}`;
   $('#btn-goto-translate').addEventListener('click', () => {
     if (!validateMinimal()) return;
     showView('view-translate');
+    setFlowStep('traducir');
   });
 
   // ---------------------------------------------------------------------
@@ -1210,8 +1534,15 @@ ${strippedHtml}`;
       iframe.srcdoc = resolveAssets(rawHtml, 'es').html;
       fitScaledIframe(iframe, wrap);
       card.querySelector('button').addEventListener('click', () => {
+        currentTemplateId = tpl.id;
+        draftCreatedAt = null;
+        translationState.en = { status: 'pending', html: '' };
+        translationState.pt = { status: 'pending', html: '' };
+        updateTranslationPill('en');
+        updateTranslationPill('pt');
         showView('view-comunicado');
         loadTemplateData(tpl.data);
+        setFlowStep('crear');
       });
       templateGrid.appendChild(card);
     });
@@ -1228,8 +1559,15 @@ ${strippedHtml}`;
         <button type="button" class="btn btn-ghost btn-sm" style="justify-content:center;">Empezar en blanco</button>
       </div>`;
     blank.querySelector('button').addEventListener('click', () => {
+      currentTemplateId = null;
+      draftCreatedAt = null;
+      translationState.en = { status: 'pending', html: '' };
+      translationState.pt = { status: 'pending', html: '' };
+      updateTranslationPill('en');
+      updateTranslationPill('pt');
       showView('view-comunicado');
       loadTemplateData({ bloques: [{}] });
+      setFlowStep('crear');
     });
     templateGrid.appendChild(blank);
   }
