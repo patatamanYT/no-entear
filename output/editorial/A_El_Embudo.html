@@ -25,48 +25,46 @@
   .brand svg{width:26px;height:26px}
   .brand span{font-weight:700;font-size:11.5px;letter-spacing:2px;color:var(--ink-soft)}
 
-  .titleblock{flex:none;margin-top:20px}
-  .titleblock h1{font-family:'Fraunces',Georgia,serif;font-weight:560;font-size:74px;line-height:.94;margin:0;letter-spacing:-.01em;max-width:11ch}
-  .titleblock .lede{font-family:'Fraunces',Georgia,serif;font-style:italic;font-size:22px;margin-top:14px}
-  .titleblock p{font-size:14.5px;color:var(--ink-soft);margin:8px 0 0;max-width:64ch}
+  .titleblock{flex:none;margin-top:22px}
+  .titleblock h1{font-family:'Fraunces',Georgia,serif;font-weight:560;font-size:96px;line-height:.9;margin:0;letter-spacing:-.015em;max-width:10ch}
+  .titleblock .lede{font-family:'Fraunces',Georgia,serif;font-style:italic;font-size:25px;margin-top:16px}
+  .titleblock p{font-size:16px;color:var(--ink-soft);margin:9px 0 0;max-width:60ch;line-height:1.5}
 
   /* ===== FUNNEL — a single continuous shape: source -> taper -> proportional fan ===== */
-  .funnel-wrap{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;min-height:120px;margin-top:6px}
-  .apex{font-family:'Fraunces',Georgia,serif;font-weight:500;font-size:210px;line-height:.78;color:var(--accent);letter-spacing:-.02em;flex:none}
-  .apex-cap{font-size:13px;font-weight:700;letter-spacing:2.5px;color:var(--ink-soft);margin-top:6px;flex:none}
+  .funnel-wrap{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;min-height:120px;margin-top:4px}
+  .apex{font-family:'Fraunces',Georgia,serif;font-weight:500;font-size:270px;line-height:.76;color:var(--accent);letter-spacing:-.02em;flex:none}
+  .apex-cap{font-size:14px;font-weight:700;letter-spacing:2.8px;color:var(--ink-soft);margin-top:8px;flex:none}
   .ribbon-zone{flex:1 1 auto;position:relative;width:100%;min-height:60px}
   .ribbon-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-  .band{display:flex;width:100%;height:104px;flex:none}
+  .band{display:flex;width:100%;height:150px;flex:none}
   .band .seg{display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff;text-align:center}
-  .band .seg .pn{font-family:'Fraunces',Georgia,serif;font-weight:560;font-size:38px;line-height:1}
-  .band .seg .ln{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-top:3px}
+  .band .seg .pn{font-family:'Fraunces',Georgia,serif;font-weight:560;font-size:54px;line-height:1}
+  .band .seg .ln{font-size:13px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;margin-top:5px}
   .s1{background:var(--c1)}.s2{background:var(--c2)}.s3{background:var(--c3)}.s4{background:var(--c4)}
 
-  /* ===== DETAIL — subordinate to the band, linked by short ticks ===== */
-  .tickrow{display:flex;width:100%;height:20px;flex:none}
-  .tickrow > div{border-left:1.5px solid rgba(27,31,39,.3);height:100%}
-  .panels{display:flex;width:100%;column-gap:3px;flex:none}
-  .panel{flex:1 1 0;padding:18px 16px 20px;position:relative}
-  .panel.c1{background:var(--c1-soft)}.panel.c2{background:var(--c2-soft)}.panel.c3{background:var(--c3-soft)}.panel.c4{background:var(--c4-soft)}
-  .panel .ico{width:20px;height:20px;margin-bottom:8px}
+  /* ===== DETAIL — subordinate to the band, linked directly (no dead gap) ===== */
+  .panels{display:flex;width:100%;column-gap:3px;flex:none;margin-top:4px}
+  .panel{flex:1 1 0;padding:22px 18px 22px;position:relative;border-top:4px solid}
+  .panel.c1{background:var(--c1-soft);border-color:var(--c1)}.panel.c2{background:var(--c2-soft);border-color:var(--c2)}.panel.c3{background:var(--c3-soft);border-color:var(--c3)}.panel.c4{background:var(--c4-soft);border-color:var(--c4)}
+  .panel .ico{width:24px;height:24px;margin-bottom:10px}
   .panel.c1 .ico{color:var(--c1)}.panel.c2 .ico{color:var(--c2)}.panel.c3 .ico{color:var(--c3)}.panel.c4 .ico{color:var(--c4)}
-  .panel .name{font-weight:700;font-size:13px;letter-spacing:.5px;text-transform:uppercase}
-  .panel .n{margin-top:1px;font-size:12px;color:var(--ink-soft)}
-  .panel .detail{margin-top:13px;padding-top:12px;border-top:1px solid rgba(27,31,39,.14)}
-  .panel .grp + .grp{margin-top:11px}
-  .panel .grp h4{margin:0;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;opacity:.72}
-  .panel .grp .meta{font-size:11px;color:var(--ink-soft);margin-top:1px}
-  .panel .grp ul{margin:6px 0 0;padding:0;list-style:none;font-size:11.5px;line-height:1.5}
-  .panel .grp li{border-top:1px solid rgba(27,31,39,.10);padding:4px 0}
+  .panel .name{font-weight:700;font-size:16px;letter-spacing:.3px}
+  .panel .n{margin-top:2px;font-size:13.5px;color:var(--ink-soft)}
+  .panel .detail{margin-top:15px;padding-top:14px;border-top:1px solid rgba(27,31,39,.16)}
+  .panel .grp + .grp{margin-top:13px}
+  .panel .grp h4{margin:0;font-size:12.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;opacity:.75}
+  .panel .grp .meta{font-size:12px;color:var(--ink-soft);margin-top:1px}
+  .panel .grp ul{margin:7px 0 0;padding:0;list-style:none;font-size:13px;line-height:1.55}
+  .panel .grp li{border-top:1px solid rgba(27,31,39,.10);padding:5px 0}
   .panel .grp li:first-child{border-top:none}
-  .panel .dept-row{display:flex;justify-content:space-between;gap:6px;font-size:12.5px;padding:5px 0;border-top:1px solid rgba(27,31,39,.10)}
+  .panel .dept-row{display:flex;justify-content:space-between;gap:6px;font-size:14px;padding:6px 0;border-top:1px solid rgba(27,31,39,.10)}
   .panel .dept-row:first-child{border-top:none}
   .panel .dept-row .v{font-weight:700;font-variant-numeric:tabular-nums;flex:none}
 
-  .close{flex:none;margin-top:22px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
-  .close .quote{font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:500;font-size:26px;line-height:1.24;max-width:26ch}
+  .close{flex:none;margin-top:26px;padding-top:22px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
+  .close .quote{font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:500;font-size:32px;line-height:1.22;max-width:25ch}
   .close .quote strong{font-style:normal;color:var(--accent)}
-  .close .foot{text-align:right;font-size:10.5px;letter-spacing:1.5px;color:var(--ink-soft);white-space:nowrap;flex:none}
+  .close .foot{text-align:right;font-size:11px;letter-spacing:1.5px;color:var(--ink-soft);white-space:nowrap;flex:none}
 </style>
 </head>
 <body>
@@ -95,10 +93,6 @@
       <div class="seg s1" style="flex:25" id="seg1"><span class="pn">25%</span><span class="ln">Concluidos</span></div>
       <div class="seg s4" style="flex:17" id="seg4"><span class="pn">17%</span><span class="ln">Sin impl.</span></div>
     </div>
-  </div>
-
-  <div class="tickrow" id="tickrow">
-    <div style="flex:31"></div><div style="flex:27"></div><div style="flex:25"></div><div style="flex:17"></div>
   </div>
 
   <div class="panels" id="panels-row">

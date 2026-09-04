@@ -24,61 +24,61 @@
 
   /* ===== 55 as origin — integrated with the headline, not a separate stat block ===== */
   .hero{display:flex;align-items:flex-end;column-gap:30px;margin-top:18px;flex:none}
-  .hero .num{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:206px;line-height:.74;letter-spacing:-.03em;flex:none}
+  .hero .num{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:250px;line-height:.72;letter-spacing:-.03em;flex:none}
   .hero .side{padding-bottom:8px}
-  .kicker{font-family:'IBM Plex Mono','Courier New',monospace;font-size:12px;letter-spacing:1.8px;color:var(--accent);font-weight:600}
-  h1{margin:10px 0 0;font-size:56px;font-weight:700;letter-spacing:-.015em;line-height:1.03;max-width:14ch}
-  .subline{margin:14px 0 0;max-width:50ch;color:var(--ink-soft);font-size:14.5px;line-height:1.6}
+  .kicker{font-family:'IBM Plex Mono','Courier New',monospace;font-size:13px;letter-spacing:1.8px;color:var(--accent);font-weight:600}
+  h1{margin:12px 0 0;font-size:66px;font-weight:700;letter-spacing:-.015em;line-height:1.0;max-width:13ch}
+  .subline{margin:16px 0 0;max-width:46ch;color:var(--ink-soft);font-size:16px;line-height:1.55}
 
-  .ruler{margin-top:30px;flex:none}
-  .bar{display:flex;height:38px}
-  .tickrow{display:flex;margin-top:8px}
-  .tickrow > div{font-family:'IBM Plex Mono','Courier New',monospace;font-size:10.5px;color:var(--ink-soft);padding-left:2px}
+  .ruler{margin-top:34px;flex:none}
+  .bar{display:flex;height:44px}
+  .tickrow{display:flex;margin-top:9px}
+  .tickrow > div{font-family:'IBM Plex Mono','Courier New',monospace;font-size:11.5px;color:var(--ink-soft);padding-left:2px}
 
   .spacer{flex:1 1 auto;min-height:8px}
 
   /* ===== 58% — the headline finding, given real visual weight ===== */
-  .callout{flex:none;background:var(--ink);color:var(--paper);padding:40px 44px;display:flex;align-items:center;column-gap:34px}
-  .callout .big{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:136px;line-height:1;color:#fff}
-  .callout .txt{font-size:19px;line-height:1.45;max-width:40ch}
+  .callout{flex:none;background:var(--ink);color:var(--paper);padding:34px 44px;display:flex;align-items:center;column-gap:36px;margin-top:28px}
+  .callout .big{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:166px;line-height:1;color:#fff}
+  .callout .txt{font-size:22px;line-height:1.4;max-width:36ch}
   .callout .txt b{color:#8fb0e8}
 
   /* ===== LEDGER — one continuous spine instead of four boxed rows ===== */
-  .ledger{flex:none;position:relative;padding-left:26px}
-  .ledger::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:2px;background:var(--line-strong)}
-  .entry{position:relative;padding:14px 0}
-  .entry::before{content:"";position:absolute;left:-31px;top:19px;width:10px;height:10px;border-radius:50%;background:var(--c)}
-  .entry-head{display:flex;align-items:baseline;column-gap:14px}
-  .entry-head .code{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:12px;color:var(--ink-soft);width:18px;flex:none}
-  .entry-head .name{font-weight:700;font-size:18px;flex:none}
-  .entry-head .line{flex:1 1 auto;height:2px;background:var(--line);position:relative;top:1px}
+  .ledger{flex:none;position:relative;padding-left:28px;margin-top:30px}
+  .ledger::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--line-strong)}
+  .entry{position:relative;padding:19px 0}
+  .entry::before{content:"";position:absolute;left:-34px;top:25px;width:13px;height:13px;border-radius:50%;background:var(--c)}
+  .entry-head{display:flex;align-items:baseline;column-gap:16px}
+  .entry-head .code{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:13px;color:var(--ink-soft);width:20px;flex:none}
+  .entry-head .name{font-weight:700;font-size:24px;flex:none}
+  .entry-head .line{flex:1 1 auto;height:3px;background:var(--line);position:relative;top:1px}
   .entry-head .line i{display:block;height:100%;background:var(--c)}
-  .entry-head .pct{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:19px;flex:none;white-space:nowrap}
-  .entry-head .pct small{font-weight:400;font-size:10.5px;color:var(--ink-soft);margin-left:5px}
+  .entry-head .pct{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:25px;flex:none;white-space:nowrap}
+  .entry-head .pct small{font-weight:400;font-size:12px;color:var(--ink-soft);margin-left:6px}
 
-  .sub-ledger{margin:10px 0 0 32px;display:grid;grid-template-columns:1fr 1fr;column-gap:34px}
+  .sub-ledger{margin:13px 0 0 36px;display:grid;grid-template-columns:1fr 1fr;column-gap:36px}
   .sub-row .r-head{display:flex;align-items:baseline;gap:8px}
-  .sub-row .r-head .t{font-weight:600;font-size:12.5px}
-  .sub-row .r-head .m{font-family:'IBM Plex Mono','Courier New',monospace;font-size:10px;color:var(--ink-soft)}
-  .sub-row ul{margin:4px 0 0;padding:0;list-style:none;font-size:11px;color:var(--ink-soft);line-height:1.55}
+  .sub-row .r-head .t{font-weight:600;font-size:14.5px}
+  .sub-row .r-head .m{font-family:'IBM Plex Mono','Courier New',monospace;font-size:11px;color:var(--ink-soft)}
+  .sub-row ul{margin:5px 0 0;padding:0;list-style:none;font-size:12.5px;color:var(--ink-soft);line-height:1.6}
   .sub-row li{position:relative;padding-left:12px}
   .sub-row li::before{content:"–";position:absolute;left:0;color:var(--line-strong)}
-  .sub-row + .sub-row{margin-top:8px}
+  .sub-row + .sub-row{margin-top:9px}
 
-  .entry-note{margin:8px 0 0 32px;font-size:11.5px;color:var(--ink-soft);max-width:56ch}
+  .entry-note{margin:9px 0 0 36px;font-size:13.5px;color:var(--ink-soft);max-width:56ch}
 
   /* ===== INDEX ===== */
-  .index-block{flex:none;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
-  .index-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:56px;margin-top:4px}
-  .index-grid h6{margin:0 0 6px;font-size:12px;font-weight:700;font-family:'IBM Plex Mono','Courier New',monospace;letter-spacing:.5px}
-  .irow{display:flex;align-items:baseline;gap:8px;padding:3.5px 0;font-size:11.5px;border-bottom:1px dotted var(--line-strong)}
+  .index-block{flex:none;margin-top:30px;padding-top:20px;border-top:1px solid var(--line)}
+  .index-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:56px;margin-top:6px}
+  .index-grid h6{margin:0 0 8px;font-size:13.5px;font-weight:700;font-family:'IBM Plex Mono','Courier New',monospace;letter-spacing:.5px}
+  .irow{display:flex;align-items:baseline;gap:8px;padding:5px 0;font-size:13px;border-bottom:1px dotted var(--line-strong)}
   .irow .leader{flex:1}
-  .irow .v{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:600;width:18px;text-align:right}
+  .irow .v{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:600;width:20px;text-align:right}
 
-  .close{flex:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
-  .close p{max-width:48ch;font-size:14.5px;line-height:1.4;margin:0;font-weight:500}
+  .close{flex:none;margin-top:26px;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+  .close p{max-width:48ch;font-size:16.5px;line-height:1.4;margin:0;font-weight:500}
   .close p strong{color:var(--accent)}
-  .close .sig{font-family:'IBM Plex Mono','Courier New',monospace;font-size:9.5px;color:var(--ink-soft);text-align:right;white-space:nowrap}
+  .close .sig{font-family:'IBM Plex Mono','Courier New',monospace;font-size:10px;color:var(--ink-soft);text-align:right;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -110,8 +110,6 @@
     <div class="txt">de los 55 temas ya están en marcha: <b>En proceso</b> y <b>Guepardo</b> juntos superan a la mitad del recorrido.</div>
   </div>
 
-  <div class="spacer"></div>
-
   <div class="ledger">
     <div class="entry" style="--c:var(--c2)">
       <div class="entry-head"><span class="code">01</span><span class="name">En proceso</span><span class="line"><i style="width:31%;background:var(--c2)"></i></span><span class="pct">31%<small>17 temas</small></span></div>
@@ -140,8 +138,6 @@
       </div>
     </div>
   </div>
-
-  <div class="spacer"></div>
 
   <div class="index-block">
     <div class="kicker">DESGLOSE POR ÁREA — LAS DOS CATEGORÍAS DE MAYOR VOLUMEN</div>
