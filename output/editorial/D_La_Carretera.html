@@ -19,10 +19,13 @@
   body{margin:0;background:#17191e;font-family:'Work Sans',"Segoe UI",sans-serif;color:var(--ink);display:flex;justify-content:center;padding:44px 20px}
   .oswald{font-family:'Oswald','Segoe UI',sans-serif}
 
-  .poster{position:relative;width:1080px;height:3340px;background:var(--paper);overflow:hidden;box-shadow:0 40px 100px -30px rgba(0,0,0,.6)}
+  .poster{position:relative;width:1080px;height:3260px;background:var(--paper);overflow:hidden;box-shadow:0 40px 100px -30px rgba(0,0,0,.6)}
   .road-layer{position:absolute;inset:0;z-index:1}
   .layer{position:absolute;inset:0;z-index:2;pointer-events:none}
   .layer > *{pointer-events:auto}
+
+  /* road-shoulder guide ticks running the full height, so the road's presence reads as continuous beside the content */
+  .guide{position:absolute;top:0;bottom:0;width:1px;background:repeating-linear-gradient(to bottom,var(--line) 0 6px,transparent 6px 18px);z-index:1}
 
   /* ===== masthead ===== */
   .masthead{position:absolute;top:52px;left:70px;right:70px;z-index:3;text-align:center}
@@ -43,31 +46,33 @@
     border-radius:4px;padding:5px 9px;letter-spacing:.5px;box-shadow:0 4px 10px rgba(0,0,0,.25)}
 
   /* ===== station marker (on the road) ===== */
-  .marker{position:absolute;z-index:4;width:64px;height:64px;border-radius:50%;background:var(--paper);
+  .marker{position:absolute;z-index:5;width:68px;height:68px;border-radius:50%;background:var(--paper);
     display:grid;place-items:center;box-shadow:0 6px 16px rgba(0,0,0,.28);transform:translate(-50%,-50%)}
   .marker .ring{position:absolute;inset:0;border-radius:50%;border:5px solid var(--c)}
-  .marker svg{width:26px;height:26px;color:var(--c);position:relative;z-index:1}
+  .marker svg{width:27px;height:27px;color:var(--c);position:relative;z-index:1}
   .marker .stage{position:absolute;top:-11px;right:-11px;width:26px;height:26px;border-radius:50%;background:var(--ink);
     color:#fff;font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:12px;display:grid;place-items:center}
 
   .detail-tag{position:absolute;z-index:4;font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:1.5px;color:#fff;
     background:var(--c);padding:5px 10px;border-radius:3px;white-space:nowrap}
 
-  /* ===== platform panels ===== */
-  .panel{position:absolute;left:0;right:0;z-index:3;background:var(--soft);border-top:1px solid rgba(0,0,0,.06);border-bottom:1px solid rgba(0,0,0,.06)}
-  .panel-head{position:absolute;top:26px;display:flex;align-items:baseline;gap:14px}
-  .panel-head .pct{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:54px;line-height:1;color:var(--c)}
-  .panel-head .meta{padding-bottom:6px}
-  .panel-head .meta .name{font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:17px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink)}
-  .panel-head .meta .n{font-size:12.5px;color:var(--ink-soft);margin-top:2px}
+  /* the road sign — the protagonist number lives here, once, hanging off the marker */
+  .signlink{position:absolute;z-index:4;width:2px;background:repeating-linear-gradient(to bottom,var(--c) 0 5px,transparent 5px 10px)}
+  .roadsign{position:absolute;z-index:5;background:var(--c);color:#fff;border-radius:8px;padding:16px 20px;box-shadow:0 10px 24px rgba(0,0,0,.3)}
+  .roadsign .pct{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:46px;line-height:1}
+  .roadsign .name{font-weight:600;font-size:13px;letter-spacing:1px;text-transform:uppercase;margin-top:5px;opacity:.96}
+  .roadsign .n{font-size:11.5px;margin-top:2px;opacity:.82}
 
-  .dept-list{position:absolute;top:112px}
+  /* ===== platform panels — narrower than the canvas, so the road stays visible beside them ===== */
+  .panel{position:absolute;left:90px;right:90px;z-index:3;background:var(--soft);border-top:1px solid rgba(0,0,0,.06);border-bottom:1px solid rgba(0,0,0,.06)}
+
+  .dept-list{position:absolute;top:78px}
   .dept-row{display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px dotted rgba(0,0,0,.18);font-size:12.5px}
   .dept-row .leader{flex:1}
   .dept-row .v{font-weight:700}
   .dept-title{font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:11px;letter-spacing:2px;color:var(--ink-soft);margin-bottom:8px}
 
-  .split2{position:absolute;top:112px;display:grid;grid-template-columns:1fr 1fr;column-gap:34px}
+  .split2{position:absolute;top:78px;display:grid;grid-template-columns:1fr 1fr;column-gap:32px}
   .split2 h4{margin:0;font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:16px;color:var(--ink)}
   .split2 .m{font-size:11px;font-weight:700;color:var(--c);margin-top:1px}
   .split2 ul{margin:8px 0 0;padding:0;list-style:none;font-size:12px;line-height:1.6;color:var(--ink-soft)}
@@ -86,7 +91,7 @@
 <body>
 <div class="poster" id="poster">
 
-  <svg class="road-layer" id="road-svg" width="1080" height="3340"></svg>
+  <svg class="road-layer" id="road-svg" width="1080" height="3260"></svg>
 
   <div class="layer">
     <div class="masthead">
@@ -112,12 +117,14 @@
     </div>
     <div class="kmtag" style="left:246px;top:706px">KM 17</div>
 
-    <div class="panel" style="top:780px;height:260px;--soft:var(--proceso-soft)">
-      <div class="panel-head" style="left:520px;--c:var(--proceso)">
-        <div class="pct">31%</div>
-        <div class="meta"><div class="name">En proceso</div><div class="n">17 temas — tramo en obra</div></div>
-      </div>
-      <div class="dept-list" style="left:520px;width:500px;--c:var(--proceso)">
+    <div class="signlink" style="left:414px;top:735px;height:39px"></div>
+    <div class="roadsign" style="left:414px;top:730px;--c:var(--proceso)">
+      <div class="pct">31%</div>
+      <div class="name">En proceso</div>
+      <div class="n">17 temas — tramo en obra</div>
+    </div>
+    <div class="panel" style="top:780px;height:230px;--soft:var(--proceso-soft)">
+      <div class="dept-list" style="left:430px;width:440px;--c:var(--proceso)">
         <div class="dept-title">DESGLOSE POR ÁREA</div>
         <div class="dept-row"><span>Ingresos</span><span class="leader"></span><span class="v">6</span></div>
         <div class="dept-row"><span>Finanzas</span><span class="leader"></span><span class="v">5</span></div>
@@ -135,12 +142,14 @@
     </div>
     <div class="kmtag" style="left:766px;top:1306px">KM 31</div>
 
-    <div class="panel" style="top:1380px;height:240px;--soft:var(--concluidos-soft)">
-      <div class="panel-head" style="left:60px;--c:var(--concluidos)">
-        <div class="pct">25%</div>
-        <div class="meta"><div class="name">Concluidos</div><div class="n">14 temas — control superado</div></div>
-      </div>
-      <div class="dept-list" style="left:60px;width:500px;--c:var(--concluidos)">
+    <div class="signlink" style="left:180px;top:1335px;height:39px"></div>
+    <div class="roadsign" style="left:130px;top:1330px;--c:var(--concluidos)">
+      <div class="pct">25%</div>
+      <div class="name">Concluidos</div>
+      <div class="n">14 temas — control superado</div>
+    </div>
+    <div class="panel" style="top:1380px;height:210px;--soft:var(--concluidos-soft)">
+      <div class="dept-list" style="left:130px;width:440px;--c:var(--concluidos)">
         <div class="dept-title">DESGLOSE POR ÁREA</div>
         <div class="dept-row"><span>Inventario</span><span class="leader"></span><span class="v">4</span></div>
         <div class="dept-row"><span>Ingresos</span><span class="leader"></span><span class="v">4</span></div>
@@ -158,12 +167,14 @@
     <div class="kmtag" style="left:246px;top:1886px">KM 46</div>
     <div class="detail-tag" style="--c:var(--guepardo);left:432px;top:1868px">SALIDA · AUTOPISTA GUEPARDO</div>
 
-    <div class="panel" style="top:1960px;height:300px;--soft:var(--guepardo-soft)">
-      <div class="panel-head" style="left:520px;--c:var(--guepardo)">
-        <div class="pct">27%</div>
-        <div class="meta"><div class="name">Guepardo</div><div class="n">15 temas — escalados a otra ruta</div></div>
-      </div>
-      <div class="split2" style="left:520px;width:500px;--c:var(--guepardo)">
+    <div class="signlink" style="left:414px;top:1915px;height:39px"></div>
+    <div class="roadsign" style="left:414px;top:1910px;--c:var(--guepardo)">
+      <div class="pct">27%</div>
+      <div class="name">Guepardo</div>
+      <div class="n">15 temas — escalados a otra ruta</div>
+    </div>
+    <div class="panel" style="top:1960px;height:280px;--soft:var(--guepardo-soft)">
+      <div class="split2" style="left:430px;width:440px;--c:var(--guepardo)">
         <div><h4>2026</h4><div class="m">7% · 4 temas</div>
           <ul><li>Revisión de flujo de alta de clientes</li><li>Aprobaciones de descuentos</li></ul></div>
         <div><h4>2027</h4><div class="m">20% · 11 temas</div>
@@ -171,21 +182,23 @@
       </div>
     </div>
 
-    <!-- STATION 4 — NO IMPLEMENTADOS : marker (700,2540) -->
-    <div class="marker" style="--c:var(--noimpl);left:700px;top:2540px">
+    <!-- STATION 4 — NO IMPLEMENTADOS : marker (700,2500) -->
+    <div class="marker" style="--c:var(--noimpl);left:700px;top:2500px">
       <div class="ring"></div>
       <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="7" cy="6" r="2.6"/><circle cx="17" cy="6" r="2.6"/><circle cx="12" cy="10.5" r="2.9"/><circle cx="4.5" cy="13.5" r="2.3"/><circle cx="19.5" cy="13.5" r="2.3"/><path d="M12 13c-4.5 0-7.5 3-7.5 7 0 .8.6 1.4 1.4 1.4h12.2c.8 0 1.4-.6 1.4-1.4 0-4-3-7-7.5-7Z"/></svg>
       <div class="stage">04</div>
     </div>
-    <div class="kmtag" style="left:766px;top:2526px">KM 55</div>
-    <div class="detail-tag" style="--c:var(--noimpl);left:606px;top:2570px">TRAMO CERRADO</div>
+    <div class="kmtag" style="left:766px;top:2486px">KM 55</div>
+    <div class="detail-tag" style="--c:var(--noimpl);left:606px;top:2530px">TRAMO CERRADO</div>
 
-    <div class="panel" style="top:2600px;height:260px;--soft:var(--noimpl-soft)">
-      <div class="panel-head" style="left:60px;--c:var(--noimpl)">
-        <div class="pct">17%</div>
-        <div class="meta"><div class="name">Sin implementación</div><div class="n">9 temas — no continúan</div></div>
-      </div>
-      <div class="split2" style="left:60px;width:500px;--c:var(--noimpl)">
+    <div class="signlink" style="left:180px;top:2515px;height:39px"></div>
+    <div class="roadsign" style="left:130px;top:2510px;--c:var(--noimpl)">
+      <div class="pct">17%</div>
+      <div class="name">Sin implementación</div>
+      <div class="n">9 temas — no continúan</div>
+    </div>
+    <div class="panel" style="top:2560px;height:230px;--soft:var(--noimpl-soft)">
+      <div class="split2" style="left:130px;width:440px;--c:var(--noimpl)">
         <div><h4>Fuera de alcance</h4><div class="m">11% · 6 temas</div>
           <ul><li>Rediseño del esquema de matrices</li><li>Documento índice entre matrices</li><li>Duplicidad de información en RH</li></ul></div>
         <div><h4>No viable</h4><div class="m">6% · 3 temas</div>
@@ -193,7 +206,7 @@
       </div>
     </div>
 
-    <div class="arrival" style="top:3080px">
+    <div class="arrival" style="top:3000px">
       <div class="flag"></div>
       <h2>LLEGADA — 55 DE 55 TEMAS CONTABILIZADOS</h2>
       <div class="quote">Cada comentario abre una <strong>oportunidad de mejora</strong>. Seguimos transformando los hallazgos en acciones concretas.</div>
@@ -215,14 +228,14 @@
   }
 
   // Waypoints: each station holds its x for a stretch (clear of that panel's
-  // text zone), then a gentle multi-point S-curve carries it to the next x.
+  // text zone), then a gentle multi-point curve carries it to the next x.
   var waypoints = [
     [540,520],
-    [420,610],[380,700],[380,720],[380,1040],
-    [460,1140],[620,1240],[700,1300],[700,1320],[700,1620],
-    [620,1720],[460,1820],[380,1880],[380,1900],[380,2260],
-    [460,2360],[620,2460],[700,2520],[700,2540],[700,2860],
-    [620,2940],[540,3020],[540,3080]
+    [420,610],[380,700],[380,720],[380,1010],
+    [480,1130],[640,1250],[700,1310],[700,1320],[700,1590],
+    [600,1710],[440,1830],[380,1890],[380,1900],[380,2220],
+    [480,2340],[640,2460],[700,2490],[700,2500],[700,2790],
+    [600,2900],[540,2960],[540,3000]
   ];
 
   var svg = document.getElementById('road-svg');
@@ -244,7 +257,7 @@
   svg.appendChild(mkPath(64, '#2a2e36'));
   svg.appendChild(mkPath(4, '#f2ede1', '18 16'));
 
-  // exit ramp near guepardo station (380,1900)
+  // exit ramp near guepardo station (380,1900) — the detour that carries "Guepardo" off the main road
   var ramp = document.createElementNS(ns,'path');
   ramp.setAttribute('d','M380,1900 C 450,1888 490,1870 520,1852');
   ramp.setAttribute('fill','none'); ramp.setAttribute('stroke','#33507a'); ramp.setAttribute('stroke-width','13');
@@ -253,12 +266,12 @@
   arrowhead.setAttribute('points','520,1840 546,1849 523,1866');
   arrowhead.setAttribute('fill','#33507a'); svg.appendChild(arrowhead);
 
-  // barrier near no-implementados station (700,2540)
+  // barrier near no-implementados station (700,2500) — the segment that goes no further
   var barLine = document.createElementNS(ns,'line');
-  barLine.setAttribute('x1',660); barLine.setAttribute('y1',2540); barLine.setAttribute('x2',740); barLine.setAttribute('y2',2540);
+  barLine.setAttribute('x1',660); barLine.setAttribute('y1',2500); barLine.setAttribute('x2',740); barLine.setAttribute('y2',2500);
   barLine.setAttribute('stroke','#fff'); barLine.setAttribute('stroke-width','15'); svg.appendChild(barLine);
   var barStripe = document.createElementNS(ns,'line');
-  barStripe.setAttribute('x1',660); barStripe.setAttribute('y1',2540); barStripe.setAttribute('x2',740); barStripe.setAttribute('y2',2540);
+  barStripe.setAttribute('x1',660); barStripe.setAttribute('y1',2500); barStripe.setAttribute('x2',740); barStripe.setAttribute('y2',2500);
   barStripe.setAttribute('stroke','#8a3b46'); barStripe.setAttribute('stroke-width','15'); barStripe.setAttribute('stroke-dasharray','11 11');
   svg.appendChild(barStripe);
 
