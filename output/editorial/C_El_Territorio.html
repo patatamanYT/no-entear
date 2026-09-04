@@ -38,22 +38,22 @@
   /* ===== MAP — a conceptual territory: organic regions, not rectangles ===== */
   .map-wrap{flex:1 1 auto;position:relative;min-height:200px;margin-top:10px}
   .route-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;overflow:visible}
-  .map{position:absolute;inset:0;display:grid;grid-template-rows:58fr 42fr;gap:22px;z-index:2}
-  .maprow{display:grid;gap:22px;min-height:0}
+  .map{position:absolute;inset:0;display:grid;grid-template-rows:58fr 42fr;gap:12px;z-index:2}
+  .maprow{display:grid;gap:12px;min-height:0}
   .row1{grid-template-columns:31fr 27fr}
   .row2{grid-template-columns:25fr 17fr}
   .region{position:relative;color:#fff;display:flex}
   .region .shape{position:relative;flex:1;display:flex;flex-direction:column}
   .region .shape-bg{position:absolute;inset:0}
   .region.c1 .shape-bg{background:var(--c1)}.region.c2 .shape-bg{background:var(--c2)}.region.c3 .shape-bg{background:var(--c3)}.region.c4 .shape-bg{background:var(--c4)}
-  /* left edge and both left corners stay solid (icon + protagonist number live there); jag is confined to the top and right, where only the badge (small, corner-anchored) and open air sit */
-  .shape-bg.organic-a{clip-path:polygon(0% 0%,62% 0%,100% 4%,97% 42%,100% 80%,72% 100%,22% 97%,0% 100%)}
-  .shape-bg.organic-b{clip-path:polygon(0% 0%,40% 3%,100% 0%,96% 40%,100% 78%,68% 96%,32% 100%,0% 93%)}
-  .shape-bg.organic-c{clip-path:polygon(0% 0%,40% 3%,100% 0%,96% 40%,100% 78%,68% 96%,32% 100%,0% 93%)}
-  .shape-bg.organic-d{clip-path:polygon(0% 0%,62% 0%,100% 4%,97% 42%,100% 80%,72% 100%,22% 97%,0% 100%)}
+  /* one restrained cut corner per region — a measured, map-tile fold rather than a jagged coastline */
+  .shape-bg.organic-a{clip-path:polygon(0% 0%,92% 0%,100% 7%,100% 100%,0% 100%)}
+  .shape-bg.organic-b{clip-path:polygon(0% 0%,94% 0%,100% 9%,100% 100%,0% 100%)}
+  .shape-bg.organic-c{clip-path:polygon(0% 0%,90% 0%,100% 11%,100% 100%,0% 100%)}
+  .shape-bg.organic-d{clip-path:polygon(0% 0%,88% 0%,100% 15%,100% 100%,0% 100%)}
   .region .content{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;padding:30px 34px 34px}
 
-  .region .badge{position:absolute;top:0;right:0;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:16px;z-index:2}
+  .region .badge{position:absolute;top:14px;right:16px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:12px;z-index:2;opacity:.85}
   .region .ico{width:26px;height:26px;opacity:.92}
   .region .pct{font-family:'Fraunces',Georgia,serif;font-weight:560;line-height:1;margin-top:auto}
   .region .name{font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-top:8px}
