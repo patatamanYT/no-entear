@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recorrido de Matriz · Expediente RM-2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+  :root{
+    --paper:#faf9f6; --ink:#14171c; --ink-soft:#5b6270; --line:#d6d9e0; --line-strong:#aeb3bf;
+    --accent:#2954a6; --accent-soft:#dde6f5;
+    --c1:#2f6b4f; --c2:#a6761f; --c3:#2954a6; --c4:#8a3b46;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',"Segoe UI",sans-serif}
+  .mono{font-family:'IBM Plex Mono',monospace}
+  .sheet{max-width:1140px;margin:0 auto;padding:60px 54px 90px}
+
+  /* ===== HEADER ===== */
+  .filehead{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:22px;border-bottom:2px solid var(--ink)}
+  .filehead .id{font-family:'IBM Plex Mono';font-size:12px;letter-spacing:1px;color:var(--ink-soft)}
+  .filehead .id b{color:var(--ink)}
+  .filehead h1{margin:10px 0 0;font-size:clamp(30px,4vw,44px);font-weight:700;letter-spacing:-.01em;max-width:14ch}
+  .filehead .stamp{text-align:right;font-family:'IBM Plex Mono';font-size:11px;color:var(--ink-soft);line-height:1.7}
+  .filehead .stamp .big{font-size:13px;color:var(--ink);font-weight:600}
+  .brandrow{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .brandrow svg{width:26px;height:26px}
+  .brandrow span{font-family:'IBM Plex Mono';font-size:11px;letter-spacing:2px;color:var(--ink-soft)}
+
+  .subline{margin:16px 0 0;max-width:60ch;color:var(--ink-soft);font-size:14.5px;line-height:1.6}
+
+  /* ===== RULER / TOTAL BAR ===== */
+  .ruler{margin-top:40px}
+  .ruler-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+  .ruler-top .total{font-family:'IBM Plex Mono';font-weight:700;font-size:15px}
+  .ruler-top .total b{font-size:28px}
+  .ruler-top .caption{font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:1.5px;color:var(--ink-soft)}
+  .bar{display:flex;height:34px;border:1.5px solid var(--ink)}
+  .bar > div{position:relative;border-right:1.5px solid var(--paper)}
+  .bar > div:last-child{border-right:none}
+  .tickrow{display:flex;margin-top:4px}
+  .tickrow > div{border-left:1px solid var(--line-strong);padding-left:6px;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--ink-soft)}
+
+  /* ===== LEDGER (case entries) ===== */
+  .ledger{margin-top:52px}
+  .entry{border-top:1px solid var(--line);padding:22px 0}
+  .entry:first-child{border-top:2px solid var(--ink)}
+  .entry-head{display:grid;grid-template-columns:44px 1fr auto auto;align-items:center;column-gap:18px}
+  .entry-head .code{font-family:'IBM Plex Mono';font-weight:700;font-size:13px;color:var(--accent)}
+  .entry-head .name{font-weight:600;font-size:17px}
+  .entry-head .gauge{width:220px;height:9px;background:var(--line);position:relative}
+  .entry-head .gauge i{position:absolute;left:0;top:0;bottom:0;display:block}
+  .entry-head .pct{font-family:'IBM Plex Mono';font-weight:600;font-size:14px;width:104px;text-align:right}
+  .entry-head .pct b{font-size:20px}
+  .entry-head .pct small{color:var(--ink-soft);font-weight:400;font-size:11px;display:block;margin-top:1px}
+
+  .sub-ledger{margin:18px 0 0 62px;position:relative;padding-left:22px}
+  .sub-ledger::before{content:"";position:absolute;left:0;top:-6px;bottom:14px;width:14px;border-left:1.5px solid var(--line-strong);border-bottom:1.5px solid var(--line-strong)}
+  .sub-row{margin-bottom:16px}
+  .sub-row:last-child{margin-bottom:0}
+  .sub-row .r-head{display:flex;align-items:baseline;gap:10px}
+  .sub-row .r-head .t{font-weight:600;font-size:14.5px}
+  .sub-row .r-head .m{font-family:'IBM Plex Mono';font-size:11.5px;color:var(--ink-soft)}
+  .sub-row ul{margin:6px 0 0;padding:0;list-style:none;font-size:12.5px;color:var(--ink-soft);line-height:1.7}
+  .sub-row li{position:relative;padding-left:14px}
+  .sub-row li::before{content:"–";position:absolute;left:0;color:var(--line-strong)}
+
+  /* ===== INDEX (by area) ===== */
+  .index-block{margin-top:56px;padding-top:24px;border-top:2px solid var(--ink)}
+  .index-block .cap{font-family:'IBM Plex Mono';font-size:11px;letter-spacing:1.5px;color:var(--ink-soft);margin-bottom:16px}
+  .index-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:60px}
+  .index-grid h6{margin:0 0 8px;font-size:13.5px;font-weight:700}
+  .irow{display:flex;align-items:baseline;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px dotted var(--line-strong)}
+  .irow .n{font-family:'IBM Plex Mono';color:var(--ink-soft);width:20px;flex:none}
+  .irow .leader{flex:1}
+  .irow .v{font-family:'IBM Plex Mono';font-weight:600;width:20px;text-align:right}
+
+  /* ===== CLOSE ===== */
+  .close{margin-top:60px;padding-top:26px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+  .close p{max-width:44ch;font-size:15px;line-height:1.55;margin:0}
+  .close p strong{color:var(--accent)}
+  .close .sig{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--ink-soft);text-align:right;white-space:nowrap}
+
+  @media(max-width:820px){
+    .entry-head{grid-template-columns:32px 1fr;row-gap:8px}
+    .entry-head .gauge{grid-column:1/-1;width:100%}
+    .entry-head .pct{grid-column:1/-1;text-align:left}
+    .sub-ledger{margin-left:0}
+    .index-grid{grid-template-columns:1fr}
+    .close{flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="brandrow">
+    <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#14171c"/><g fill="#faf9f6"><ellipse cx="50" cy="60" rx="20" ry="15"/><circle cx="24" cy="38" r="9"/><circle cx="42" cy="24" r="10"/><circle cx="62" cy="24" r="10"/><circle cx="79" cy="41" r="8.5"/></g></svg>
+    <span>RECORRIDO DE MATRIZ · PROGRAMA DE CONTROL INTERNO</span>
+  </div>
+
+  <div class="filehead">
+    <div>
+      <div class="id">EXPEDIENTE <b>N.º RM-2026</b> · ESTADO DE HALLAZGOS</div>
+      <h1>De los comentarios a las acciones.</h1>
+      <p class="subline">Registro completo de los 55 temas identificados en el Recorrido de Matriz y su estado actual, ordenados por volumen y trazabilidad — de la categoría más numerosa a la más pequeña.</p>
+    </div>
+    <div class="stamp">REVISIÓN<br><span class="big">2026</span><br>4 categorías<br>2 con desglose</div>
+  </div>
+
+  <div class="ruler">
+    <div class="ruler-top">
+      <div class="total"><b>55</b> temas registrados</div>
+      <div class="caption">COMPOSICIÓN — 100%</div>
+    </div>
+    <div class="bar" id="bar"></div>
+    <div class="tickrow" id="tickrow"></div>
+  </div>
+
+  <div class="ledger">
+    <div class="entry">
+      <div class="entry-head">
+        <div class="code">01</div>
+        <div class="name">En proceso</div>
+        <div class="gauge"><i style="width:31%;background:var(--c2)"></i></div>
+        <div class="pct"><b>31%</b><small>17 temas</small></div>
+      </div>
+    </div>
+
+    <div class="entry">
+      <div class="entry-head">
+        <div class="code">02</div>
+        <div class="name">Guepardo — escalados</div>
+        <div class="gauge"><i style="width:27%;background:var(--c3)"></i></div>
+        <div class="pct"><b>27%</b><small>15 temas</small></div>
+      </div>
+      <div class="sub-ledger">
+        <div class="sub-row"><div class="r-head"><span class="t">Guepardo 2026</span><span class="m">7% · 4 temas</span></div>
+          <ul><li>Revisión de flujo de alta de clientes</li><li>Aprobaciones de descuentos</li></ul></div>
+        <div class="sub-row"><div class="r-head"><span class="t">Guepardo 2027</span><span class="m">20% · 11 temas</span></div>
+          <ul><li>Órdenes de compra abiertas</li><li>Proveedores únicos</li><li>Proyectos y compras MKT</li><li>Compensaciones e incrementos</li><li>Valorización de puestos, usuarios SAP y más</li></ul></div>
+      </div>
+    </div>
+
+    <div class="entry">
+      <div class="entry-head">
+        <div class="code">03</div>
+        <div class="name">Concluidos</div>
+        <div class="gauge"><i style="width:25%;background:var(--c1)"></i></div>
+        <div class="pct"><b>25%</b><small>14 temas</small></div>
+      </div>
+    </div>
+
+    <div class="entry">
+      <div class="entry-head">
+        <div class="code">04</div>
+        <div class="name">Sin implementación</div>
+        <div class="gauge"><i style="width:17%;background:var(--c4)"></i></div>
+        <div class="pct"><b>17%</b><small>9 temas</small></div>
+      </div>
+      <div class="sub-ledger">
+        <div class="sub-row"><div class="r-head"><span class="t">Fuera de alcance</span><span class="m">11% · 6 temas</span></div>
+          <ul><li>Rediseño del esquema de matrices</li><li>Documento índice entre matrices</li><li>Duplicidad de información en RH</li></ul></div>
+        <div class="sub-row"><div class="r-head"><span class="t">No viable</span><span class="m">6% · 3 temas</span></div>
+          <ul><li>Flujo de autorización para reservas</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="index-block">
+    <div class="cap">ANEXO — DESGLOSE POR ÁREA</div>
+    <div class="index-grid">
+      <div>
+        <h6>En proceso (17)</h6>
+        <div class="irow"><span class="n">01</span><span>Ingresos</span><span class="leader"></span><span class="v">6</span></div>
+        <div class="irow"><span class="n">02</span><span>Finanzas</span><span class="leader"></span><span class="v">5</span></div>
+        <div class="irow"><span class="n">03</span><span>Inventario</span><span class="leader"></span><span class="v">5</span></div>
+        <div class="irow"><span class="n">04</span><span>Compras</span><span class="leader"></span><span class="v">4</span></div>
+        <div class="irow"><span class="n">05</span><span>Mantenimiento</span><span class="leader"></span><span class="v">2</span></div>
+        <div class="irow"><span class="n">06</span><span>RH</span><span class="leader"></span><span class="v">2</span></div>
+        <div class="irow" style="border-bottom:none"><span class="n">07</span><span>Marketing</span><span class="leader"></span><span class="v">1</span></div>
+      </div>
+      <div>
+        <h6>Concluidos (14)</h6>
+        <div class="irow"><span class="n">01</span><span>Inventario</span><span class="leader"></span><span class="v">4</span></div>
+        <div class="irow"><span class="n">02</span><span>Ingresos</span><span class="leader"></span><span class="v">4</span></div>
+        <div class="irow"><span class="n">03</span><span>Compras</span><span class="leader"></span><span class="v">3</span></div>
+        <div class="irow" style="border-bottom:none"><span class="n">04</span><span>Finanzas</span><span class="leader"></span><span class="v">3</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="close">
+    <p>Cada comentario abre una <strong>oportunidad de mejora</strong>. Seguimos transformando los hallazgos en acciones concretas.</p>
+    <div class="sig">RECORRIDO DE MATRIZ<br>PROGRAMA DE CONTROL INTERNO · 2026</div>
+  </div>
+
+</div>
+
+<script>
+  var data = [
+    {code:'A', label:'En proceso', pct:31, color:'#a6761f'},
+    {code:'B', label:'Guepardo', pct:27, color:'#2954a6'},
+    {code:'C', label:'Concluidos', pct:25, color:'#2f6b4f'},
+    {code:'D', label:'Sin impl.', pct:17, color:'#8a3b46'}
+  ];
+  var bar = document.getElementById('bar');
+  var tickrow = document.getElementById('tickrow');
+  data.forEach(function(d){
+    var seg = document.createElement('div');
+    seg.style.width = d.pct + '%';
+    seg.style.background = d.color;
+    bar.appendChild(seg);
+    var tick = document.createElement('div');
+    tick.style.width = d.pct + '%';
+    tick.innerHTML = d.pct + '% ' + d.label.toUpperCase();
+    tickrow.appendChild(tick);
+  });
+</script>
+</body>
+</html>

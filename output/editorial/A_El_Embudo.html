@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recorrido de Matriz · El embudo de hallazgos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340..600;1,9..144,400..500&family=Work+Sans:wght@400;500;600;700;800&display=swap');
+
+  :root{
+    --paper:#f7f4ec; --paper2:#f1ecdf; --ink:#1b1f27; --ink-soft:#5b6473; --line:#d9d2bf;
+    --accent:#c65d3b; --accent-soft:#f0ded4;
+    --c1:#3d6e5c; --c1-soft:#e2ece7;   /* concluidos */
+    --c2:#b3801f; --c2-soft:#f4e8d3;   /* en proceso */
+    --c3:#33507a; --c3-soft:#dfe5f0;   /* guepardo */
+    --c4:#6b4a73; --c4-soft:#eae0ec;   /* no implementados */
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Work Sans',"Segoe UI",sans-serif;line-height:1.5}
+  .sheet{max-width:1180px;margin:0 auto;padding:64px 56px 90px}
+  a{color:inherit}
+  .serif{font-family:'Fraunces',Georgia,serif}
+
+  /* ===== MASTHEAD ===== */
+  .masthead{display:grid;grid-template-columns:auto 1fr;column-gap:28px;align-items:start;border-bottom:1px solid var(--line);padding-bottom:34px}
+  .brand{display:flex;align-items:center;gap:12px;grid-column:1/-1;margin-bottom:30px}
+  .brand svg{width:34px;height:34px;flex:none}
+  .brand .name{font-weight:700;font-size:13px;letter-spacing:2.5px}
+  .brand .tag{font-size:11px;letter-spacing:2px;color:var(--ink-soft);margin-top:1px}
+  .masthead h1{
+    grid-column:1;font-family:'Fraunces',Georgia,serif;font-weight:560;font-size:clamp(40px,6vw,74px);
+    line-height:.94;margin:0;letter-spacing:-.01em;max-width:9ch;
+  }
+  .masthead .deck{grid-column:2;align-self:end;max-width:36ch;justify-self:end;text-align:left}
+  .masthead .deck .lede{font-family:'Fraunces',Georgia,serif;font-style:italic;font-size:22px;line-height:1.3;color:var(--ink)}
+  .masthead .deck p{font-size:14.5px;color:var(--ink-soft);margin:14px 0 0;line-height:1.6}
+
+  /* ===== STATEMENT ===== */
+  .statement{display:grid;grid-template-columns:auto 1fr;column-gap:36px;align-items:end;padding:52px 0 36px}
+  .statement .num{font-family:'Fraunces',Georgia,serif;font-weight:500;font-size:clamp(120px,16vw,220px);line-height:.8;color:var(--accent);letter-spacing:-.02em}
+  .statement .cap{max-width:30ch;padding-bottom:14px}
+  .statement .cap .kicker{font-size:11.5px;font-weight:700;letter-spacing:2.5px;color:var(--accent)}
+  .statement .cap p{margin:8px 0 0;font-size:16px;color:var(--ink-soft);line-height:1.55}
+
+  /* ===== FLOW ===== */
+  .flow{position:relative;margin-top:8px}
+  .funnel-svg{display:block;width:100%;height:130px;overflow:visible}
+  .panels{display:grid;grid-template-columns:25fr 31fr 27fr 17fr;column-gap:2px;position:relative}
+  .panel{padding:26px 20px 24px;position:relative}
+  .panel::before{content:"";position:absolute;left:0;right:0;top:0;height:4px}
+  .panel.c1{background:var(--c1-soft)}.panel.c1::before{background:var(--c1)}
+  .panel.c2{background:var(--c2-soft)}.panel.c2::before{background:var(--c2)}
+  .panel.c3{background:var(--c3-soft)}.panel.c3::before{background:var(--c3)}
+  .panel.c4{background:var(--c4-soft)}.panel.c4::before{background:var(--c4)}
+  .panel .ico{width:26px;height:26px;margin-bottom:14px}
+  .panel.c1 .ico{color:var(--c1)}.panel.c2 .ico{color:var(--c2)}.panel.c3 .ico{color:var(--c3)}.panel.c4 .ico{color:var(--c4)}
+  .panel .pct{font-family:'Fraunces',Georgia,serif;font-weight:560;font-size:clamp(30px,3.4vw,46px);line-height:1}
+  .panel .name{margin-top:6px;font-weight:700;font-size:12.5px;letter-spacing:1.2px;text-transform:uppercase}
+  .panel .n{margin-top:2px;font-size:12.5px;color:var(--ink-soft)}
+
+  /* branch (level-2 split) */
+  .branch{margin-top:22px;padding-top:18px;position:relative}
+  .branch::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:rgba(27,31,39,.14)}
+  .branch-connector{width:100%;height:20px;display:block}
+  .branch-cols{display:grid;grid-template-columns:1fr 1fr;column-gap:16px}
+  .branch-cols.stack{grid-template-columns:1fr;row-gap:14px}
+  .sub h4{margin:0;font-family:'Fraunces',Georgia,serif;font-weight:560;font-size:16px}
+  .sub .meta{font-size:11px;font-weight:700;letter-spacing:.5px;margin-top:1px;opacity:.85}
+  .sub ul{margin:9px 0 0;padding:0;list-style:none;font-size:12px;line-height:1.55;color:var(--ink)}
+  .sub li{border-top:1px solid rgba(27,31,39,.12);padding:5px 0}
+  .sub li:first-child{border-top:none}
+
+  /* ===== SECONDARY: BY AREA ===== */
+  .byarea{margin-top:64px;padding-top:30px;border-top:1px solid var(--line)}
+  .byarea .kicker{font-size:11.5px;font-weight:700;letter-spacing:2.5px;color:var(--ink-soft)}
+  .byarea-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:60px;margin-top:20px}
+  .byarea-col h5{margin:0 0 10px;font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:500;font-size:17px}
+  .idx-row{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-bottom:1px solid rgba(27,31,39,.10);font-size:13.5px}
+  .idx-row .ico{width:15px;height:15px;flex:none;color:var(--ink-soft);align-self:center}
+  .idx-row .lbl{white-space:nowrap}
+  .idx-row .leader{flex:1;border-bottom:1px dotted rgba(27,31,39,.35);height:1px;margin-bottom:5px}
+  .idx-row .val{font-weight:700;font-variant-numeric:tabular-nums}
+
+  /* ===== CLOSE ===== */
+  .close{margin-top:70px;padding-top:36px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr auto;align-items:end;gap:24px}
+  .close .quote{font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:500;font-size:clamp(22px,3vw,32px);line-height:1.28;max-width:22ch}
+  .close .quote strong{font-style:normal;color:var(--accent)}
+  .close .foot{text-align:right;font-size:11px;letter-spacing:1.5px;color:var(--ink-soft);white-space:nowrap}
+
+  @media(max-width:860px){
+    .masthead{grid-template-columns:1fr}
+    .masthead .deck{grid-column:1;justify-self:start;margin-top:20px}
+    .statement{grid-template-columns:1fr}
+    .panels{grid-template-columns:1fr 1fr}
+    .funnel-svg{display:none}
+    .byarea-grid{grid-template-columns:1fr}
+    .close{grid-template-columns:1fr}
+    .close .foot{text-align:left}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <div class="brand">
+      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#1b1f27"/><g fill="#f7f4ec"><ellipse cx="50" cy="60" rx="20" ry="15"/><circle cx="24" cy="38" r="9"/><circle cx="42" cy="24" r="10"/><circle cx="62" cy="24" r="10"/><circle cx="79" cy="41" r="8.5"/></g></svg>
+      <div><div class="name">RECORRIDO DE MATRIZ</div><div class="tag">PROGRAMA DE CONTROL INTERNO</div></div>
+    </div>
+    <h1>El embudo de los hallazgos</h1>
+    <div class="deck">
+      <div class="lede">De los comentarios a las acciones.</div>
+      <p>Así avanzan los principales temas identificados en el Recorrido de Matriz: de un solo punto de partida a cuatro destinos, en la proporción real en que ocurrieron.</p>
+    </div>
+  </div>
+
+  <div class="statement">
+    <div class="num" id="src-num">55</div>
+    <div class="cap">
+      <div class="kicker">PUNTO DE PARTIDA</div>
+      <p>A partir de los recorridos y comentarios en nuestras matrices, identificamos 55 temas de mejora — el origen de todo lo que sigue.</p>
+    </div>
+  </div>
+
+  <div class="flow">
+    <svg class="funnel-svg" id="funnel-svg" preserveAspectRatio="none"></svg>
+    <div class="panels" id="panels-row">
+      <div class="panel c1">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        <div class="pct">25%</div><div class="name">Concluidos</div><div class="n">14 temas</div>
+      </div>
+      <div class="panel c2">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+        <div class="pct">31%</div><div class="name">En proceso</div><div class="n">17 temas</div>
+      </div>
+      <div class="panel c3" id="guepardo-panel">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg>
+        <div class="pct">27%</div><div class="name">Guepardo</div><div class="n">15 temas</div>
+        <div class="branch">
+          <svg class="branch-connector" id="branch-svg-1" preserveAspectRatio="none"></svg>
+          <div class="branch-cols" id="branch-cols-1">
+            <div class="sub"><h4>2026</h4><div class="meta">7% · 4 temas</div>
+              <ul><li>Revisión de flujo de alta de clientes</li><li>Aprobaciones de descuentos</li></ul></div>
+            <div class="sub"><h4>2027</h4><div class="meta">20% · 11 temas</div>
+              <ul><li>Órdenes de compra abiertas</li><li>Proveedores únicos</li><li>Proyectos y compras MKT</li><li>Compensaciones e incrementos</li><li>Valorización de puestos, usuarios SAP y más</li></ul></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel c4" id="noimpl-panel">
+        <svg class="ico" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="7" cy="6" r="2.6"/><circle cx="17" cy="6" r="2.6"/><circle cx="12" cy="10.5" r="2.9"/><circle cx="4.5" cy="13.5" r="2.3"/><circle cx="19.5" cy="13.5" r="2.3"/><path d="M12 13c-4.5 0-7.5 3-7.5 7 0 .8.6 1.4 1.4 1.4h12.2c.8 0 1.4-.6 1.4-1.4 0-4-3-7-7.5-7Z"/></svg>
+        <div class="pct">17%</div><div class="name">No implement.</div><div class="n">9 temas</div>
+        <div class="branch">
+          <svg class="branch-connector" id="branch-svg-2" preserveAspectRatio="none"></svg>
+          <div class="branch-cols stack" id="branch-cols-2">
+            <div class="sub"><h4>Fuera de alcance</h4><div class="meta">11% · 6 temas</div>
+              <ul><li>Rediseño del esquema de matrices</li><li>Documento índice entre matrices</li><li>Duplicidad de información en RH</li></ul></div>
+            <div class="sub"><h4>No viable</h4><div class="meta">6% · 3 temas</div>
+              <ul><li>Flujo de autorización para reservas</li></ul></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="byarea">
+    <div class="kicker">DESGLOSE POR ÁREA</div>
+    <div class="byarea-grid">
+      <div class="byarea-col">
+        <h5>En proceso — 17 temas</h5>
+        <div class="idx-row"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9.5" cy="20" r="1.4"/><circle cx="17.5" cy="20" r="1.4"/></svg><span class="lbl">Ingresos</span><span class="leader"></span><span class="val">6</span></div>
+        <div class="idx-row"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg><span class="lbl">Finanzas</span><span class="leader"></span><span class="val">5</span></div>
+        <div class="idx-row"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l9-5 9 5-9 5-9-5Z"/><path d="M3 8v9l9 5 9-5V8"/></svg><span class="lbl">Inventario</span><span class="leader"></span><span class="val">5</span></div>
+        <div class="idx-row"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9.5" cy="20" r="1.4"/><circle cx="17.5" cy="20" r="1.4"/></svg><span class="lbl">Compras</span><span class="leader"></span><span class="val">4</span></div>
+        <div class="idx-row"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.8 2.8-2.4-2.4Z"/></svg><span class="lbl">Mantenimiento</span><span class="leader"></span><span class="val">2</span></div>
+        <div class="idx-row"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/></svg><span class="lbl">RH</span><span class="leader"></span><span class="val">2</span></div>
+        <div class="idx-row"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10v4h3l7 4V6l-7 4H3Z"/><path d="M15 9a3 3 0 0 1 0 6"/></svg><span class="lbl">Marketing</span><span class="leader"></span><span class="val">1</span></div>
+      </div>
+      <div class="byarea-col">
+        <h5>Concluidos — 14 temas</h5>
+        <div class="idx-row"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l9-5 9 5-9 5-9-5Z"/><path d="M3 8v9l9 5 9-5V8"/></svg><span class="lbl">Inventario</span><span class="leader"></span><span class="val">4</span></div>
+        <div class="idx-row"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9.5" cy="20" r="1.4"/><circle cx="17.5" cy="20" r="1.4"/></svg><span class="lbl">Ingresos</span><span class="leader"></span><span class="val">4</span></div>
+        <div class="idx-row"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9.5" cy="20" r="1.4"/><circle cx="17.5" cy="20" r="1.4"/></svg><span class="lbl">Compras</span><span class="leader"></span><span class="val">3</span></div>
+        <div class="idx-row"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg><span class="lbl">Finanzas</span><span class="leader"></span><span class="val">3</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="close">
+    <div class="quote">Cada comentario abre una <strong>oportunidad de mejora</strong>. Seguimos transformando los hallazgos en acciones concretas.</div>
+    <div class="foot">RECORRIDO DE MATRIZ<br>PROGRAMA DE CONTROL INTERNO · 2026</div>
+  </div>
+
+</div>
+
+<script>
+function drawFunnel(svgEl, sourceEl, targetEls, colorAttr){
+  var svgRect = svgEl.getBoundingClientRect();
+  var srcRect = sourceEl.getBoundingClientRect();
+  var srcX = srcRect.left + srcRect.width/2 - svgRect.left;
+  var srcY = 0;
+  svgEl.setAttribute('viewBox', '0 0 '+svgRect.width+' '+svgRect.height);
+  svgEl.innerHTML = '';
+  var ns = 'http://www.w3.org/2000/svg';
+  targetEls.forEach(function(t){
+    var r = t.el.getBoundingClientRect();
+    var xL = r.left - svgRect.left, xR = r.right - svgRect.left;
+    var yT = svgRect.height;
+    var path = document.createElementNS(ns,'path');
+    var d = 'M '+srcX+' '+srcY+
+      ' C '+srcX+' '+(yT*0.55)+' '+xL+' '+(yT*0.2)+' '+xL+' '+yT+
+      ' L '+xR+' '+yT+
+      ' C '+xR+' '+(yT*0.2)+' '+srcX+' '+(yT*0.55)+' '+srcX+' '+srcY+' Z';
+    path.setAttribute('d', d);
+    path.setAttribute('fill', t.color);
+    path.setAttribute('opacity', '0.9');
+    svgEl.appendChild(path);
+  });
+}
+
+function drawBranch(svgEl, panelEl, subEls, color){
+  var svgRect = svgEl.getBoundingClientRect();
+  if(svgRect.width < 2) return;
+  var pRect = panelEl.getBoundingClientRect();
+  var srcX = pRect.left + pRect.width/2 - svgRect.left;
+  svgEl.setAttribute('viewBox', '0 0 '+svgRect.width+' '+svgRect.height);
+  svgEl.innerHTML='';
+  var ns='http://www.w3.org/2000/svg';
+  subEls.forEach(function(s){
+    var r = s.getBoundingClientRect();
+    var xC = r.left + r.width/2 - svgRect.left;
+    var yT = svgRect.height;
+    var path = document.createElementNS(ns,'path');
+    path.setAttribute('d','M '+srcX+' 0 C '+srcX+' '+(yT*.6)+' '+xC+' '+(yT*.2)+' '+xC+' '+yT);
+    path.setAttribute('fill','none'); path.setAttribute('stroke', color); path.setAttribute('stroke-width','1.6');
+    svgEl.appendChild(path);
+    var dot = document.createElementNS(ns,'circle');
+    dot.setAttribute('cx', xC); dot.setAttribute('cy', yT); dot.setAttribute('r', 2.6); dot.setAttribute('fill', color);
+    svgEl.appendChild(dot);
+  });
+  var srcDot = document.createElementNS(ns,'circle');
+  srcDot.setAttribute('cx', srcX); srcDot.setAttribute('cy', 0); srcDot.setAttribute('r', 2.6); srcDot.setAttribute('fill', color);
+  svgEl.appendChild(srcDot);
+}
+
+function renderAll(){
+  var panels = document.querySelectorAll('.panel');
+  var colors = ['#3d6e5c','#b3801f','#33507a','#6b4a73'];
+  var targets = Array.prototype.map.call(panels, function(p,i){ return {el:p, color: colors[i]}; });
+  drawFunnel(document.getElementById('funnel-svg'), document.getElementById('src-num'), targets);
+
+  drawBranch(document.getElementById('branch-svg-1'), document.getElementById('guepardo-panel'),
+    document.querySelectorAll('#branch-cols-1 .sub'), '#33507a');
+  drawBranch(document.getElementById('branch-svg-2'), document.getElementById('noimpl-panel'),
+    document.querySelectorAll('#branch-cols-2 .sub'), '#6b4a73');
+}
+window.addEventListener('load', renderAll);
+window.addEventListener('resize', renderAll);
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(renderAll); }
+</script>
+</body>
+</html>
