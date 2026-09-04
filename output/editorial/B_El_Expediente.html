@@ -13,94 +13,88 @@
     --c1:#2f6b4f; --c2:#a6761f; --c3:#2954a6; --c4:#8a3b46;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;background:#e4e2dc}
-  body{color:var(--ink);font-family:'IBM Plex Sans',"Segoe UI",sans-serif;display:flex;justify-content:center;padding:40px 16px}
+  html,body{margin:0;background:#e4e2dc;height:100%}
+  body{color:var(--ink);font-family:'IBM Plex Sans',"Segoe UI",sans-serif;display:flex;justify-content:center;padding:36px 16px}
   .mono{font-family:'IBM Plex Mono','Courier New',monospace}
-  .poster{position:relative;width:1080px;background:var(--paper);padding:70px 76px 66px;box-shadow:0 30px 70px -20px rgba(10,10,15,.35)}
+  .poster{position:relative;width:1080px;height:1920px;background:var(--paper);padding:50px 64px 40px;display:flex;flex-direction:column;box-shadow:0 30px 70px -20px rgba(10,10,15,.35);overflow:hidden}
 
-  .brandrow{display:flex;align-items:center;gap:10px;margin-bottom:36px}
-  .brandrow svg{width:26px;height:26px}
-  .brandrow span{font-family:'IBM Plex Mono','Courier New',monospace;font-size:11px;letter-spacing:2px;color:var(--ink-soft)}
+  .brandrow{display:flex;align-items:center;gap:9px;flex:none}
+  .brandrow svg{width:22px;height:22px}
+  .brandrow span{font-family:'IBM Plex Mono','Courier New',monospace;font-size:10.5px;letter-spacing:1.8px;color:var(--ink-soft)}
 
-  /* ===== HEADER — editorial, not a report stamp ===== */
-  .kicker{font-family:'IBM Plex Mono','Courier New',monospace;font-size:11.5px;letter-spacing:2px;color:var(--accent);font-weight:600}
-  h1{margin:14px 0 0;font-size:58px;font-weight:700;letter-spacing:-.015em;line-height:1.04;max-width:15ch}
-  .subline{margin:18px 0 0;max-width:62ch;color:var(--ink-soft);font-size:15px;line-height:1.65}
+  /* ===== 55 as origin — integrated with the headline, not a separate stat block ===== */
+  .hero{display:flex;align-items:flex-end;column-gap:30px;margin-top:18px;flex:none}
+  .hero .num{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:206px;line-height:.74;letter-spacing:-.03em;flex:none}
+  .hero .side{padding-bottom:8px}
+  .kicker{font-family:'IBM Plex Mono','Courier New',monospace;font-size:12px;letter-spacing:1.8px;color:var(--accent);font-weight:600}
+  h1{margin:10px 0 0;font-size:56px;font-weight:700;letter-spacing:-.015em;line-height:1.03;max-width:14ch}
+  .subline{margin:14px 0 0;max-width:50ch;color:var(--ink-soft);font-size:14.5px;line-height:1.6}
 
-  /* ===== HERO NUMBER ===== */
-  .hero{display:grid;grid-template-columns:auto 1fr;column-gap:32px;align-items:end;margin-top:52px;padding-bottom:30px;border-bottom:2px solid var(--ink)}
-  .hero .num{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:150px;line-height:.78;letter-spacing:-.03em}
-  .hero .side{padding-bottom:10px;max-width:34ch}
-  .hero .side .t{font-size:11.5px;font-weight:700;letter-spacing:1.5px;color:var(--ink-soft);text-transform:uppercase}
-  .hero .side p{margin:8px 0 0;font-size:14.5px;color:var(--ink-soft);line-height:1.6}
-
-  /* ===== RULER / TOTAL BAR ===== */
-  .ruler{margin-top:26px}
+  .ruler{margin-top:30px;flex:none}
   .bar{display:flex;height:38px}
-  .bar > div{position:relative}
   .tickrow{display:flex;margin-top:8px}
   .tickrow > div{font-family:'IBM Plex Mono','Courier New',monospace;font-size:10.5px;color:var(--ink-soft);padding-left:2px}
 
-  .bridge{margin:34px 0 0;font-size:16px;line-height:1.6;max-width:74ch;color:var(--ink)}
-  .bridge b{color:var(--accent)}
+  .spacer{flex:1 1 auto;min-height:8px}
 
-  /* ===== LEDGER (case entries) — editorial index, not dashboard rows ===== */
-  .ledger{margin-top:8px}
-  .entry{padding:34px 0;border-top:1px solid var(--line)}
-  .entry-head{display:grid;grid-template-columns:84px 1fr auto;column-gap:20px;align-items:baseline}
-  .entry-head .code{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:44px;color:var(--line-strong);line-height:1}
-  .entry-head .name{font-weight:700;font-size:26px;letter-spacing:-.01em}
-  .entry-head .pct{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:32px;text-align:right;white-space:nowrap}
-  .entry-head .pct small{display:block;font-weight:400;font-size:11px;color:var(--ink-soft);text-align:right;margin-top:2px}
-  .entry-line{grid-column:2/-1;height:4px;background:var(--line);margin-top:12px;position:relative}
-  .entry-line i{position:absolute;left:0;top:0;bottom:0;display:block}
+  /* ===== 58% — the headline finding, given real visual weight ===== */
+  .callout{flex:none;background:var(--ink);color:var(--paper);padding:40px 44px;display:flex;align-items:center;column-gap:34px}
+  .callout .big{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:136px;line-height:1;color:#fff}
+  .callout .txt{font-size:19px;line-height:1.45;max-width:40ch}
+  .callout .txt b{color:#8fb0e8}
 
-  .sub-ledger{margin:22px 0 0 104px;padding-left:20px;border-left:1.5px solid var(--line-strong)}
-  .sub-row{margin-bottom:18px}
-  .sub-row:last-child{margin-bottom:0}
-  .sub-row .r-head{display:flex;align-items:baseline;gap:10px}
-  .sub-row .r-head .t{font-weight:600;font-size:15px}
-  .sub-row .r-head .m{font-family:'IBM Plex Mono','Courier New',monospace;font-size:11.5px;color:var(--ink-soft)}
-  .sub-row ul{margin:7px 0 0;padding:0;list-style:none;font-size:13px;color:var(--ink-soft);line-height:1.75;columns:2;column-gap:28px}
-  .sub-row li{position:relative;padding-left:14px;break-inside:avoid}
+  /* ===== LEDGER — one continuous spine instead of four boxed rows ===== */
+  .ledger{flex:none;position:relative;padding-left:26px}
+  .ledger::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:2px;background:var(--line-strong)}
+  .entry{position:relative;padding:14px 0}
+  .entry::before{content:"";position:absolute;left:-31px;top:19px;width:10px;height:10px;border-radius:50%;background:var(--c)}
+  .entry-head{display:flex;align-items:baseline;column-gap:14px}
+  .entry-head .code{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:12px;color:var(--ink-soft);width:18px;flex:none}
+  .entry-head .name{font-weight:700;font-size:18px;flex:none}
+  .entry-head .line{flex:1 1 auto;height:2px;background:var(--line);position:relative;top:1px}
+  .entry-head .line i{display:block;height:100%;background:var(--c)}
+  .entry-head .pct{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:19px;flex:none;white-space:nowrap}
+  .entry-head .pct small{font-weight:400;font-size:10.5px;color:var(--ink-soft);margin-left:5px}
+
+  .sub-ledger{margin:10px 0 0 32px;display:grid;grid-template-columns:1fr 1fr;column-gap:34px}
+  .sub-row .r-head{display:flex;align-items:baseline;gap:8px}
+  .sub-row .r-head .t{font-weight:600;font-size:12.5px}
+  .sub-row .r-head .m{font-family:'IBM Plex Mono','Courier New',monospace;font-size:10px;color:var(--ink-soft)}
+  .sub-row ul{margin:4px 0 0;padding:0;list-style:none;font-size:11px;color:var(--ink-soft);line-height:1.55}
+  .sub-row li{position:relative;padding-left:12px}
   .sub-row li::before{content:"–";position:absolute;left:0;color:var(--line-strong)}
+  .sub-row + .sub-row{margin-top:8px}
 
-  .entry-note{margin:104px 0 0;font-size:13px;color:var(--ink-soft);max-width:52ch}
-  .entry-note.tight{margin-left:104px;margin-top:16px}
+  .entry-note{margin:8px 0 0 32px;font-size:11.5px;color:var(--ink-soft);max-width:56ch}
 
-  /* ===== INDEX (by area) — integrated as continuation, not appendix ===== */
-  .index-block{margin-top:12px;padding-top:36px;border-top:2px solid var(--ink)}
-  .index-block .lead{font-size:15px;color:var(--ink-soft);max-width:62ch;margin:0 0 26px}
-  .index-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:60px}
-  .index-grid h6{margin:0 0 10px;font-size:13.5px;font-weight:700;font-family:'IBM Plex Mono','Courier New',monospace;letter-spacing:.5px}
-  .irow{display:flex;align-items:baseline;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px dotted var(--line-strong)}
+  /* ===== INDEX ===== */
+  .index-block{flex:none;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+  .index-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:56px;margin-top:4px}
+  .index-grid h6{margin:0 0 6px;font-size:12px;font-weight:700;font-family:'IBM Plex Mono','Courier New',monospace;letter-spacing:.5px}
+  .irow{display:flex;align-items:baseline;gap:8px;padding:3.5px 0;font-size:11.5px;border-bottom:1px dotted var(--line-strong)}
   .irow .leader{flex:1}
-  .irow .v{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:600;width:20px;text-align:right}
+  .irow .v{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:600;width:18px;text-align:right}
 
-  /* ===== CLOSE ===== */
-  .close{margin-top:56px;padding-top:26px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
-  .close p{max-width:46ch;font-size:17px;line-height:1.55;margin:0;font-weight:500}
+  .close{flex:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+  .close p{max-width:48ch;font-size:14.5px;line-height:1.4;margin:0;font-weight:500}
   .close p strong{color:var(--accent)}
-  .close .sig{font-family:'IBM Plex Mono','Courier New',monospace;font-size:10.5px;color:var(--ink-soft);text-align:right;white-space:nowrap}
+  .close .sig{font-family:'IBM Plex Mono','Courier New',monospace;font-size:9.5px;color:var(--ink-soft);text-align:right;white-space:nowrap}
 </style>
 </head>
 <body>
-<div class="poster">
+<div class="poster" id="poster">
 
   <div class="brandrow">
     <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#14171c"/><g fill="#faf9f6"><ellipse cx="50" cy="60" rx="20" ry="15"/><circle cx="24" cy="38" r="9"/><circle cx="42" cy="24" r="10"/><circle cx="62" cy="24" r="10"/><circle cx="79" cy="41" r="8.5"/></g></svg>
     <span>RECORRIDO DE MATRIZ · PROGRAMA DE CONTROL INTERNO</span>
   </div>
 
-  <div class="kicker">EXPEDIENTE N.º RM-2026 — ESTADO DE HALLAZGOS</div>
-  <h1>De los comentarios a las acciones.</h1>
-  <p class="subline">Registro completo de los 55 temas identificados en el Recorrido de Matriz y su estado actual, ordenados de la categoría más numerosa a la más pequeña.</p>
-
   <div class="hero">
     <div class="num">55</div>
     <div class="side">
-      <div class="t">Temas registrados</div>
-      <p>El total se reparte en cuatro estados. El ancho de cada tramo de la barra es su proporción real dentro del conjunto.</p>
+      <div class="kicker">EXPEDIENTE N.º RM-2026 — DESDE ESTE ORIGEN</div>
+      <h1>De los comentarios a las acciones.</h1>
+      <p class="subline">55 temas identificados en el Recorrido de Matriz. Lo que sigue es su estado actual, tema por tema, del más numeroso al más pequeño.</p>
     </div>
   </div>
 
@@ -109,63 +103,48 @@
     <div class="tickrow" id="tickrow"></div>
   </div>
 
-  <p class="bridge">En proceso y Guepardo concentran <b>58% del total</b>; Concluidos consolida una cuarta parte del recorrido, y solo <b>17%</b> queda sin implementación.</p>
+  <div class="spacer"></div>
+
+  <div class="callout">
+    <div class="big">58%</div>
+    <div class="txt">de los 55 temas ya están en marcha: <b>En proceso</b> y <b>Guepardo</b> juntos superan a la mitad del recorrido.</div>
+  </div>
+
+  <div class="spacer"></div>
 
   <div class="ledger">
-    <div class="entry">
-      <div class="entry-head">
-        <div class="code">01</div>
-        <div class="name">En proceso</div>
-        <div class="pct">31%<small>17 temas</small></div>
-      </div>
-      <div class="entry-line"><i style="width:31%;background:var(--c2)"></i></div>
-      <p class="entry-note tight">El tramo más numeroso: casi un tercio de los hallazgos avanza hoy dentro de las áreas.</p>
+    <div class="entry" style="--c:var(--c2)">
+      <div class="entry-head"><span class="code">01</span><span class="name">En proceso</span><span class="line"><i style="width:31%;background:var(--c2)"></i></span><span class="pct">31%<small>17 temas</small></span></div>
+      <p class="entry-note">El tramo más numeroso: casi un tercio de los hallazgos avanza hoy en las áreas.</p>
     </div>
-
-    <div class="entry">
-      <div class="entry-head">
-        <div class="code">02</div>
-        <div class="name">Guepardo — escalados</div>
-        <div class="pct">27%<small>15 temas</small></div>
-      </div>
-      <div class="entry-line"><i style="width:27%;background:var(--c3)"></i></div>
+    <div class="entry" style="--c:var(--c3)">
+      <div class="entry-head"><span class="code">02</span><span class="name">Guepardo — escalados</span><span class="line"><i style="width:27%;background:var(--c3)"></i></span><span class="pct">27%<small>15 temas</small></span></div>
       <div class="sub-ledger">
-        <div class="sub-row"><div class="r-head"><span class="t">Guepardo 2026</span><span class="m">7% · 4 temas</span></div>
+        <div class="sub-row"><div class="r-head"><span class="t">2026</span><span class="m">7% · 4 temas</span></div>
           <ul><li>Revisión de flujo de alta de clientes</li><li>Aprobaciones de descuentos</li></ul></div>
-        <div class="sub-row"><div class="r-head"><span class="t">Guepardo 2027</span><span class="m">20% · 11 temas</span></div>
-          <ul><li>Órdenes de compra abiertas</li><li>Proveedores únicos</li><li>Proyectos y compras MKT</li><li>Compensaciones e incrementos</li><li>Valorización de puestos, usuarios SAP y más</li></ul></div>
+        <div class="sub-row"><div class="r-head"><span class="t">2027</span><span class="m">20% · 11 temas</span></div>
+          <ul><li>Órdenes de compra abiertas</li><li>Proveedores únicos</li><li>Proyectos y compras MKT</li><li>Compensaciones e incrementos</li><li>Valorización de puestos, SAP y más</li></ul></div>
       </div>
     </div>
-
-    <div class="entry">
-      <div class="entry-head">
-        <div class="code">03</div>
-        <div class="name">Concluidos</div>
-        <div class="pct">25%<small>14 temas</small></div>
-      </div>
-      <div class="entry-line"><i style="width:25%;background:var(--c1)"></i></div>
-      <p class="entry-note tight">Una cuarta parte del recorrido ya cerró su ciclo completo, de comentario a acción.</p>
+    <div class="entry" style="--c:var(--c1)">
+      <div class="entry-head"><span class="code">03</span><span class="name">Concluidos</span><span class="line"><i style="width:25%;background:var(--c1)"></i></span><span class="pct">25%<small>14 temas</small></span></div>
+      <p class="entry-note">Una cuarta parte ya cerró su ciclo completo, de comentario a acción.</p>
     </div>
-
-    <div class="entry">
-      <div class="entry-head">
-        <div class="code">04</div>
-        <div class="name">Sin implementación</div>
-        <div class="pct">17%<small>9 temas</small></div>
-      </div>
-      <div class="entry-line"><i style="width:17%;background:var(--c4)"></i></div>
+    <div class="entry" style="--c:var(--c4)">
+      <div class="entry-head"><span class="code">04</span><span class="name">Sin implementación</span><span class="line"><i style="width:17%;background:var(--c4)"></i></span><span class="pct">17%<small>9 temas</small></span></div>
       <div class="sub-ledger">
-        <div class="sub-row"><div class="r-head"><span class="t">Fuera de alcance</span><span class="m">11% · 6 temas</span></div>
+        <div class="sub-row"><div class="r-head"><span class="t">Fuera de alcance</span><span class="m">11% · 6</span></div>
           <ul><li>Rediseño del esquema de matrices</li><li>Documento índice entre matrices</li><li>Duplicidad de información en RH</li></ul></div>
-        <div class="sub-row"><div class="r-head"><span class="t">No viable</span><span class="m">6% · 3 temas</span></div>
+        <div class="sub-row"><div class="r-head"><span class="t">No viable</span><span class="m">6% · 3</span></div>
           <ul><li>Flujo de autorización para reservas</li></ul></div>
       </div>
     </div>
   </div>
 
+  <div class="spacer"></div>
+
   <div class="index-block">
-    <div class="kicker">DESGLOSE POR ÁREA</div>
-    <p class="lead">Las mismas cifras, vistas desde el área responsable — para las dos categorías con mayor volumen.</p>
+    <div class="kicker">DESGLOSE POR ÁREA — LAS DOS CATEGORÍAS DE MAYOR VOLUMEN</div>
     <div class="index-grid">
       <div>
         <h6>EN PROCESO · 17</h6>

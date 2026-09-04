@@ -16,269 +16,250 @@
     --noimpl:#8a3b46;  --noimpl-soft:#ecdde0;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:#17191e;font-family:'Work Sans',"Segoe UI",sans-serif;color:var(--ink);display:flex;justify-content:center;padding:44px 20px}
+  html,body{margin:0;background:#17191e;height:100%}
+  body{font-family:'Work Sans',"Segoe UI",sans-serif;color:var(--ink);display:flex;justify-content:center;padding:36px 16px}
   .oswald{font-family:'Oswald','Segoe UI',sans-serif}
 
-  .poster{position:relative;width:1080px;height:3260px;background:var(--paper);overflow:hidden;box-shadow:0 40px 100px -30px rgba(0,0,0,.6)}
-  .road-layer{position:absolute;inset:0;z-index:1}
-  .layer{position:absolute;inset:0;z-index:2;pointer-events:none}
-  .layer > *{pointer-events:auto}
+  .poster{position:relative;width:1080px;height:1920px;background:var(--paper);padding:44px 64px 34px;display:flex;flex-direction:column;box-shadow:0 40px 100px -30px rgba(0,0,0,.6);overflow:hidden}
 
-  /* road-shoulder guide ticks running the full height, so the road's presence reads as continuous beside the content */
-  .guide{position:absolute;top:0;bottom:0;width:1px;background:repeating-linear-gradient(to bottom,var(--line) 0 6px,transparent 6px 18px);z-index:1}
+  .brand{display:flex;align-items:center;justify-content:center;gap:9px;flex:none}
+  .brand svg{width:24px;height:24px}
+  .brand span{font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:11.5px;letter-spacing:2.5px;color:var(--ink-soft)}
+  h1{text-align:center;margin:14px 0 0;font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:44px;letter-spacing:.5px;line-height:1.05;color:var(--ink);flex:none}
+  .deck{text-align:center;font-size:13.5px;color:var(--ink-soft);max-width:58ch;margin:10px auto 0;line-height:1.5;flex:none}
 
-  /* ===== masthead ===== */
-  .masthead{position:absolute;top:52px;left:70px;right:70px;z-index:3;text-align:center}
-  .brand{display:inline-flex;align-items:center;gap:10px;margin-bottom:16px}
-  .brand svg{width:30px;height:30px}
-  .brand span{font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:13px;letter-spacing:3px;color:var(--ink-soft)}
-  .masthead h1{margin:0;font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:50px;letter-spacing:.5px;line-height:1.08;color:var(--ink)}
-  .masthead .deck{font-size:14.5px;color:var(--ink-soft);max-width:56ch;margin:14px auto 0;line-height:1.5}
+  /* ===== gate ===== */
+  .gate{text-align:center;flex:none;margin-top:16px;padding-bottom:26px}
+  .gate .kicker{font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:11px;letter-spacing:3px;color:var(--gold)}
+  .gate .num{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:76px;line-height:.85;color:var(--ink);margin-top:4px}
+  .gate .cap{font-size:11.5px;color:var(--ink-soft);margin-top:4px}
 
-  /* ===== start gate ===== */
-  .gate{position:absolute;top:342px;left:390px;width:300px;text-align:center;z-index:3}
-  .gate .kicker{font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:11.5px;letter-spacing:3px;color:var(--gold)}
-  .gate .num{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:96px;line-height:.85;color:var(--ink);margin-top:6px}
-  .gate .cap{font-size:12.5px;color:var(--ink-soft);margin-top:6px}
+  /* ===== ROAD VISUAL — measured, not hand-plotted ===== */
+  .road-visual{flex:1 1 auto;position:relative;display:flex;flex-direction:column;align-items:center;min-height:160px;margin-top:6px}
+  .road-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:1}
 
-  /* ===== km tag ===== */
-  .kmtag{position:absolute;z-index:4;font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:12px;color:#fff;background:var(--asphalt);
-    border-radius:4px;padding:5px 9px;letter-spacing:.5px;box-shadow:0 4px 10px rgba(0,0,0,.25)}
+  .node{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;flex:none}
+  .junction .head{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;background:var(--paper);padding-bottom:6px}
+  .node .dot,.junction .dot{width:58px;height:58px;border-radius:50%;background:var(--paper);border:5px solid var(--c);display:grid;place-items:center;box-shadow:0 6px 14px rgba(0,0,0,.22)}
+  .node .dot svg,.junction .dot svg{width:22px;height:22px;color:var(--c)}
+  .node .lbl,.junction .lbl{margin-top:8px;text-align:center;background:var(--paper);position:relative;z-index:3;padding:0 14px}
+  .node .lbl .pct,.junction .lbl .pct{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:26px;color:var(--c);line-height:1}
+  .node .lbl .nm,.junction .lbl .nm{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink);margin-top:2px}
+  .node .lbl .kk,.junction .lbl .kk{font-size:9.5px;color:var(--ink-soft);margin-top:1px}
+  .node .tag,.junction .tag{margin-top:8px;font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:9.5px;letter-spacing:1.6px;color:#fff;background:var(--c);padding:3px 9px;border-radius:3px;position:relative;z-index:3}
 
-  /* ===== station marker (on the road) ===== */
-  .marker{position:absolute;z-index:5;width:68px;height:68px;border-radius:50%;background:var(--paper);
-    display:grid;place-items:center;box-shadow:0 6px 16px rgba(0,0,0,.28);transform:translate(-50%,-50%)}
-  .marker .ring{position:absolute;inset:0;border-radius:50%;border:5px solid var(--c)}
-  .marker svg{width:27px;height:27px;color:var(--c);position:relative;z-index:1}
-  .marker .stage{position:absolute;top:-11px;right:-11px;width:26px;height:26px;border-radius:50%;background:var(--ink);
-    color:#fff;font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:12px;display:grid;place-items:center}
+  .spacer-sm{flex:1 1 auto;min-height:6px}
 
-  .detail-tag{position:absolute;z-index:4;font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:1.5px;color:#fff;
-    background:var(--c);padding:5px 10px;border-radius:3px;white-space:nowrap}
+  /* ===== junction with two branches ===== */
+  .junction{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;flex:none;width:100%}
+  .junction .head{display:flex;flex-direction:column;align-items:center}
+  .branches{display:flex;justify-content:space-between;width:100%;max-width:820px;margin-top:14px}
+  .chip{position:relative;z-index:3;width:290px;background:var(--c-soft);border-top:3px solid var(--c);padding:12px 16px 14px;text-align:left}
+  .chip .h{display:flex;justify-content:space-between;align-items:baseline}
+  .chip .h .t{font-weight:700;font-size:13.5px}
+  .chip .h .p{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:16px;color:var(--c)}
+  .chip .m{font-size:10.5px;color:var(--ink-soft);margin-top:1px}
+  .chip.end{border-top-color:var(--c);position:relative}
+  .chip.end::after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:6px;background:repeating-linear-gradient(90deg,#fff 0 8px,var(--c) 8px 16px)}
 
-  /* the road sign — the protagonist number lives here, once, hanging off the marker */
-  .signlink{position:absolute;z-index:4;width:2px;background:repeating-linear-gradient(to bottom,var(--c) 0 5px,transparent 5px 10px)}
-  .roadsign{position:absolute;z-index:5;background:var(--c);color:#fff;border-radius:8px;padding:16px 20px;box-shadow:0 10px 24px rgba(0,0,0,.3)}
-  .roadsign .pct{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:46px;line-height:1}
-  .roadsign .name{font-weight:600;font-size:13px;letter-spacing:1px;text-transform:uppercase;margin-top:5px;opacity:.96}
-  .roadsign .n{font-size:11.5px;margin-top:2px;opacity:.82}
+  /* ===== DETAIL STRIP — full lists, off the road, keyed by color ===== */
+  .detail-head{flex:none;margin-top:18px;text-align:center}
+  .detail-head .kk{font-size:10.5px;font-weight:700;letter-spacing:2.2px;color:var(--ink-soft)}
+  .detail{flex:none;margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;column-gap:16px}
+  .dcol{border-top:3px solid var(--c);padding-top:10px}
+  .dcol .dh{display:flex;align-items:baseline;gap:6px}
+  .dcol .dh .p{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:17px;color:var(--c)}
+  .dcol .dh .n{font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--ink)}
+  .dcol .dept-row{display:flex;justify-content:space-between;gap:5px;font-size:10.5px;padding:3.5px 0;border-top:1px solid rgba(0,0,0,.08)}
+  .dcol .dept-row:first-of-type{border-top:none;margin-top:8px}
+  .dcol .dept-row .v{font-weight:700;flex:none}
+  .dcol .grp{margin-top:8px}
+  .dcol .grp .gh{font-size:10px;font-weight:700}
+  .dcol .grp ul{margin:3px 0 0;padding:0;list-style:none;font-size:9.5px;color:var(--ink-soft);line-height:1.45}
+  .dcol .grp li{position:relative;padding-left:9px}
+  .dcol .grp li::before{content:"–";position:absolute;left:0}
 
-  /* ===== platform panels — narrower than the canvas, so the road stays visible beside them ===== */
-  .panel{position:absolute;left:90px;right:90px;z-index:3;background:var(--soft);border-top:1px solid rgba(0,0,0,.06);border-bottom:1px solid rgba(0,0,0,.06)}
-
-  .dept-list{position:absolute;top:78px}
-  .dept-row{display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px dotted rgba(0,0,0,.18);font-size:12.5px}
-  .dept-row .leader{flex:1}
-  .dept-row .v{font-weight:700}
-  .dept-title{font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:11px;letter-spacing:2px;color:var(--ink-soft);margin-bottom:8px}
-
-  .split2{position:absolute;top:78px;display:grid;grid-template-columns:1fr 1fr;column-gap:32px}
-  .split2 h4{margin:0;font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:16px;color:var(--ink)}
-  .split2 .m{font-size:11px;font-weight:700;color:var(--c);margin-top:1px}
-  .split2 ul{margin:8px 0 0;padding:0;list-style:none;font-size:12px;line-height:1.6;color:var(--ink-soft)}
-  .split2 li{border-top:1px solid rgba(0,0,0,.1);padding:4px 0}
-  .split2 li:first-child{border-top:none}
-
-  /* ===== destination ===== */
-  .arrival{position:absolute;left:0;right:0;text-align:center;z-index:3}
-  .arrival .flag{width:120px;height:14px;margin:0 auto;background-image:repeating-linear-gradient(90deg,#20232b 0 15px,#f2ede1 15px 30px);border-radius:3px}
-  .arrival h2{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:32px;letter-spacing:1px;margin:18px 0 0;color:var(--ink)}
-  .arrival .quote{font-family:'Oswald','Segoe UI',sans-serif;font-weight:400;font-style:italic;font-size:19px;max-width:46ch;margin:16px auto 0;color:var(--ink-soft);line-height:1.5}
-  .arrival .quote strong{font-weight:600;font-style:normal;color:var(--gold)}
-  .arrival .foot{margin-top:26px;font-family:'Oswald','Segoe UI',sans-serif;font-weight:500;font-size:11px;letter-spacing:2.5px;color:var(--ink-soft)}
+  /* ===== close ===== */
+  .close{flex:none;margin-top:20px;text-align:center}
+  .close .quote{font-family:'Oswald','Segoe UI',sans-serif;font-weight:400;font-style:italic;font-size:16px;max-width:60ch;margin:0 auto;color:var(--ink-soft);line-height:1.4}
+  .close .quote strong{font-weight:600;font-style:normal;color:var(--gold)}
+  .close .foot{margin-top:10px;font-family:'Oswald','Segoe UI',sans-serif;font-weight:500;font-size:9.5px;letter-spacing:2px;color:var(--ink-soft)}
 </style>
 </head>
 <body>
 <div class="poster" id="poster">
 
-  <svg class="road-layer" id="road-svg" width="1080" height="3260"></svg>
+  <div class="brand">
+    <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#20232b"/><g fill="#f2ede1"><ellipse cx="50" cy="60" rx="20" ry="15"/><circle cx="24" cy="38" r="9"/><circle cx="42" cy="24" r="10"/><circle cx="62" cy="24" r="10"/><circle cx="79" cy="41" r="8.5"/></g></svg>
+    <span>RECORRIDO DE MATRIZ · PROGRAMA DE CONTROL INTERNO</span>
+  </div>
+  <h1>LA CARRETERA DE LOS HALLAZGOS</h1>
+  <div class="deck">De los comentarios a las acciones: el camino que siguieron los 55 temas, de punto de partida a destino final.</div>
 
-  <div class="layer">
-    <div class="masthead">
-      <div class="brand">
-        <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#20232b"/><g fill="#f2ede1"><ellipse cx="50" cy="60" rx="20" ry="15"/><circle cx="24" cy="38" r="9"/><circle cx="42" cy="24" r="10"/><circle cx="62" cy="24" r="10"/><circle cx="79" cy="41" r="8.5"/></g></svg>
-        <span>RECORRIDO DE MATRIZ · PROGRAMA DE CONTROL INTERNO</span>
+  <div class="gate" id="gate">
+    <div class="kicker">INICIO · KM 0</div>
+    <div class="num">55</div>
+    <div class="cap">temas identificados en el Recorrido de Matriz</div>
+  </div>
+
+  <div class="road-visual" id="road-visual">
+    <svg class="road-svg" id="road-svg"></svg>
+
+    <div class="node" id="n-hito1" style="--c:var(--proceso)">
+      <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></div>
+      <div class="lbl"><div class="pct">31%</div><div class="nm">En proceso</div><div class="kk">17 temas · HITO — tramo en obra</div></div>
+    </div>
+
+    <div class="spacer-sm"></div>
+
+    <div class="junction" id="j-guepardo" style="--c:var(--guepardo)">
+      <div class="head">
+        <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg></div>
+        <div class="lbl"><div class="pct">27%</div><div class="nm">Guepardo</div><div class="kk">15 temas</div></div>
+        <div class="tag">DESVÍO · SE BIFURCA EN DOS AÑOS</div>
       </div>
-      <h1>LA CARRETERA DE LOS HALLAZGOS</h1>
-      <div class="deck">De los comentarios a las acciones: el camino que siguieron los 55 temas identificados, en el orden y la distancia real de su recorrido.</div>
-    </div>
-
-    <div class="gate">
-      <div class="kicker">KM 0 — PUNTO DE PARTIDA</div>
-      <div class="num">55</div>
-      <div class="cap">temas identificados en el Recorrido de Matriz</div>
-    </div>
-
-    <!-- STATION 1 — EN PROCESO : marker (380,720) -->
-    <div class="marker" style="--c:var(--proceso);left:380px;top:720px">
-      <div class="ring"></div>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
-      <div class="stage">01</div>
-    </div>
-    <div class="kmtag" style="left:246px;top:706px">KM 17</div>
-
-    <div class="signlink" style="left:414px;top:735px;height:39px"></div>
-    <div class="roadsign" style="left:414px;top:730px;--c:var(--proceso)">
-      <div class="pct">31%</div>
-      <div class="name">En proceso</div>
-      <div class="n">17 temas — tramo en obra</div>
-    </div>
-    <div class="panel" style="top:780px;height:230px;--soft:var(--proceso-soft)">
-      <div class="dept-list" style="left:430px;width:440px;--c:var(--proceso)">
-        <div class="dept-title">DESGLOSE POR ÁREA</div>
-        <div class="dept-row"><span>Ingresos</span><span class="leader"></span><span class="v">6</span></div>
-        <div class="dept-row"><span>Finanzas</span><span class="leader"></span><span class="v">5</span></div>
-        <div class="dept-row"><span>Inventario</span><span class="leader"></span><span class="v">5</span></div>
-        <div class="dept-row"><span>Compras</span><span class="leader"></span><span class="v">4</span></div>
-        <div class="dept-row" style="border-bottom:none"><span>Mantenimiento · RH · Marketing</span><span class="leader"></span><span class="v">2 · 2 · 1</span></div>
+      <div class="branches">
+        <div class="chip" id="ch-2026" style="--c:var(--guepardo);--c-soft:var(--guepardo-soft)">
+          <div class="h"><span class="t">2026</span><span class="p">7%</span></div>
+          <div class="m">4 temas — primera ola</div>
+        </div>
+        <div class="chip" id="ch-2027" style="--c:var(--guepardo);--c-soft:var(--guepardo-soft)">
+          <div class="h"><span class="t">2027</span><span class="p">20%</span></div>
+          <div class="m">11 temas — la mayoría del desvío</div>
+        </div>
       </div>
     </div>
 
-    <!-- STATION 2 — CONCLUIDOS : marker (700,1320) -->
-    <div class="marker" style="--c:var(--concluidos);left:700px;top:1320px">
-      <div class="ring"></div>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
-      <div class="stage">02</div>
-    </div>
-    <div class="kmtag" style="left:766px;top:1306px">KM 31</div>
+    <div class="spacer-sm"></div>
 
-    <div class="signlink" style="left:180px;top:1335px;height:39px"></div>
-    <div class="roadsign" style="left:130px;top:1330px;--c:var(--concluidos)">
-      <div class="pct">25%</div>
-      <div class="name">Concluidos</div>
-      <div class="n">14 temas — control superado</div>
+    <div class="node" id="n-hito2" style="--c:var(--concluidos)">
+      <div class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div class="lbl"><div class="pct">25%</div><div class="nm">Concluidos</div><div class="kk">14 temas · RESULTADO — control superado</div></div>
     </div>
-    <div class="panel" style="top:1380px;height:210px;--soft:var(--concluidos-soft)">
-      <div class="dept-list" style="left:130px;width:440px;--c:var(--concluidos)">
-        <div class="dept-title">DESGLOSE POR ÁREA</div>
-        <div class="dept-row"><span>Inventario</span><span class="leader"></span><span class="v">4</span></div>
-        <div class="dept-row"><span>Ingresos</span><span class="leader"></span><span class="v">4</span></div>
-        <div class="dept-row"><span>Compras</span><span class="leader"></span><span class="v">3</span></div>
-        <div class="dept-row" style="border-bottom:none"><span>Finanzas</span><span class="leader"></span><span class="v">3</span></div>
+
+    <div class="spacer-sm"></div>
+
+    <div class="junction" id="j-noimpl" style="--c:var(--noimpl)">
+      <div class="head">
+        <div class="dot"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="7" cy="6" r="2.6"/><circle cx="17" cy="6" r="2.6"/><circle cx="12" cy="10.5" r="2.9"/><circle cx="4.5" cy="13.5" r="2.3"/><circle cx="19.5" cy="13.5" r="2.3"/><path d="M12 13c-4.5 0-7.5 3-7.5 7 0 .8.6 1.4 1.4 1.4h12.2c.8 0 1.4-.6 1.4-1.4 0-4-3-7-7.5-7Z"/></svg></div>
+        <div class="lbl"><div class="pct">17%</div><div class="nm">Sin implementación</div><div class="kk">9 temas</div></div>
+        <div class="tag">DOS DESTINOS FINALES — EL CAMINO TERMINA AQUÍ</div>
+      </div>
+      <div class="branches">
+        <div class="chip end" id="ch-fuera" style="--c:var(--noimpl);--c-soft:var(--noimpl-soft)">
+          <div class="h"><span class="t">Fuera de alcance</span><span class="p">11%</span></div>
+          <div class="m">6 temas — no corresponden a este programa</div>
+        </div>
+        <div class="chip end" id="ch-noviable" style="--c:var(--noimpl);--c-soft:var(--noimpl-soft)">
+          <div class="h"><span class="t">No viable</span><span class="p">6%</span></div>
+          <div class="m">3 temas — evaluados y descartados</div>
+        </div>
       </div>
     </div>
 
-    <!-- STATION 3 — GUEPARDO : marker (380,1900) -->
-    <div class="marker" style="--c:var(--guepardo);left:380px;top:1900px">
-      <div class="ring"></div>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg>
-      <div class="stage">03</div>
-    </div>
-    <div class="kmtag" style="left:246px;top:1886px">KM 46</div>
-    <div class="detail-tag" style="--c:var(--guepardo);left:432px;top:1868px">SALIDA · AUTOPISTA GUEPARDO</div>
+    <div class="spacer-sm"></div>
 
-    <div class="signlink" style="left:414px;top:1915px;height:39px"></div>
-    <div class="roadsign" style="left:414px;top:1910px;--c:var(--guepardo)">
-      <div class="pct">27%</div>
-      <div class="name">Guepardo</div>
-      <div class="n">15 temas — escalados a otra ruta</div>
+    <div class="node" id="n-llegada" style="--c:var(--ink)">
+      <div class="dot" style="border-color:var(--gold)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18"/><path d="M5 4h11l-2.5 3.5L16 11H5"/></svg></div>
+      <div class="lbl"><div class="pct" style="color:var(--ink)">55/55</div><div class="nm">Llegada</div><div class="kk">DESTINO — temas contabilizados</div></div>
     </div>
-    <div class="panel" style="top:1960px;height:280px;--soft:var(--guepardo-soft)">
-      <div class="split2" style="left:430px;width:440px;--c:var(--guepardo)">
-        <div><h4>2026</h4><div class="m">7% · 4 temas</div>
-          <ul><li>Revisión de flujo de alta de clientes</li><li>Aprobaciones de descuentos</li></ul></div>
-        <div><h4>2027</h4><div class="m">20% · 11 temas</div>
-          <ul><li>Órdenes de compra abiertas</li><li>Proveedores únicos</li><li>Proyectos y compras MKT</li><li>Compensaciones e incrementos</li><li>Valorización de puestos, usuarios SAP y más</li></ul></div>
-      </div>
-    </div>
+  </div>
 
-    <!-- STATION 4 — NO IMPLEMENTADOS : marker (700,2500) -->
-    <div class="marker" style="--c:var(--noimpl);left:700px;top:2500px">
-      <div class="ring"></div>
-      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="7" cy="6" r="2.6"/><circle cx="17" cy="6" r="2.6"/><circle cx="12" cy="10.5" r="2.9"/><circle cx="4.5" cy="13.5" r="2.3"/><circle cx="19.5" cy="13.5" r="2.3"/><path d="M12 13c-4.5 0-7.5 3-7.5 7 0 .8.6 1.4 1.4 1.4h12.2c.8 0 1.4-.6 1.4-1.4 0-4-3-7-7.5-7Z"/></svg>
-      <div class="stage">04</div>
+  <div class="detail-head"><div class="kk">EL RECORRIDO EN DETALLE — POR ÁREA Y TEMA</div></div>
+  <div class="detail">
+    <div class="dcol" style="--c:var(--proceso)">
+      <div class="dh"><span class="p">31%</span><span class="n">En proceso</span></div>
+      <div class="dept-row"><span>Ingresos</span><span class="v">6</span></div>
+      <div class="dept-row"><span>Finanzas</span><span class="v">5</span></div>
+      <div class="dept-row"><span>Inventario</span><span class="v">5</span></div>
+      <div class="dept-row"><span>Compras</span><span class="v">4</span></div>
+      <div class="dept-row"><span>Mtto.·RH·Mktg.</span><span class="v">2·2·1</span></div>
     </div>
-    <div class="kmtag" style="left:766px;top:2486px">KM 55</div>
-    <div class="detail-tag" style="--c:var(--noimpl);left:606px;top:2530px">TRAMO CERRADO</div>
+    <div class="dcol" style="--c:var(--guepardo)">
+      <div class="dh"><span class="p">27%</span><span class="n">Guepardo</span></div>
+      <div class="grp"><div class="gh">2026 · 4 temas</div>
+        <ul><li>Revisión de flujo de alta de clientes</li><li>Aprobaciones de descuentos</li></ul></div>
+      <div class="grp"><div class="gh">2027 · 11 temas</div>
+        <ul><li>Órdenes de compra abiertas</li><li>Proveedores únicos</li><li>Proyectos y compras MKT</li><li>Compensaciones e incrementos</li><li>Valorización de puestos, SAP y más</li></ul></div>
+    </div>
+    <div class="dcol" style="--c:var(--concluidos)">
+      <div class="dh"><span class="p">25%</span><span class="n">Concluidos</span></div>
+      <div class="dept-row"><span>Inventario</span><span class="v">4</span></div>
+      <div class="dept-row"><span>Ingresos</span><span class="v">4</span></div>
+      <div class="dept-row"><span>Compras</span><span class="v">3</span></div>
+      <div class="dept-row"><span>Finanzas</span><span class="v">3</span></div>
+    </div>
+    <div class="dcol" style="--c:var(--noimpl)">
+      <div class="dh"><span class="p">17%</span><span class="n">Sin impl.</span></div>
+      <div class="grp"><div class="gh">Fuera de alcance · 6</div>
+        <ul><li>Rediseño del esquema de matrices</li><li>Documento índice entre matrices</li><li>Duplicidad de información en RH</li></ul></div>
+      <div class="grp"><div class="gh">No viable · 3</div>
+        <ul><li>Flujo de autorización para reservas</li></ul></div>
+    </div>
+  </div>
 
-    <div class="signlink" style="left:180px;top:2515px;height:39px"></div>
-    <div class="roadsign" style="left:130px;top:2510px;--c:var(--noimpl)">
-      <div class="pct">17%</div>
-      <div class="name">Sin implementación</div>
-      <div class="n">9 temas — no continúan</div>
-    </div>
-    <div class="panel" style="top:2560px;height:230px;--soft:var(--noimpl-soft)">
-      <div class="split2" style="left:130px;width:440px;--c:var(--noimpl)">
-        <div><h4>Fuera de alcance</h4><div class="m">11% · 6 temas</div>
-          <ul><li>Rediseño del esquema de matrices</li><li>Documento índice entre matrices</li><li>Duplicidad de información en RH</li></ul></div>
-        <div><h4>No viable</h4><div class="m">6% · 3 temas</div>
-          <ul><li>Flujo de autorización para reservas</li></ul></div>
-      </div>
-    </div>
-
-    <div class="arrival" style="top:3000px">
-      <div class="flag"></div>
-      <h2>LLEGADA — 55 DE 55 TEMAS CONTABILIZADOS</h2>
-      <div class="quote">Cada comentario abre una <strong>oportunidad de mejora</strong>. Seguimos transformando los hallazgos en acciones concretas.</div>
-      <div class="foot">RECORRIDO DE MATRIZ · PROGRAMA DE CONTROL INTERNO · 2026</div>
-    </div>
+  <div class="close">
+    <div class="quote">Cada comentario abre una <strong>oportunidad de mejora</strong>. Seguimos transformando los hallazgos en acciones concretas.</div>
+    <div class="foot">RECORRIDO DE MATRIZ · PROGRAMA DE CONTROL INTERNO · 2026</div>
   </div>
 </div>
 
 <script>
-  function smoothPath(pts){
-    var d = 'M '+pts[0][0]+' '+pts[0][1];
-    for(var i=1;i<pts.length-1;i++){
-      var mx=(pts[i][0]+pts[i+1][0])/2, my=(pts[i][1]+pts[i+1][1])/2;
-      d += ' Q '+pts[i][0]+' '+pts[i][1]+' '+mx+' '+my;
-    }
-    var last = pts[pts.length-1];
-    d += ' L '+last[0]+' '+last[1];
-    return d;
-  }
-
-  // Waypoints: each station holds its x for a stretch (clear of that panel's
-  // text zone), then a gentle multi-point curve carries it to the next x.
-  var waypoints = [
-    [540,520],
-    [420,610],[380,700],[380,720],[380,1010],
-    [480,1130],[640,1250],[700,1310],[700,1320],[700,1590],
-    [600,1710],[440,1830],[380,1890],[380,1900],[380,2220],
-    [480,2340],[640,2460],[700,2490],[700,2500],[700,2790],
-    [600,2900],[540,2960],[540,3000]
-  ];
-
+function drawRoad(){
+  var visual = document.getElementById('road-visual');
   var svg = document.getElementById('road-svg');
-  var ns = 'http://www.w3.org/2000/svg';
-  var d = smoothPath(waypoints);
+  var vr = visual.getBoundingClientRect();
+  if(vr.height < 4) return;
+  svg.setAttribute('viewBox','0 0 '+vr.width+' '+vr.height);
+  svg.innerHTML='';
+  var ns='http://www.w3.org/2000/svg';
 
-  function mkPath(width, color, dash){
+  function pt(el, yEdge){
+    var r = el.getBoundingClientRect();
+    return { x: r.left + r.width/2 - vr.left, y: (yEdge==='bottom'? r.bottom : r.top) - vr.top };
+  }
+  function mkPath(d, width, color, dash){
     var p = document.createElementNS(ns,'path');
-    p.setAttribute('d', d);
-    p.setAttribute('fill','none');
-    p.setAttribute('stroke', color);
-    p.setAttribute('stroke-width', width);
-    p.setAttribute('stroke-linecap','round');
-    p.setAttribute('stroke-linejoin','round');
+    p.setAttribute('d', d); p.setAttribute('fill','none'); p.setAttribute('stroke', color);
+    p.setAttribute('stroke-width', width); p.setAttribute('stroke-linecap','round'); p.setAttribute('stroke-linejoin','round');
     if(dash) p.setAttribute('stroke-dasharray', dash);
     return p;
   }
-  svg.appendChild(mkPath(76, '#3c414c'));
-  svg.appendChild(mkPath(64, '#2a2e36'));
-  svg.appendChild(mkPath(4, '#f2ede1', '18 16'));
+  function trunk(a,b){
+    var p1 = pt(a,'bottom'), p2 = pt(b,'top');
+    var d = 'M '+p1.x+' '+p1.y+' L '+p2.x+' '+p2.y;
+    svg.appendChild(mkPath(d, 30, '#3c414c'));
+    svg.appendChild(mkPath(d, 22, '#2a2e36'));
+    svg.appendChild(mkPath(d, 3, '#f2ede1', '14 12'));
+  }
+  function branch(fromEl, toEl, color){
+    var p1 = pt(fromEl,'bottom'), p2 = pt(toEl,'top');
+    var midY = (p1.y+p2.y)/2;
+    var d = 'M '+p1.x+' '+p1.y+' C '+p1.x+' '+midY+' '+p2.x+' '+midY+' '+p2.x+' '+p2.y;
+    svg.appendChild(mkPath(d, 16, color, null));
+  }
 
-  // exit ramp near guepardo station (380,1900) — the detour that carries "Guepardo" off the main road
-  var ramp = document.createElementNS(ns,'path');
-  ramp.setAttribute('d','M380,1900 C 450,1888 490,1870 520,1852');
-  ramp.setAttribute('fill','none'); ramp.setAttribute('stroke','#33507a'); ramp.setAttribute('stroke-width','13');
-  ramp.setAttribute('stroke-linecap','round'); svg.appendChild(ramp);
-  var arrowhead = document.createElementNS(ns,'polygon');
-  arrowhead.setAttribute('points','520,1840 546,1849 523,1866');
-  arrowhead.setAttribute('fill','#33507a'); svg.appendChild(arrowhead);
+  var gate = document.getElementById('gate');
+  var n1 = document.getElementById('n-hito1');
+  var jG = document.getElementById('j-guepardo').querySelector('.head');
+  var n2 = document.getElementById('n-hito2');
+  var jN = document.getElementById('j-noimpl').querySelector('.head');
+  var nL = document.getElementById('n-llegada');
 
-  // barrier near no-implementados station (700,2500) — the segment that goes no further
-  var barLine = document.createElementNS(ns,'line');
-  barLine.setAttribute('x1',660); barLine.setAttribute('y1',2500); barLine.setAttribute('x2',740); barLine.setAttribute('y2',2500);
-  barLine.setAttribute('stroke','#fff'); barLine.setAttribute('stroke-width','15'); svg.appendChild(barLine);
-  var barStripe = document.createElementNS(ns,'line');
-  barStripe.setAttribute('x1',660); barStripe.setAttribute('y1',2500); barStripe.setAttribute('x2',740); barStripe.setAttribute('y2',2500);
-  barStripe.setAttribute('stroke','#8a3b46'); barStripe.setAttribute('stroke-width','15'); barStripe.setAttribute('stroke-dasharray','11 11');
-  svg.appendChild(barStripe);
+  trunk(gate, n1);
+  trunk(n1, jG);
+  trunk(jG, n2);
+  trunk(n2, jN);
+  trunk(jN, nL);
 
-  // km-zero dot right under the gate
-  var c0 = document.createElementNS(ns,'circle');
-  c0.setAttribute('cx',540); c0.setAttribute('cy',520); c0.setAttribute('r',6); c0.setAttribute('fill','#c9922f');
-  svg.appendChild(c0);
+  branch(jG, document.getElementById('ch-2026'), 'var(--guepardo)'.trim()==='var(--guepardo)' ? '#33507a' : '#33507a');
+  branch(jG, document.getElementById('ch-2027'), '#33507a');
+  branch(jN, document.getElementById('ch-fuera'), '#8a3b46');
+  branch(jN, document.getElementById('ch-noviable'), '#8a3b46');
+}
+window.addEventListener('load', drawRoad);
+window.addEventListener('resize', drawRoad);
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(drawRoad); }
 </script>
 </body>
 </html>

@@ -10,191 +10,186 @@
   :root{
     --paper:#f7f4ec; --ink:#1b1f27; --ink-soft:#5b6473; --line:#d9d2bf;
     --accent:#c65d3b;
-    --c1:#3d6e5c; --c1-soft:#e6efe9;   /* concluidos */
-    --c2:#b3801f; --c2-soft:#f6ecd8;   /* en proceso */
-    --c3:#33507a; --c3-soft:#e2e7f1;   /* guepardo */
-    --c4:#6b4a73; --c4-soft:#ede2ef;   /* no implementados */
+    --c1:#3d6e5c; --c1-soft:#e6efe9;
+    --c2:#b3801f; --c2-soft:#f6ecd8;
+    --c3:#33507a; --c3-soft:#e2e7f1;
+    --c4:#6b4a73; --c4-soft:#ede2ef;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;background:#e9e3d2}
-  body{color:var(--ink);font-family:'Work Sans',"Segoe UI",sans-serif;line-height:1.5;display:flex;justify-content:center;padding:40px 16px}
+  html,body{margin:0;background:#e9e3d2;height:100%}
+  body{color:var(--ink);font-family:'Work Sans',"Segoe UI",sans-serif;line-height:1.4;display:flex;justify-content:center;align-items:flex-start;padding:36px 16px}
   .serif{font-family:'Fraunces',Georgia,serif}
-  .poster{position:relative;width:1080px;background:var(--paper);padding:74px 80px 70px;box-shadow:0 30px 70px -20px rgba(20,15,5,.35)}
+  .poster{position:relative;width:1080px;height:1920px;background:var(--paper);padding:52px 62px 44px;display:flex;flex-direction:column;box-shadow:0 30px 70px -20px rgba(20,15,5,.35);overflow:hidden}
 
-  /* ===== MASTHEAD ===== */
-  .brand{display:flex;align-items:center;gap:12px}
-  .brand svg{width:32px;height:32px;flex:none}
-  .brand .name{font-weight:700;font-size:12.5px;letter-spacing:2.5px}
-  .brand .tag{font-size:10.5px;letter-spacing:1.8px;color:var(--ink-soft);margin-top:1px}
-  .masthead h1{font-family:'Fraunces',Georgia,serif;font-weight:560;font-size:64px;line-height:.98;margin:26px 0 0;letter-spacing:-.01em;max-width:11ch}
-  .masthead .lede{font-family:'Fraunces',Georgia,serif;font-style:italic;font-size:21px;margin:16px 0 0;color:var(--ink)}
-  .masthead p{font-size:14.5px;color:var(--ink-soft);margin:10px 0 0;max-width:56ch;line-height:1.6}
+  .brand{display:flex;align-items:center;gap:10px;flex:none}
+  .brand svg{width:26px;height:26px}
+  .brand span{font-weight:700;font-size:11.5px;letter-spacing:2px;color:var(--ink-soft)}
 
-  /* ===== STATEMENT (hero number) ===== */
-  .statement{display:grid;grid-template-columns:auto 1fr;column-gap:34px;align-items:end;padding:56px 0 8px;border-bottom:1px solid var(--line)}
-  .statement .num{font-family:'Fraunces',Georgia,serif;font-weight:500;font-size:224px;line-height:.78;color:var(--accent);letter-spacing:-.02em}
-  .statement .cap{max-width:30ch;padding-bottom:20px}
-  .statement .cap .kicker{font-size:11.5px;font-weight:700;letter-spacing:2.5px;color:var(--accent)}
-  .statement .cap p{margin:8px 0 0;font-size:15px;color:var(--ink-soft);line-height:1.6}
+  .titleblock{flex:none;margin-top:20px}
+  .titleblock h1{font-family:'Fraunces',Georgia,serif;font-weight:560;font-size:74px;line-height:.94;margin:0;letter-spacing:-.01em;max-width:11ch}
+  .titleblock .lede{font-family:'Fraunces',Georgia,serif;font-style:italic;font-size:22px;margin-top:14px}
+  .titleblock p{font-size:14.5px;color:var(--ink-soft);margin:8px 0 0;max-width:64ch}
 
-  /* ===== PROPORTION BAR — the % becomes width, honestly ===== */
-  .propwrap{padding:40px 0 0}
-  .propwrap .cap2{font-size:11.5px;font-weight:700;letter-spacing:2.5px;color:var(--ink-soft);margin-bottom:14px}
-  .propbar{display:flex;width:100%;height:64px}
-  .propbar .seg{display:flex;align-items:center;padding:0 18px;color:#fff;position:relative}
-  .propbar .seg .pn{font-family:'Fraunces',Georgia,serif;font-weight:560;font-size:24px;margin-right:8px}
-  .propbar .seg .ln{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;line-height:1.25}
-  .propbar .s1{background:var(--c1)}.propbar .s2{background:var(--c2)}.propbar .s3{background:var(--c3)}.propbar .s4{background:var(--c4)}
+  /* ===== FUNNEL — a single continuous shape: source -> taper -> proportional fan ===== */
+  .funnel-wrap{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;min-height:120px;margin-top:6px}
+  .apex{font-family:'Fraunces',Georgia,serif;font-weight:500;font-size:210px;line-height:.78;color:var(--accent);letter-spacing:-.02em;flex:none}
+  .apex-cap{font-size:13px;font-weight:700;letter-spacing:2.5px;color:var(--ink-soft);margin-top:6px;flex:none}
+  .ribbon-zone{flex:1 1 auto;position:relative;width:100%;min-height:60px}
+  .ribbon-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .band{display:flex;width:100%;height:104px;flex:none}
+  .band .seg{display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff;text-align:center}
+  .band .seg .pn{font-family:'Fraunces',Georgia,serif;font-weight:560;font-size:38px;line-height:1}
+  .band .seg .ln{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-top:3px}
+  .s1{background:var(--c1)}.s2{background:var(--c2)}.s3{background:var(--c3)}.s4{background:var(--c4)}
 
-  /* connector lines from bar to panels */
-  .connect-svg{display:block;width:100%;height:46px;overflow:visible}
-
-  /* ===== PANELS — equal width, equal structural weight ===== */
-  .panels{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;column-gap:3px}
-  .panel{padding:22px 18px 24px;position:relative}
-  .panel::before{content:"";position:absolute;left:0;right:0;top:0;height:4px}
-  .panel.c1{background:var(--c1-soft)}.panel.c1::before{background:var(--c1)}
-  .panel.c2{background:var(--c2-soft)}.panel.c2::before{background:var(--c2)}
-  .panel.c3{background:var(--c3-soft)}.panel.c3::before{background:var(--c3)}
-  .panel.c4{background:var(--c4-soft)}.panel.c4::before{background:var(--c4)}
-  .panel .ico{width:22px;height:22px;margin-bottom:10px}
+  /* ===== DETAIL — subordinate to the band, linked by short ticks ===== */
+  .tickrow{display:flex;width:100%;height:20px;flex:none}
+  .tickrow > div{border-left:1.5px solid rgba(27,31,39,.3);height:100%}
+  .panels{display:flex;width:100%;column-gap:3px;flex:none}
+  .panel{flex:1 1 0;padding:18px 16px 20px;position:relative}
+  .panel.c1{background:var(--c1-soft)}.panel.c2{background:var(--c2-soft)}.panel.c3{background:var(--c3-soft)}.panel.c4{background:var(--c4-soft)}
+  .panel .ico{width:20px;height:20px;margin-bottom:8px}
   .panel.c1 .ico{color:var(--c1)}.panel.c2 .ico{color:var(--c2)}.panel.c3 .ico{color:var(--c3)}.panel.c4 .ico{color:var(--c4)}
-  .panel .pct{font-family:'Fraunces',Georgia,serif;font-weight:560;font-size:32px;line-height:1}
-  .panel .name{margin-top:5px;font-weight:700;font-size:11.5px;letter-spacing:1px;text-transform:uppercase}
-  .panel .n{margin-top:1px;font-size:11.5px;color:var(--ink-soft)}
-
-  .panel .detail{margin-top:16px;padding-top:14px;border-top:1px solid rgba(27,31,39,.14)}
-  .panel .grp + .grp{margin-top:12px}
-  .panel .grp h4{margin:0;font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;opacity:.72}
-  .panel .grp .meta{font-size:10.5px;color:var(--ink-soft);margin-top:1px}
-  .panel .grp ul{margin:6px 0 0;padding:0;list-style:none;font-size:11px;line-height:1.5}
+  .panel .name{font-weight:700;font-size:13px;letter-spacing:.5px;text-transform:uppercase}
+  .panel .n{margin-top:1px;font-size:12px;color:var(--ink-soft)}
+  .panel .detail{margin-top:13px;padding-top:12px;border-top:1px solid rgba(27,31,39,.14)}
+  .panel .grp + .grp{margin-top:11px}
+  .panel .grp h4{margin:0;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;opacity:.72}
+  .panel .grp .meta{font-size:11px;color:var(--ink-soft);margin-top:1px}
+  .panel .grp ul{margin:6px 0 0;padding:0;list-style:none;font-size:11.5px;line-height:1.5}
   .panel .grp li{border-top:1px solid rgba(27,31,39,.10);padding:4px 0}
   .panel .grp li:first-child{border-top:none}
-  .panel .dept-row{display:flex;justify-content:space-between;gap:6px;font-size:11.5px;padding:4.5px 0;border-top:1px solid rgba(27,31,39,.10)}
+  .panel .dept-row{display:flex;justify-content:space-between;gap:6px;font-size:12.5px;padding:5px 0;border-top:1px solid rgba(27,31,39,.10)}
   .panel .dept-row:first-child{border-top:none}
   .panel .dept-row .v{font-weight:700;font-variant-numeric:tabular-nums;flex:none}
 
-  /* ===== CLOSE ===== */
-  .close{margin-top:64px;padding-top:32px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr auto;align-items:end;gap:24px}
-  .close .quote{font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:500;font-size:29px;line-height:1.28;max-width:24ch}
+  .close{flex:none;margin-top:22px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
+  .close .quote{font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:500;font-size:26px;line-height:1.24;max-width:26ch}
   .close .quote strong{font-style:normal;color:var(--accent)}
-  .close .foot{text-align:right;font-size:10.5px;letter-spacing:1.5px;color:var(--ink-soft);white-space:nowrap}
+  .close .foot{text-align:right;font-size:10.5px;letter-spacing:1.5px;color:var(--ink-soft);white-space:nowrap;flex:none}
 </style>
 </head>
 <body>
-<div class="poster">
+<div class="poster" id="poster">
 
   <div class="brand">
     <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#1b1f27"/><g fill="#f7f4ec"><ellipse cx="50" cy="60" rx="20" ry="15"/><circle cx="24" cy="38" r="9"/><circle cx="42" cy="24" r="10"/><circle cx="62" cy="24" r="10"/><circle cx="79" cy="41" r="8.5"/></g></svg>
-    <div><div class="name">RECORRIDO DE MATRIZ</div><div class="tag">PROGRAMA DE CONTROL INTERNO</div></div>
+    <span>RECORRIDO DE MATRIZ · PROGRAMA DE CONTROL INTERNO</span>
   </div>
 
-  <div class="masthead">
+  <div class="titleblock">
     <h1>El embudo de los hallazgos</h1>
     <div class="lede">De los comentarios a las acciones.</div>
-    <p>Así avanzan los principales temas identificados en el Recorrido de Matriz: de un solo punto de partida a cuatro destinos, en la proporción real en que ocurrieron.</p>
+    <p>55 temas entran por un solo punto. La forma del embudo — no una lista — muestra cómo se reparten al salir: cuatro corrientes, cada una del ancho real de su proporción.</p>
   </div>
 
-  <div class="statement">
-    <div class="num" id="src-num">55</div>
-    <div class="cap">
-      <div class="kicker">PUNTO DE PARTIDA</div>
-      <p>Temas de mejora identificados a partir de los recorridos y comentarios en nuestras matrices — el origen de todo lo que sigue.</p>
+  <div class="funnel-wrap">
+    <div class="apex" id="apex">55</div>
+    <div class="apex-cap">PUNTO DE PARTIDA — TEMAS IDENTIFICADOS</div>
+    <div class="ribbon-zone">
+      <svg class="ribbon-svg" id="ribbon-svg"></svg>
     </div>
-  </div>
-
-  <div class="propwrap">
-    <div class="cap2">CÓMO SE REPARTE EL 100% · ANCHO = PROPORCIÓN REAL</div>
-    <div class="propbar" id="propbar">
-      <div class="seg s1" style="flex:25" id="seg1"><span class="pn">25%</span><span class="ln">Concluidos</span></div>
-      <div class="seg s2" style="flex:31" id="seg2"><span class="pn">31%</span><span class="ln">En<br>proceso</span></div>
+    <div class="band" id="band">
+      <div class="seg s2" style="flex:31" id="seg2"><span class="pn">31%</span><span class="ln">En proceso</span></div>
       <div class="seg s3" style="flex:27" id="seg3"><span class="pn">27%</span><span class="ln">Guepardo</span></div>
-      <div class="seg s4" style="flex:17" id="seg4"><span class="pn">17%</span><span class="ln">Sin<br>impl.</span></div>
+      <div class="seg s1" style="flex:25" id="seg1"><span class="pn">25%</span><span class="ln">Concluidos</span></div>
+      <div class="seg s4" style="flex:17" id="seg4"><span class="pn">17%</span><span class="ln">Sin impl.</span></div>
     </div>
-    <svg class="connect-svg" id="connect-svg"></svg>
+  </div>
 
-    <div class="panels" id="panels-row">
-      <div class="panel c1" id="p1">
-        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
-        <div class="pct">25%</div><div class="name">Concluidos</div><div class="n">14 temas</div>
-        <div class="detail">
-          <div class="dept-row"><span>Inventario</span><span class="v">4</span></div>
-          <div class="dept-row"><span>Ingresos</span><span class="v">4</span></div>
-          <div class="dept-row"><span>Compras</span><span class="v">3</span></div>
-          <div class="dept-row"><span>Finanzas</span><span class="v">3</span></div>
-        </div>
+  <div class="tickrow" id="tickrow">
+    <div style="flex:31"></div><div style="flex:27"></div><div style="flex:25"></div><div style="flex:17"></div>
+  </div>
+
+  <div class="panels" id="panels-row">
+    <div class="panel c2" id="p2">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+      <div class="name">En proceso</div><div class="n">17 temas</div>
+      <div class="detail">
+        <div class="dept-row"><span>Ingresos</span><span class="v">6</span></div>
+        <div class="dept-row"><span>Finanzas</span><span class="v">5</span></div>
+        <div class="dept-row"><span>Inventario</span><span class="v">5</span></div>
+        <div class="dept-row"><span>Compras</span><span class="v">4</span></div>
+        <div class="dept-row"><span>Mtto. · RH · Mktg.</span><span class="v">2·2·1</span></div>
       </div>
-      <div class="panel c2" id="p2">
-        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
-        <div class="pct">31%</div><div class="name">En proceso</div><div class="n">17 temas</div>
-        <div class="detail">
-          <div class="dept-row"><span>Ingresos</span><span class="v">6</span></div>
-          <div class="dept-row"><span>Finanzas</span><span class="v">5</span></div>
-          <div class="dept-row"><span>Inventario</span><span class="v">5</span></div>
-          <div class="dept-row"><span>Compras</span><span class="v">4</span></div>
-          <div class="dept-row"><span>Mtto. · RH · Mktg.</span><span class="v">2·2·1</span></div>
-        </div>
+    </div>
+    <div class="panel c3" id="p3">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg>
+      <div class="name">Guepardo</div><div class="n">15 temas</div>
+      <div class="detail">
+        <div class="grp"><h4>2026</h4><div class="meta">7% · 4 temas</div>
+          <ul><li>Revisión de flujo de alta de clientes</li><li>Aprobaciones de descuentos</li></ul></div>
+        <div class="grp"><h4>2027</h4><div class="meta">20% · 11 temas</div>
+          <ul><li>Órdenes de compra abiertas</li><li>Proveedores únicos</li><li>Proyectos y compras MKT</li><li>Compensaciones e incrementos</li><li>Valorización de puestos, usuarios SAP y más</li></ul></div>
       </div>
-      <div class="panel c3" id="p3">
-        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg>
-        <div class="pct">27%</div><div class="name">Guepardo</div><div class="n">15 temas</div>
-        <div class="detail">
-          <div class="grp"><h4>2026</h4><div class="meta">7% · 4 temas</div>
-            <ul><li>Revisión de flujo de alta de clientes</li><li>Aprobaciones de descuentos</li></ul></div>
-          <div class="grp"><h4>2027</h4><div class="meta">20% · 11 temas</div>
-            <ul><li>Órdenes de compra abiertas</li><li>Proveedores únicos</li><li>Proyectos y compras MKT</li><li>Compensaciones e incrementos</li><li>Valorización de puestos, usuarios SAP y más</li></ul></div>
-        </div>
+    </div>
+    <div class="panel c1" id="p1">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+      <div class="name">Concluidos</div><div class="n">14 temas</div>
+      <div class="detail">
+        <div class="dept-row"><span>Inventario</span><span class="v">4</span></div>
+        <div class="dept-row"><span>Ingresos</span><span class="v">4</span></div>
+        <div class="dept-row"><span>Compras</span><span class="v">3</span></div>
+        <div class="dept-row"><span>Finanzas</span><span class="v">3</span></div>
       </div>
-      <div class="panel c4" id="p4">
-        <svg class="ico" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="7" cy="6" r="2.6"/><circle cx="17" cy="6" r="2.6"/><circle cx="12" cy="10.5" r="2.9"/><circle cx="4.5" cy="13.5" r="2.3"/><circle cx="19.5" cy="13.5" r="2.3"/><path d="M12 13c-4.5 0-7.5 3-7.5 7 0 .8.6 1.4 1.4 1.4h12.2c.8 0 1.4-.6 1.4-1.4 0-4-3-7-7.5-7Z"/></svg>
-        <div class="pct">17%</div><div class="name">No implement.</div><div class="n">9 temas</div>
-        <div class="detail">
-          <div class="grp"><h4>Fuera de alcance</h4><div class="meta">11% · 6 temas</div>
-            <ul><li>Rediseño del esquema de matrices</li><li>Documento índice entre matrices</li><li>Duplicidad de información en RH</li></ul></div>
-          <div class="grp"><h4>No viable</h4><div class="meta">6% · 3 temas</div>
-            <ul><li>Flujo de autorización para reservas</li></ul></div>
-        </div>
+    </div>
+    <div class="panel c4" id="p4">
+      <svg class="ico" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="7" cy="6" r="2.6"/><circle cx="17" cy="6" r="2.6"/><circle cx="12" cy="10.5" r="2.9"/><circle cx="4.5" cy="13.5" r="2.3"/><circle cx="19.5" cy="13.5" r="2.3"/><path d="M12 13c-4.5 0-7.5 3-7.5 7 0 .8.6 1.4 1.4 1.4h12.2c.8 0 1.4-.6 1.4-1.4 0-4-3-7-7.5-7Z"/></svg>
+      <div class="name">No implement.</div><div class="n">9 temas</div>
+      <div class="detail">
+        <div class="grp"><h4>Fuera de alcance</h4><div class="meta">11% · 6 temas</div>
+          <ul><li>Rediseño del esquema de matrices</li><li>Documento índice entre matrices</li><li>Duplicidad de información en RH</li></ul></div>
+        <div class="grp"><h4>No viable</h4><div class="meta">6% · 3 temas</div>
+          <ul><li>Flujo de autorización para reservas</li></ul></div>
       </div>
     </div>
   </div>
 
   <div class="close">
-    <div class="quote">Cada comentario abre una <strong>oportunidad de mejora</strong>. Seguimos transformando los hallazgos en acciones concretas.</div>
+    <div class="quote">Cada comentario abre una <strong>oportunidad de mejora</strong>. Seguimos transformando hallazgos en acciones.</div>
     <div class="foot">RECORRIDO DE MATRIZ<br>PROGRAMA DE CONTROL INTERNO · 2026</div>
   </div>
 
 </div>
 
 <script>
-function drawConnectors(){
-  var svg = document.getElementById('connect-svg');
-  var svgRect = svg.getBoundingClientRect();
-  if(svgRect.width < 2) return;
-  svg.setAttribute('viewBox','0 0 '+svgRect.width+' '+svgRect.height);
+function drawRibbons(){
+  var zone = document.getElementById('ribbon-zone') || document.querySelector('.ribbon-zone');
+  var svg = document.getElementById('ribbon-svg');
+  var apex = document.getElementById('apex');
+  var zr = zone.getBoundingClientRect();
+  if(zr.height < 4) return;
+  var ar = apex.getBoundingClientRect();
+  svg.setAttribute('viewBox','0 0 '+zr.width+' '+zr.height);
   svg.innerHTML='';
   var ns='http://www.w3.org/2000/svg';
-  var pairs = [['seg1','p1','#3d6e5c'],['seg2','p2','#b3801f'],['seg3','p3','#33507a'],['seg4','p4','#6b4a73']];
-  pairs.forEach(function(pair){
-    var segR = document.getElementById(pair[0]).getBoundingClientRect();
-    var panR = document.getElementById(pair[1]).getBoundingClientRect();
-    var x1 = segR.left + segR.width/2 - svgRect.left;
-    var x2 = panR.left + panR.width/2 - svgRect.left;
-    var line = document.createElementNS(ns,'line');
-    line.setAttribute('x1', x1); line.setAttribute('y1', 0);
-    line.setAttribute('x2', x2); line.setAttribute('y2', svgRect.height);
-    line.setAttribute('stroke', pair[2]); line.setAttribute('stroke-width','1.4'); line.setAttribute('opacity','.55');
-    svg.appendChild(line);
-    var d1 = document.createElementNS(ns,'circle');
-    d1.setAttribute('cx',x1); d1.setAttribute('cy',0); d1.setAttribute('r',2.6); d1.setAttribute('fill',pair[2]);
-    svg.appendChild(d1);
-    var d2 = document.createElementNS(ns,'circle');
-    d2.setAttribute('cx',x2); d2.setAttribute('cy',svgRect.height); d2.setAttribute('r',2.6); d2.setAttribute('fill',pair[2]);
-    svg.appendChild(d2);
+  var srcX = ar.left + ar.width/2 - zr.left;
+  var srcY = 0;
+  var segs = [
+    {id:'seg2', color:'#b3801f'},
+    {id:'seg3', color:'#33507a'},
+    {id:'seg1', color:'#3d6e5c'},
+    {id:'seg4', color:'#6b4a73'}
+  ];
+  segs.forEach(function(s){
+    var el = document.getElementById(s.id);
+    var r = el.getBoundingClientRect();
+    var xL = r.left - zr.left, xR = r.right - zr.left;
+    var yT = zr.height;
+    var path = document.createElementNS(ns,'path');
+    var d = 'M '+srcX+' '+srcY+
+      ' C '+srcX+' '+(yT*0.5)+' '+xL+' '+(yT*0.15)+' '+xL+' '+yT+
+      ' L '+xR+' '+yT+
+      ' C '+xR+' '+(yT*0.15)+' '+srcX+' '+(yT*0.5)+' '+srcX+' '+srcY+' Z';
+    path.setAttribute('d', d);
+    path.setAttribute('fill', s.color);
+    path.setAttribute('opacity', '0.88');
+    svg.appendChild(path);
   });
 }
-window.addEventListener('load', drawConnectors);
-window.addEventListener('resize', drawConnectors);
-if(document.fonts && document.fonts.ready){ document.fonts.ready.then(drawConnectors); }
+window.addEventListener('load', drawRibbons);
+window.addEventListener('resize', drawRibbons);
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(drawRibbons); }
 </script>
 </body>
 </html>
