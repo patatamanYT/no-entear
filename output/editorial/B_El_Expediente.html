@@ -33,21 +33,19 @@
   .ruler{margin-top:34px;flex:none}
   .bar{display:flex;height:44px}
   .tickrow{display:flex;margin-top:9px}
-  .tickrow > div{font-family:'IBM Plex Mono','Courier New',monospace;font-size:11.5px;color:var(--ink-soft);padding-left:2px}
+  .tickrow > div{font-family:'IBM Plex Mono','Courier New',monospace;font-size:14px;font-weight:600;color:var(--ink-soft);padding-left:2px}
 
-  .spacer{flex:1 1 auto;min-height:8px}
+  .spacer{flex:1 1 auto;min-height:8px;max-height:44px}
 
-  /* ===== 58% — the headline finding, functioning as a bridge into the ledger below ===== */
-  .callout{flex:none;background:var(--ink);color:var(--paper);padding:34px 44px 26px;display:flex;align-items:center;column-gap:36px;margin-top:28px}
-  .callout .big{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:190px;line-height:1;color:#fff;flex:none}
-  .callout .txt{font-size:22px;line-height:1.4;max-width:36ch}
+  /* ===== 58% — the headline finding, compact and clearly secondary to 55 ===== */
+  .callout{flex:none;background:var(--ink);color:var(--paper);padding:32px 44px;display:flex;align-items:center;column-gap:36px;margin-top:20px}
+  .callout .big{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:164px;line-height:1;color:#fff;flex:none}
+  .callout .txt{font-size:21px;line-height:1.38;max-width:38ch}
   .callout .txt b{color:#8fb0e8}
-  .callout .bridge{margin-top:12px;font-family:'IBM Plex Mono','Courier New',monospace;font-size:13px;letter-spacing:.5px;color:#9aa3b5}
-  .callout .bridge b{color:#8fb0e8;font-weight:700}
 
   /* ===== LEDGER — an editorial color-coded index, not a project timeline ===== */
   .ledger{flex:none;margin-top:0;padding-top:0}
-  .entry{position:relative;padding:22px 0 22px 26px;border-left:6px solid var(--c)}
+  .entry{position:relative;padding:21px 0 21px 26px;border-left:6px solid var(--c)}
   .entry-head{display:flex;align-items:baseline;column-gap:16px}
   .entry-head .code{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:14px;color:var(--c);width:22px;flex:none}
   .entry-head .name{font-weight:700;font-size:29px;flex:none}
@@ -56,7 +54,8 @@
   .entry-head .pct{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:31px;flex:none;white-space:nowrap;color:var(--c)}
   .entry-head .pct small{font-weight:400;font-size:12.5px;color:var(--ink-soft);margin-left:6px}
 
-  .sub-ledger{margin:13px 0 0 36px;display:grid;grid-template-columns:1fr 1fr;column-gap:36px}
+  .sub-ledger{margin:13px 0 0 36px;display:grid;grid-template-columns:1fr 1fr;column-gap:34px}
+  .sub-ledger .sub-row:last-child{padding-left:22px;border-left:2px solid var(--line-strong)}
   .sub-row .r-head{display:flex;align-items:baseline;gap:8px}
   .sub-row .r-head .t{font-weight:600;font-size:14.5px}
   .sub-row .r-head .m{font-family:'IBM Plex Mono','Courier New',monospace;font-size:11px;color:var(--ink-soft)}
@@ -68,7 +67,7 @@
   .entry-note{margin:9px 0 0 36px;font-size:13.5px;color:var(--ink-soft);max-width:56ch}
 
   /* ===== INDEX ===== */
-  .index-block{flex:none;margin-top:30px;padding-top:20px;border-top:1px solid var(--line)}
+  .index-block{flex:none;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
   .index-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:56px;margin-top:6px}
   .index-grid h6{margin:0 0 8px;font-size:13.5px;font-weight:700;font-family:'IBM Plex Mono','Courier New',monospace;letter-spacing:.5px}
   .irow{display:flex;align-items:baseline;gap:8px;padding:5px 0;font-size:13px;border-bottom:1px dotted var(--line-strong)}
@@ -107,10 +106,7 @@
 
   <div class="callout">
     <div class="big">58%</div>
-    <div>
-      <div class="txt">de los 55 temas ya están en marcha: <b>En proceso</b> y <b>Guepardo</b> juntos superan a la mitad del recorrido.</div>
-      <div class="bridge">01 <b>31%</b> EN PROCESO&nbsp; + &nbsp;02 <b>27%</b> GUEPARDO&nbsp; = &nbsp;58% — el detalle de cada uno sigue abajo</div>
-    </div>
+    <div class="txt">de los 55 temas ya están en marcha: <b>En proceso</b> y <b>Guepardo</b> juntos superan a la mitad del recorrido.</div>
   </div>
 
   <div class="ledger">
