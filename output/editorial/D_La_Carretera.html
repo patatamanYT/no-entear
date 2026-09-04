@@ -34,9 +34,11 @@
   .gate .kicker{font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:12px;letter-spacing:3px;color:var(--gold)}
   .gate .num{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:92px;line-height:.82;color:var(--ink);margin-top:6px}
   .gate .cap{font-size:12.5px;color:var(--ink-soft);margin-top:5px}
-  .gate-insight{background:var(--ink);color:var(--paper);padding:16px 22px;text-align:left}
-  .gate-insight .p{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:38px;line-height:1;color:#fff}
-  .gate-insight .t{font-size:11.5px;color:#b9c0cc;margin-top:6px;line-height:1.45;max-width:22ch}
+  /* a highway sign, not a black block: asphalt plaque with a rounded corner and a small pointer back to the road */
+  .gate-insight{justify-self:start;background:var(--asphalt);color:#fff;padding:13px 20px;border-radius:5px;text-align:left;position:relative}
+  .gate-insight::after{content:"";position:absolute;left:-8px;top:50%;margin-top:-6px;border:6px solid transparent;border-right-color:var(--asphalt)}
+  .gate-insight .p{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:27px;line-height:1;color:var(--gold)}
+  .gate-insight .t{font-size:10.5px;color:#c7cdd6;margin-top:5px;line-height:1.4;max-width:19ch;letter-spacing:.2px}
 
   /* ===== ROAD VISUAL — measured, not hand-plotted ===== */
   .road-visual{flex:1 1 auto;position:relative;display:flex;flex-direction:column;align-items:center;min-height:160px;margin-top:6px}

@@ -38,14 +38,14 @@
   .spacer{flex:1 1 auto;min-height:8px;max-height:44px}
 
   /* ===== 58% — the headline finding, compact and clearly secondary to 55 ===== */
-  .callout{flex:none;background:var(--ink);color:var(--paper);padding:32px 44px;display:flex;align-items:center;column-gap:36px;margin-top:20px}
-  .callout .big{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:164px;line-height:1;color:#fff;flex:none}
+  .callout{flex:none;background:var(--ink);color:var(--paper);padding:26px 44px;display:flex;align-items:center;column-gap:36px;margin-top:20px}
+  .callout .big{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:146px;line-height:1;color:#fff;flex:none}
   .callout .txt{font-size:21px;line-height:1.38;max-width:38ch}
   .callout .txt b{color:#8fb0e8}
 
   /* ===== LEDGER — an editorial color-coded index, not a project timeline ===== */
   .ledger{flex:none;margin-top:0;padding-top:0}
-  .entry{position:relative;padding:21px 0 21px 26px;border-left:6px solid var(--c)}
+  .entry{position:relative;padding:27px 0 27px 26px;border-left:6px solid var(--c)}
   .entry-head{display:flex;align-items:baseline;column-gap:16px}
   .entry-head .code{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:14px;color:var(--c);width:22px;flex:none}
   .entry-head .name{font-weight:700;font-size:29px;flex:none}
@@ -70,12 +70,12 @@
   .index-block{flex:none;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
   .index-grid{display:grid;grid-template-columns:1fr 1fr;column-gap:56px;margin-top:6px}
   .index-grid h6{margin:0 0 8px;font-size:13.5px;font-weight:700;font-family:'IBM Plex Mono','Courier New',monospace;letter-spacing:.5px}
-  .irow{display:flex;align-items:baseline;gap:8px;padding:5px 0;font-size:13px;border-bottom:1px dotted var(--line-strong)}
+  .irow{display:flex;align-items:baseline;gap:8px;padding:7px 0;font-size:13.5px;border-bottom:1px dotted var(--line-strong)}
   .irow .leader{flex:1}
   .irow .v{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:600;width:20px;text-align:right}
 
   .close{flex:none;margin-top:26px;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
-  .close p{max-width:48ch;font-size:16.5px;line-height:1.4;margin:0;font-weight:500}
+  .close p{max-width:44ch;font-size:20px;line-height:1.35;margin:0;font-weight:600}
   .close p strong{color:var(--accent)}
   .close .sig{font-family:'IBM Plex Mono','Courier New',monospace;font-size:10px;color:var(--ink-soft);text-align:right;white-space:nowrap}
 </style>
@@ -173,7 +173,7 @@
     {label:'En proceso', pct:31, color:'#a6761f'},
     {label:'Guepardo', pct:27, color:'#2954a6'},
     {label:'Concluidos', pct:25, color:'#2f6b4f'},
-    {label:'Sin impl.', pct:17, color:'#8a3b46'}
+    {label:'Sin implementación', pct:17, color:'#8a3b46'}
   ];
   var bar = document.getElementById('bar');
   var tickrow = document.getElementById('tickrow');
