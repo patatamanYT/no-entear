@@ -24,10 +24,10 @@
 
   /* ===== 55 as origin — integrated with the headline, not a separate stat block ===== */
   .hero{display:flex;align-items:flex-end;column-gap:30px;margin-top:18px;flex:none}
-  .hero .num{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:250px;line-height:.72;letter-spacing:-.03em;flex:none}
+  .hero .num{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:278px;line-height:.7;letter-spacing:-.03em;flex:none}
   .hero .side{padding-bottom:8px}
   .kicker{font-family:'IBM Plex Mono','Courier New',monospace;font-size:13px;letter-spacing:1.8px;color:var(--accent);font-weight:600}
-  h1{margin:12px 0 0;font-size:66px;font-weight:700;letter-spacing:-.015em;line-height:1.0;max-width:13ch}
+  h1{margin:12px 0 0;font-size:72px;font-weight:700;letter-spacing:-.015em;line-height:.98;max-width:12ch}
   .subline{margin:16px 0 0;max-width:46ch;color:var(--ink-soft);font-size:16px;line-height:1.55}
 
   .ruler{margin-top:34px;flex:none}
@@ -37,23 +37,25 @@
 
   .spacer{flex:1 1 auto;min-height:8px}
 
-  /* ===== 58% — the headline finding, given real visual weight ===== */
-  .callout{flex:none;background:var(--ink);color:var(--paper);padding:34px 44px;display:flex;align-items:center;column-gap:36px;margin-top:28px}
-  .callout .big{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:166px;line-height:1;color:#fff}
+  /* ===== 58% — the headline finding, functioning as a bridge into the ledger below ===== */
+  .callout{flex:none;background:var(--ink);color:var(--paper);padding:34px 44px 26px;display:flex;align-items:center;column-gap:36px;margin-top:28px}
+  .callout .big{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:190px;line-height:1;color:#fff;flex:none}
   .callout .txt{font-size:22px;line-height:1.4;max-width:36ch}
   .callout .txt b{color:#8fb0e8}
+  .callout .bridge{margin-top:12px;font-family:'IBM Plex Mono','Courier New',monospace;font-size:13px;letter-spacing:.5px;color:#9aa3b5}
+  .callout .bridge b{color:#8fb0e8;font-weight:700}
 
-  /* ===== LEDGER — one continuous spine instead of four boxed rows ===== */
-  .ledger{flex:none;position:relative;padding-left:28px;margin-top:30px}
-  .ledger::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;background:var(--line-strong)}
+  /* ===== LEDGER — the spine visually grows out of the callout above ===== */
+  .ledger{flex:none;position:relative;padding-left:28px;margin-top:0;padding-top:14px}
+  .ledger::before{content:"";position:absolute;left:0;top:-28px;bottom:8px;width:3px;background:var(--ink)}
   .entry{position:relative;padding:19px 0}
   .entry::before{content:"";position:absolute;left:-34px;top:25px;width:13px;height:13px;border-radius:50%;background:var(--c)}
   .entry-head{display:flex;align-items:baseline;column-gap:16px}
   .entry-head .code{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:13px;color:var(--ink-soft);width:20px;flex:none}
-  .entry-head .name{font-weight:700;font-size:24px;flex:none}
+  .entry-head .name{font-weight:700;font-size:27px;flex:none}
   .entry-head .line{flex:1 1 auto;height:3px;background:var(--line);position:relative;top:1px}
   .entry-head .line i{display:block;height:100%;background:var(--c)}
-  .entry-head .pct{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:25px;flex:none;white-space:nowrap}
+  .entry-head .pct{font-family:'IBM Plex Mono','Courier New',monospace;font-weight:700;font-size:28px;flex:none;white-space:nowrap}
   .entry-head .pct small{font-weight:400;font-size:12px;color:var(--ink-soft);margin-left:6px}
 
   .sub-ledger{margin:13px 0 0 36px;display:grid;grid-template-columns:1fr 1fr;column-gap:36px}
@@ -107,7 +109,10 @@
 
   <div class="callout">
     <div class="big">58%</div>
-    <div class="txt">de los 55 temas ya están en marcha: <b>En proceso</b> y <b>Guepardo</b> juntos superan a la mitad del recorrido.</div>
+    <div>
+      <div class="txt">de los 55 temas ya están en marcha: <b>En proceso</b> y <b>Guepardo</b> juntos superan a la mitad del recorrido.</div>
+      <div class="bridge">01 <b>31%</b> EN PROCESO&nbsp; + &nbsp;02 <b>27%</b> GUEPARDO&nbsp; = &nbsp;58% — el detalle de cada uno sigue abajo</div>
+    </div>
   </div>
 
   <div class="ledger">
