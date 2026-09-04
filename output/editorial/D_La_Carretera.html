@@ -20,32 +20,32 @@
   body{font-family:'Work Sans',"Segoe UI",sans-serif;color:var(--ink);display:flex;justify-content:center;padding:36px 16px}
   .oswald{font-family:'Oswald','Segoe UI',sans-serif}
 
-  .poster{position:relative;width:1080px;height:1920px;background:var(--paper);padding:44px 64px 34px;display:flex;flex-direction:column;box-shadow:0 40px 100px -30px rgba(0,0,0,.6);overflow:hidden}
+  .poster{position:relative;width:1080px;height:1920px;background:var(--paper);padding:40px 46px 32px;display:flex;flex-direction:column;box-shadow:0 40px 100px -30px rgba(0,0,0,.6);overflow:hidden}
 
   .brand{display:flex;align-items:center;justify-content:center;gap:9px;flex:none}
   .brand svg{width:24px;height:24px}
   .brand span{font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:11.5px;letter-spacing:2.5px;color:var(--ink-soft)}
-  h1{text-align:center;margin:14px 0 0;font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:44px;letter-spacing:.5px;line-height:1.05;color:var(--ink);flex:none}
-  .deck{text-align:center;font-size:13.5px;color:var(--ink-soft);max-width:58ch;margin:10px auto 0;line-height:1.5;flex:none}
+  h1{text-align:center;margin:14px 0 0;font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:52px;letter-spacing:.5px;line-height:1.05;color:var(--ink);flex:none}
+  .deck{text-align:center;font-size:14.5px;color:var(--ink-soft);max-width:58ch;margin:11px auto 0;line-height:1.5;flex:none}
 
   /* ===== gate ===== */
-  .gate{text-align:center;flex:none;margin-top:16px;padding-bottom:26px}
-  .gate .kicker{font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:11px;letter-spacing:3px;color:var(--gold)}
-  .gate .num{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:76px;line-height:.85;color:var(--ink);margin-top:4px}
-  .gate .cap{font-size:11.5px;color:var(--ink-soft);margin-top:4px}
+  .gate{text-align:center;flex:none;margin-top:14px;padding-bottom:24px}
+  .gate .kicker{font-family:'Oswald','Segoe UI',sans-serif;font-weight:600;font-size:12px;letter-spacing:3px;color:var(--gold)}
+  .gate .num{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:92px;line-height:.82;color:var(--ink);margin-top:6px}
+  .gate .cap{font-size:12.5px;color:var(--ink-soft);margin-top:5px}
 
   /* ===== ROAD VISUAL — measured, not hand-plotted ===== */
   .road-visual{flex:1 1 auto;position:relative;display:flex;flex-direction:column;align-items:center;min-height:160px;margin-top:6px}
   .road-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:1}
 
   .node{position:relative;z-index:3;flex:none}
-  .node .dot,.junction .dot{width:64px;height:64px;border-radius:50%;background:var(--paper);border:5px solid var(--c);display:grid;place-items:center;box-shadow:0 6px 14px rgba(0,0,0,.22);flex:none}
-  .node .dot svg,.junction .dot svg{width:24px;height:24px;color:var(--c)}
+  .node .dot,.junction .dot{width:56px;height:56px;border-radius:50%;background:var(--paper);border:5px solid var(--c);display:grid;place-items:center;box-shadow:0 6px 14px rgba(0,0,0,.22);flex:none}
+  .node .dot svg,.junction .dot svg{width:21px;height:21px;color:var(--c)}
 
   /* hito row: marker fixed at the road's centerline, a wide data panel fills the lateral space on one side */
   .hito-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;column-gap:26px;width:100%}
   .hito-row .side{position:relative;z-index:3}
-  .side-panel{background:var(--soft);border-top:4px solid var(--c);padding:18px 26px 20px}
+  .side-panel{background:var(--soft);border-top:4px solid var(--c);padding:17px 30px 18px}
   .side-panel .ph{display:flex;align-items:baseline;column-gap:14px}
   .side-panel .pct{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:66px;color:var(--c);line-height:1}
   .side-panel .nm{font-size:18px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--ink)}
@@ -66,8 +66,8 @@
   /* ===== junction with two branches — now spanning the full canvas width ===== */
   .junction{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;flex:none;width:100%}
   .junction .head{display:flex;flex-direction:column;align-items:center}
-  .branches{display:flex;justify-content:space-between;gap:28px;width:100%;margin-top:16px}
-  .chip{position:relative;z-index:3;flex:1 1 0;background:var(--c-soft);border-top:4px solid var(--c);padding:18px 22px 20px;text-align:left}
+  .branches{display:flex;justify-content:space-between;gap:28px;width:100%;margin-top:13px}
+  .chip{position:relative;z-index:3;flex:1 1 0;background:var(--c-soft);border-top:4px solid var(--c);padding:16px 22px 17px;text-align:left}
   .chip .h{display:flex;justify-content:space-between;align-items:baseline}
   .chip .h .t{font-weight:700;font-size:21px}
   .chip .h .p{font-family:'Oswald','Segoe UI',sans-serif;font-weight:700;font-size:28px;color:var(--c)}
@@ -79,7 +79,7 @@
   .chip.end::after{content:"";position:absolute;left:0;right:0;bottom:-10px;height:7px;background:repeating-linear-gradient(90deg,#fff 0 9px,var(--c) 9px 18px)}
 
   /* ===== close ===== */
-  .close{flex:none;margin-top:20px;text-align:center}
+  .close{flex:none;margin-top:12px;text-align:center}
   .close .quote{font-family:'Oswald','Segoe UI',sans-serif;font-weight:400;font-style:italic;font-size:16px;max-width:60ch;margin:0 auto;color:var(--ink-soft);line-height:1.4}
   .close .quote strong{font-weight:600;font-style:normal;color:var(--gold)}
   .close .foot{margin-top:10px;font-family:'Oswald','Segoe UI',sans-serif;font-weight:500;font-size:9.5px;letter-spacing:2px;color:var(--ink-soft)}
