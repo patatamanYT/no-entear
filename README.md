@@ -13,13 +13,16 @@ no-entear/
 ├── backend/                 FastAPI + computer vision pipeline
 │   └── app/
 │       ├── cv/
-│       │   ├── detector.py          YOLO detection + ByteTrack multi-object tracking
-│       │   ├── homography.py        4-point pixel → pitch-meter (60×40) transform
-│       │   └── team_classifier.py   Jersey color extraction + K-Means team clustering
+│       │   ├── detector.py          YOLO detection + ByteTrack/BoT-SORT multi-object tracking
+│       │   ├── ball_tracker.py      Kalman-filtered ball trajectory (kinematic gating, gap interpolation)
+│       │   ├── pose_estimator.py    YOLO-Pose keypoints + joint-angle/posture geometry
+│       │   ├── homography.py        4-point pixel → pitch-meter (60×40) transform, jitter smoothing
+│       │   └── team_classifier.py   Jersey color extraction + K-Means team/referee clustering
 │       ├── analytics/
 │       │   ├── events.py            Possession / pass / shot heuristics
 │       │   └── heatmaps.py          2D Gaussian KDE heatmap grids (40×60, 1m bins)
 │       ├── storage/                 Uploaded videos + generated match JSON
+│       ├── config.py                Centralized, env-overridable tunables (models, limits)
 │       ├── mock_data.py             Synthetic match generator (CLI + importable)
 │       ├── schemas.py               Pydantic data contract (source of truth)
 │       └── main.py                  REST API (CORS enabled for the frontend)
@@ -112,6 +115,26 @@ A longer video is rejected up front with a clear error instead of failing silent
 | GET    | `/api/match-data`                 | Full `MatchData` payload: frames, passes, shots, heatmaps        |
 
 Full request/response shapes: `backend/app/schemas.py`.
+
+## Computer vision stack
+
+| Stage | Tool | Notes |
+|---|---|---|
+| Player/ball detection | YOLO (Ultralytics) | Model weights are a config change, not a code change — see below. |
+| Tracking | ByteTrack (default) or BoT-SORT | `TRACKER_BACKEND` env var. BoT-SORT adds camera-motion compensation + re-ID on top of ByteTrack's motion model, at extra compute cost. |
+| Pose / body keypoints | YOLO-Pose | `app/cv/pose_estimator.py` — 17 COCO keypoints per player, plus joint-angle and torso-lean/posture (standing/leaning/fallen) helpers. Built and unit-tested; **not yet wired into `MatchData`** — ask if you want keypoints exposed through the API and rendered as skeleton overlays in the frontend, that's a schema + UI change on top of this. |
+| Ball trajectory smoothing | Custom Kalman filter (`app/cv/ball_tracker.py`) | Rejects kinematically-impossible jumps, bridges short occlusions, anchors to the ball carrier — see "Analytics heuristics" below. |
+| Pitch mapping | Homography (`app/cv/homography.py`) | Pixel → pitch-meter projection, boundary-clamped, jitter-smoothed. |
+
+**Swapping models** (e.g. a checkpoint fine-tuned on a football dataset from Roboflow Universe, or a newer Ultralytics release) is a config change via `backend/app/config.py` / environment variables — no code changes:
+
+```bash
+YOLO_WEIGHTS_PATH=path/to/football-finetuned.pt
+YOLO_POSE_WEIGHTS_PATH=yolov8n-pose.pt
+TRACKER_BACKEND=botsort   # or "bytetrack" (default)
+```
+
+**On TrackNet:** a specialized ball-tracking network (originally built for tennis) is a real option for the ball specifically, since it's small/fast/motion-blurred and a generic object detector is the weakest link for it. It isn't wired in here — there's no maintained, pip-installable TrackNet with pretrained football weights to point at, unlike YOLO/ByteTrack/BoT-SORT which ship ready to use. `app/cv/ball_tracker.py` is deliberately decoupled from *how* ball candidates are produced (it just consumes a list of `(x, y, confidence)` candidates per frame), so a TrackNet-based detector could be dropped in as an alternative candidate source later without touching the Kalman/gating/interpolation logic — but that would mean training or sourcing weights first.
 
 ## Analytics heuristics
 

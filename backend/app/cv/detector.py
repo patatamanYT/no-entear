@@ -10,15 +10,26 @@ flow — must never require them to be installed or reachable.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Iterator, List, Optional
+from typing import Iterator, List, Literal, Optional
 
 import numpy as np
+
+from app.config import TRACKER_BACKEND, YOLO_WEIGHTS_PATH
 
 # COCO class ids used by stock ultralytics checkpoints.
 COCO_PERSON_CLASS_ID = 0
 COCO_BALL_CLASS_ID = 32  # 'sports ball'
 
-DEFAULT_MODEL_WEIGHTS = "yolov8n.pt"
+# Swappable without touching this module: point YOLO_WEIGHTS_PATH (env var,
+# see app/config.py) at any Ultralytics-compatible .pt file — a newer
+# stock release, or a checkpoint fine-tuned on a football dataset (e.g. a
+# Roboflow Universe set with player/ball/referee/goalkeeper as separate
+# classes) — to change what this pipeline detects with, with zero code
+# changes.
+DEFAULT_MODEL_WEIGHTS = YOLO_WEIGHTS_PATH
+
+TrackerBackend = Literal["bytetrack", "botsort"]
+_NATIVE_TRACKER_YAML = {"botsort": "botsort.yaml", "bytetrack": "bytetrack.yaml"}
 
 # Class-specific confidence gates. The ball is a small, fast-moving, often
 # motion-blurred object that YOLO reports at much lower confidence than
@@ -90,6 +101,7 @@ class PlayerBallDetector:
         track_activation_threshold: float = BYTETRACK_TRACK_ACTIVATION_THRESHOLD,
         matching_threshold: float = BYTETRACK_MATCHING_THRESHOLD,
         lost_track_buffer: int = BYTETRACK_LOST_TRACK_BUFFER,
+        tracker_backend: TrackerBackend = TRACKER_BACKEND,  # type: ignore[assignment]
     ) -> None:
         self.weights_path = weights_path
         self.conf_player = conf_player
@@ -99,6 +111,7 @@ class PlayerBallDetector:
         self.track_activation_threshold = track_activation_threshold
         self.matching_threshold = matching_threshold
         self.lost_track_buffer = lost_track_buffer
+        self.tracker_backend = tracker_backend
         self._model = None
         self._tracker = None
 
@@ -162,13 +175,17 @@ class PlayerBallDetector:
         import supervision as sv  # lazy import
 
         model = self._ensure_model()
+        use_native_track = self.tracker_backend == "botsort"
 
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             raise IOError(f"Could not open video: {video_path}")
 
         fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
-        tracker = self._ensure_tracker(frame_rate=fps)
+        # BoT-SORT runs through Ultralytics' own model.track(persist=True),
+        # which keeps its tracker state on the model object itself — no
+        # separate supervision tracker instance needed for that path.
+        tracker = None if use_native_track else self._ensure_tracker(frame_rate=fps)
         frame_index = 0
 
         # Ultralytics applies one `conf` gate at inference time. To honor two
@@ -187,10 +204,23 @@ class PlayerBallDetector:
                     frame_index += 1
                     continue
 
-                results = model(frame, verbose=False, conf=infer_conf)[0]
+                if use_native_track:
+                    results = model.track(
+                        frame,
+                        persist=True,
+                        tracker=_NATIVE_TRACKER_YAML["botsort"],
+                        conf=infer_conf,
+                        verbose=False,
+                    )[0]
+                else:
+                    results = model(frame, verbose=False, conf=infer_conf)[0]
+
                 detections = sv.Detections.from_ultralytics(results)
                 detections = self._apply_class_confidence_gates(detections)
-                detections = tracker.update_with_detections(detections)
+                if not use_native_track:
+                    # BoT-SORT already assigned tracker_id inside model.track();
+                    # only the ByteTrack path needs supervision's own tracker.
+                    detections = tracker.update_with_detections(detections)
 
                 frame_dets: List[Detection] = []
                 for i in range(len(detections)):

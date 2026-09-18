@@ -19,6 +19,10 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+def _env_str(name: str, default: str) -> str:
+    return os.environ.get(name, default)
+
+
 # Longest clip the real CV pipeline will accept. 20 minutes is the target
 # use case for this deployment (a full fútbol 7 half plus stoppage time);
 # processing time and memory both scale with video length, so this is an
@@ -47,3 +51,19 @@ ALLOWED_VIDEO_CONTENT_TYPES = {
 # few minutes of inference on CPU for a small model, regardless of the
 # source clip's raw length or fps.
 TARGET_MAX_PROCESSED_FRAMES = _env_int("TARGET_MAX_PROCESSED_FRAMES", 9000)
+
+# Swapping detection/pose models (e.g. a football-specific YOLO checkpoint
+# fine-tuned on a Roboflow Universe dataset, or a newer Ultralytics release)
+# is a config change, not a code change — point these at any Ultralytics-
+# compatible .pt weights file or model name.
+YOLO_WEIGHTS_PATH = _env_str("YOLO_WEIGHTS_PATH", "yolov8n.pt")
+YOLO_POSE_WEIGHTS_PATH = _env_str("YOLO_POSE_WEIGHTS_PATH", "yolov8n-pose.pt")
+
+# Multi-object tracker backend for app.cv.detector.PlayerBallDetector:
+#   "bytetrack" (default) — supervision's ByteTrack, tuned via the
+#     BYTETRACK_* constants in app.cv.detector.
+#   "botsort"  — Ultralytics' native BoT-SORT (adds a camera-motion
+#     compensation + appearance-embedding re-ID step on top of ByteTrack's
+#     motion model; more robust through longer occlusions/collisions at
+#     some extra compute cost).
+TRACKER_BACKEND = _env_str("TRACKER_BACKEND", "bytetrack")
