@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>claude-code · el cursor que piensa</title>
+<script src="look.js"></script>
+<style>
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--ground,#f8f8f6)}
+body{font-family:var(--body);color:var(--ink)}
+#stage{position:absolute;inset:0;overflow:hidden;background:var(--ground)}
+#world{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;will-change:transform}
+#dots{position:absolute;left:-2400px;top:-1800px;width:6720px;height:4680px;
+  background-image:radial-gradient(circle,var(--line) 2.2px,transparent 2.6px);background-size:96px 96px}
+#card{position:absolute;left:0;top:0;background:var(--card);border:1px solid var(--line);border-radius:22px;overflow:hidden;
+  box-shadow:0 40px 90px -36px rgba(20,20,20,.28),0 2px 8px rgba(20,20,20,.05);will-change:transform}
+.layer{position:absolute;left:0;top:0;white-space:pre;font-family:var(--mono);color:var(--ink)}
+#hdr{position:absolute;left:44px;top:30px;font-family:var(--display);font-size:34px}
+#hdr small{font-family:var(--mono);font-size:20px;color:var(--mute);margin-left:14px}
+.row{position:absolute;left:44px;font-family:var(--mono);font-size:32px;white-space:pre;display:flex;align-items:center;gap:22px}
+.row .bx{width:30px;height:30px;border-radius:9px;border:2px solid var(--line);position:relative;flex:none}
+.row .bx:after{content:"";position:absolute;left:9px;top:3px;width:8px;height:16px;border-right:3px solid #fff;border-bottom:3px solid #fff;transform:rotate(45deg);opacity:0}
+.row.on .bx{background:var(--accent);border-color:var(--accent)}
+.row.on .bx:after{opacity:1}
+.row b{color:var(--mute);font-weight:400}
+.dl{position:absolute;left:0;right:0;height:46px;font-family:var(--mono);font-size:29px;line-height:46px;white-space:pre;padding-left:44px}
+.dl.del{background:rgba(180,35,35,.10);color:var(--accent2)}
+.dl.add{background:rgba(23,160,94,.12);color:#0c7a45}
+.dl.ctx{color:var(--mute)}
+#ok{position:absolute;left:44px;font-family:var(--display);font-size:78px;color:var(--accent);white-space:nowrap}
+#ok small{font-family:var(--mono);font-size:26px;color:var(--mute);margin-left:18px}
+#caret{position:absolute;left:0;top:0;background:var(--ink);border-radius:2px;will-change:transform}
+#mark{position:absolute;left:0;top:0;font-family:var(--display);font-size:150px;line-height:1;white-space:pre;color:var(--ink)}
+#hud{position:absolute;right:14px;bottom:10px;font:13px monospace;color:#c00;display:none}
+</style></head><body>
+<div id="stage"><div id="world"><div id="dots"></div>
+  <div id="card"><div id="hdr">Claude Code<small>~/no-entear</small></div>
+    <div id="L1" class="layer"></div><div id="L2" class="layer"></div><div id="L3" class="layer"></div></div>
+  <div id="mark"></div><div id="caret"></div></div>
+  <div id="hud"></div></div>
+<script src="motion.js"></script>
+<script>
+const DUR=15; window.__meta={dur:DUR,fps:30,w:1920,h:1080,inFrame:{caret:[0,15]}};
+const {clamp,lerp,sstep,ssstep,seg}=OM; const $=id=>document.getElementById(id);
+// ── timeline ──
+const T_CARD0=1.15,T_CARD1=1.85, TYPE0=1.9, CPS=17, ENTER=4.05;
+const PROMPT='fix the failing test in the API';
+const STEPS=[['Read','backend/tests/test_api.py',4.55],['Edit','backend/app/main.py',5.20],['Run','pytest -q',5.95],['Check','12 passed',6.70]];
+const DIFF_IN=7.35, OK_T=8.55, FOLD0=10.7, FOLD1=11.55, NAME0=11.6, NAME='Claude Code', NCPS=9;
+// ── geometry (world = 1920×1080 layout) ──
+const CW=19.2;                                           // mono advance at 32px (measured below)
+const R1={x:460,y:430,w:1000,h:210}, R2={x:420,y:210,w:1080,h:660};
+const PX=R1.x+44, PY=R1.y+80;                            // prompt text origin
+const CARET={w:4,h:46};
+const cv=document.createElement('canvas').getContext('2d');
+let mono32=CW, serifW=[];
+function measure(){ cv.font="400 32px "+getComputedStyle(document.body).getPropertyValue('--mono'); mono32=cv.measureText('0000000000').width/10;
+  cv.font="400 150px "+getComputedStyle(document.body).getPropertyValue('--display'); serifW=[...Array(NAME.length+1)].map((_,i)=>cv.measureText(NAME.slice(0,i)).width); }
+// ── layers ──
+const L1=$('L1'),L2=$('L2'),L3=$('L3');
+L1.style.cssText+=`left:44px;top:80px;font-size:32px`;
+const stepEls=STEPS.map(([v,a],i)=>{const d=document.createElement('div');d.className='row';d.style.top=(110+i*104)+'px';
+  d.innerHTML=`<div class="bx"></div><span>${v.padEnd(6)}<b>${a}</b></span>`;L2.appendChild(d);return d;});
+const DIFF=[['ctx','  def get_match_data(request):'],['del','-     return load(path)'],['add','+     return load(path or DEFAULT)'],['ctx','      validate(data)'],['add','+     data.setdefault("events", [])']];
+DIFF.forEach(([c,s],i)=>{const d=document.createElement('div');d.className='dl '+c;d.style.top=(120+i*60)+'px';d.textContent=s;L3.appendChild(d);});
+const okEl=document.createElement('div');okEl.id='ok';okEl.style.top='480px';okEl.innerHTML='12 passed<small>0.8s</small>';L3.appendChild(okEl);
+// ── caret path: where it is, as a spring between stops ──
+function caretStops(){ const s=[];
+  s.push({t:0,x:PX,y:PY,h:CARET.h});
+  return s; }
+const sp=(t,t0,z=0.7,w=20)=>OM.spring(t-t0,z,w);
+function caretPos(t){
+  // typing: rides the end of the prompt text
+  const nT=clamp(Math.floor((t-TYPE0)*CPS),0,PROMPT.length), typed=t>=TYPE0;
+  let p={x:PX+(typed?nT:0)*mono32,y:PY}; if(t<ENTER) return {...p,w:CARET.w,h:CARET.h};
+  // after enter: hops to the end of each step line as it ticks, then to the pass line
+  const rowY=i=>R2.y+110+i*104-4, rowX=i=>R2.x+44+30+22+(6+STEPS[i][1].length)*mono32+10;
+  const stops=[{t:ENTER,x:p.x,y:p.y}];
+  stops.push({t:ENTER+0.1,x:R2.x+44+30+22+mono32*6,y:rowY(0)});
+  STEPS.forEach((s,i)=>stops.push({t:s[2],x:rowX(i),y:rowY(i)}));
+  stops.push({t:DIFF_IN+0.25,x:R2.x+44+mono32*34,y:R2.y+120+60*2-2});
+  stops.push({t:OK_T,x:R2.x+390,y:R2.y+497});
+  // fold: card collapses, caret goes to where the name begins
+  const nx=960-serifW[NAME.length]/2, ny=540-70;
+  let cur=stops[0]; for(let i=1;i<stops.length;i++){ if(t>=stops[i].t){ const a=stops[i-1],b=stops[i],k=sp(t,b.t,0.75,22); cur={x:lerp(a.x,b.x,k),y:lerp(a.y,b.y,k)}; if(i<stops.length-1&&t>=stops[i+1].t) continue; } else break; }
+  // recompute properly: find last stop reached
+  let li=0; for(let i=0;i<stops.length;i++) if(t>=stops[i].t) li=i;
+  const b=stops[li], a=stops[Math.max(0,li-1)]; const k=li===0?1:sp(t,b.t,0.75,22);
+  let x=lerp(a.x,b.x,li===0?1:k), y=lerp(a.y,b.y,li===0?1:k);
+  if(t>=FOLD0){ const f=OM.ease.expoInOut(seg(t,FOLD0,FOLD1)); const sx=stops[stops.length-1]; x=lerp(sx.x,nx,f); y=lerp(sx.y,ny+0,f); }
+  if(t>=NAME0){ const n=clamp(Math.floor((t-NAME0)*NCPS),0,NAME.length); x=nx-serifW[NAME.length]+serifW[0]+0; x=960-serifW[NAME.length]/2+serifW[n]; y=ny; }
+  return {x,y,w:CARET.w,h:t>=FOLD0?100:CARET.h};
+}
+function cardRect(t){
+  if(t<T_CARD0) return null;
+  const A={x:PX-2,y:PY,w:CARET.w,h:CARET.h};
+  let r;
+  const k1=OM.ease.expoOut(seg(t,T_CARD0,T_CARD1));
+  r={x:lerp(A.x,R1.x,k1),y:lerp(A.y,R1.y,k1),w:lerp(A.w,R1.w,k1),h:lerp(A.h,R1.h,k1)};
+  const k2=sp(t,ENTER+0.05,0.8,15); if(t>=ENTER){ r={x:lerp(R1.x,R2.x,k2),y:lerp(R1.y,R2.y,k2),w:lerp(R1.w,R2.w,k2),h:lerp(R1.h,R2.h,k2)}; }
+  if(t>=FOLD0){ const f=OM.ease.expoInOut(seg(t,FOLD0,FOLD1)); const c=caretPos(FOLD0-0.0001); const nx=960-serifW[NAME.length]/2, ny=540-70;
+    r={x:lerp(R2.x,nx,f),y:lerp(R2.y,ny,f),w:lerp(R2.w,CARET.w,f),h:lerp(R2.h,100,f)}; }
+  return r;
+}
+// ── camera ──
+const KEYS=[{t:0,x:PX+10,y:PY+20,zoom:2.4},{t:1.0,x:PX+10,y:PY+20,zoom:2.4},{t:3.2,x:960,y:540,zoom:1.0,curve:OM.ease.sineInOut},
+ {t:4.6,x:970,y:530,zoom:1.04,curve:OM.ease.sineInOut},{t:7.2,x:960,y:540,zoom:1.0,curve:OM.ease.sineInOut},{t:9.9,x:960,y:540,zoom:1.0},
+ {t:11.0,x:960,y:540,zoom:1.0},{t:12.4,x:960,y:540,zoom:1.12,curve:OM.ease.sineInOut}];
+const HITS=[[ENTER,5,10],[DIFF_IN,3,10],[OK_T,5,10]];
+function camAt(t){ const c=OM.camera(t,KEYS); let x=c.x,y=c.y; for(const [th,amp,dc] of HITS){const s=OM.shake(t,th,{amp,decay:dc,seed:Math.round(th*100)}); x+=s.x/c.zoom; y+=s.y/c.zoom;} return {x,y,zoom:c.zoom}; }
+// ── seek ──
+function seek(t){
+  const C=camAt(t); $('world').style.transform=`translate(${(960-C.x*C.zoom).toFixed(2)}px,${(540-C.y*C.zoom).toFixed(2)}px) scale(${C.zoom.toFixed(4)})`;
+  // card
+  const r=cardRect(t), card=$('card');
+  if(!r||t>=FOLD1){ card.style.opacity=0; } else { card.style.opacity=1; card.style.transform=`translate(${r.x.toFixed(1)}px,${r.y.toFixed(1)}px)`; card.style.width=r.w.toFixed(1)+'px'; card.style.height=r.h.toFixed(1)+'px';
+    card.style.borderRadius=Math.min(22,r.w/2,r.h/2).toFixed(1)+'px'; card.style.borderWidth=r.w<20?0:1; }
+  // layers (content sits inside the card; fades across the same container)
+  const nT=clamp(Math.floor((t-TYPE0)*CPS),0,PROMPT.length);
+  L1.textContent=t>=TYPE0?'›  '+PROMPT.slice(0,nT):'';
+  L1.style.left=44+'px'; L1.style.top=(PY-R1.y-26)+'px'; L1.style.fontSize='32px';
+  const l1op=(1-sstep(ENTER-0.02,ENTER+0.16,t))*sstep(T_CARD1-0.3,T_CARD1,t); L1.style.opacity=l1op;
+  // caret x for L1 includes the '›  ' prefix (3 chars) → shift typing origin
+  $('hdr').style.opacity=sstep(ENTER+0.1,ENTER+0.35,t)*(1-sstep(DIFF_IN-0.05,DIFF_IN+0.1,t));
+  const l2=sstep(ENTER+0.1,ENTER+0.35,t)*(1-sstep(DIFF_IN-0.05,DIFF_IN+0.12,t)); L2.style.opacity=l2;
+  L2.style.top='0px'; stepEls.forEach((e,i)=>{ const on=t>=STEPS[i][2]-0.05; e.classList.toggle('on',on); const k=OM.tick(t,STEPS[i][2]-0.05); e.firstChild.style.transform=`scale(${k.s})`; e.style.top=(110+i*104)+'px'; });
+  L3.style.opacity=sstep(DIFF_IN-0.02,DIFF_IN+0.2,t)*(1-sstep(FOLD0-0.05,FOLD0+0.12,t));
+  [...L3.children].forEach((d,i)=>{ if(d.id==='ok'){ const w=OM.wordRise(t,OK_T,{dist:22}); d.style.opacity=w.op; d.style.transform=`translateY(${w.y.toFixed(1)}px) scale(${w.s.toFixed(3)})`; d.style.top='470px'; }
+    else { const w=OM.wordRise(t,DIFF_IN+0.06*i,{dist:14,fade:2}); d.style.opacity=w.op; d.style.transform=`translateY(${w.y.toFixed(1)}px)`; } });
+  // caret
+  const cp=caretPos(t); const cEl=$('caret');
+  // prompt prefix correction: text starts 3 chars after PX while typing
+  let cx=cp.x+(t<ENTER&&t>=TYPE0?3*mono32:0), cy=cp.y;
+  if(t<TYPE0){ cx=PX+(t>=T_CARD0?3*mono32*sstep(T_CARD1-0.2,T_CARD1,t):0); }
+  const blink=(t<1.15||t>12.9)? (Math.floor(t*1.8)%2===0?1:0.0):1;
+  const green=t>=OK_T&&t<FOLD0?1:0;
+  cEl.style.width=cp.w+'px'; cEl.style.height=cp.h+'px'; cEl.style.opacity=blink;
+  cEl.style.background=green?'var(--accent)':'var(--ink)';
+  cEl.style.transform=`translate(${cx.toFixed(1)}px,${(cy-cp.h*0.0).toFixed(1)}px)`;
+  // name
+  const nn=clamp(Math.floor((t-NAME0)*NCPS),0,NAME.length); const mk=$('mark'); mk.textContent=t>=NAME0?NAME.slice(0,nn):'';
+  mk.style.left=(960-serifW[NAME.length]/2)+'px'; mk.style.top=(540-70)+'px';
+  $('hud').textContent='t='+t.toFixed(3);
+  return Promise.resolve();
+}
+window.__seek=async t=>{await seek(t);return true;};
+window.__ready=Promise.all([document.fonts.ready,LOOK.ready||Promise.resolve()]).then(()=>{measure();return seek(0);});
+const q=new URLSearchParams(location.search);
+if(q.has('t')) __ready.then(()=>seek(parseFloat(q.get('t'))));
+if(q.has('hud')) $('hud').style.display='block';
+if(q.has('play')) __ready.then(()=>{const t0=performance.now();(function loop(){seek(((performance.now()-t0)/1000)%DUR);requestAnimationFrame(loop);})();});
+</script></body></html>

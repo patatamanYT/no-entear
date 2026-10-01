@@ -1,0 +1,18 @@
+{
+ "comp": "/home/user/no-entear/promo/comp.html",
+ "fps": 30,
+ "scale": 1,
+ "size": [
+  1920,
+  1080
+ ],
+ "shutter": 180.0,
+ "samples": 8,
+ "workers": 2,
+ "frames": 450,
+ "still_frames": 165,
+ "cut_frames": 22,
+ "captures": 2610,
+ "seconds": 319.9,
+ "final": false
+}
