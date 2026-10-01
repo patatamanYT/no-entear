@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>meet-claude · 30s</title>
+<script src="look.js"></script>
+<script>{const r=document.documentElement.style;for(const [k,v] of Object.entries({ink:'#141413',clay:'#D97757',cream:'#F0EEE5',ground:'#F0EEE5'}))r.setProperty('--'+k,v);}</script>
+<style>
+:root{--cream:#F0EEE5;--ink:#141413;--clay:#D97757;--kraft:#D4A27F;--manilla:#EBDBBC;--sky:#6A9BCC;--olive:#788C5D;--fig:#C46686;--heather:#CBCADB;--slate:#232220}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--cream)}
+body{font-family:var(--text);color:var(--ink)}
+#cam{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;will-change:transform}
+.a{position:absolute;will-change:transform,opacity;transform-origin:50% 50%}
+.card{background:#fff;border-radius:28px;box-shadow:0 50px 100px -40px rgba(20,20,19,.35),0 4px 14px rgba(20,20,19,.08)}
+.disp{font-family:var(--display);font-weight:500;letter-spacing:-.02em;white-space:nowrap;line-height:1}
+.mono{font-family:var(--mono);white-space:pre}
+.sans{font-family:var(--text);white-space:nowrap}
+.chip{display:flex;align-items:center;gap:14px;border-radius:44px;background:#fff;font-size:30px;font-weight:500;padding:0 28px;box-shadow:0 22px 44px -20px rgba(20,20,19,.3),0 2px 6px rgba(20,20,19,.06)}
+.chip svg{width:34px;height:34px;flex:none}
+#hud{position:absolute;right:14px;bottom:10px;font:13px monospace;color:#c00;display:none;z-index:99}
+</style></head><body>
+<div id="cam"></div><div id="hud"></div>
+<script src="motion.js"></script>
+<script>
+window.__meta={dur:30,fps:30,w:1920,h:1080};
+const {clamp,lerp,sstep,seg,ease}=OM; const CAM=document.getElementById('cam');
+const pop=(t,t0,z=.55,w=22)=>OM.spring(t-t0,z,w);
+const u=(t,a,b,c=ease.expoOut)=>c(seg(t,a,b));
+const BEAT=.5;
+// ── element factory: centred box, animated by place() ──
+const ALL=[];
+function mk(cx,cy,w,h,cls,html,css){const d=document.createElement('div');d.className='a '+(cls||'');d.style.cssText=`left:${cx-w/2}px;top:${cy-h/2}px;width:${w}px;height:${h}px;`+(css||'');if(html!=null)d.innerHTML=html;CAM.appendChild(d);return d;}
+function P(el,dx=0,dy=0,s=1,r=0,op=1,sx=1,sy=1){el.style.opacity=op;el.style.visibility=op<=.001?'hidden':'visible';el.style.transform=`translate(${dx.toFixed(2)}px,${dy.toFixed(2)}px) rotate(${r.toFixed(3)}deg) scale(${(s*sx).toFixed(4)},${(s*sy).toFixed(4)})`;}
+const ICON={
+ pen:'<svg viewBox="0 0 24 24" fill="none" stroke="#D97757" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 7l3 3"/></svg>',
+ code:'<svg viewBox="0 0 24 24" fill="none" stroke="#788C5D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg>',
+ chart:'<svg viewBox="0 0 24 24" fill="none" stroke="#6A9BCC" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>',
+ grid:'<svg viewBox="0 0 24 24" fill="none" stroke="#C46686" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>',
+ arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
+ heart:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 21s-8-5.3-8-11a4.6 4.6 0 018-3 4.6 4.6 0 018 3c0 5.7-8 11-8 11z"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
+ shield:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2.5l8 3v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10v-6z"/></svg>',
+};
+const LOGO_D="M52.4285 162.873L98.7844 136.879L99.5485 134.602L98.7844 133.334H96.4921L88.7237 132.862L62.2346 132.153L39.3113 131.207L17.0249 130.026L11.4214 128.844L6.2 121.873L6.7094 118.447L11.4214 115.257L18.171 115.847L33.0711 116.911L55.485 118.447L71.6586 119.392L95.728 121.873H99.5485L100.058 120.337L98.7844 119.392L97.7656 118.447L74.5877 102.732L49.4995 86.1905L36.3823 76.62L29.3779 71.7757L25.8121 67.2858L24.2839 57.3608L30.6515 50.2716L39.3113 50.8623L41.4763 51.4531L50.2636 58.1879L68.9842 72.7209L93.4357 90.6804L97.0015 93.6343L98.4374 92.6652L98.6571 91.9801L97.0015 89.2625L83.757 65.2772L69.621 40.8192L63.2534 30.6579L61.5978 24.632C60.9565 22.1032 60.579 20.0111 60.579 17.4246L67.8381 7.49965L71.9133 6.19995L81.7193 7.49965L85.7946 11.0443L91.9074 24.9865L101.714 46.8451L116.996 76.62L121.453 85.4816L123.873 93.6343L124.764 96.1155H126.292V94.6976L127.566 77.9197L129.858 57.3608L132.15 30.8942L132.915 23.4505L136.608 14.4708L143.994 9.62643L149.725 12.344L154.437 19.0788L153.8 23.4505L150.998 41.6463L145.522 70.1215L141.957 89.2625H143.994L146.414 86.7813L156.093 74.0206L172.266 53.698L179.398 45.6635L187.803 36.802L193.152 32.5484H203.34L210.726 43.6549L207.415 55.1159L196.972 68.3492L188.312 79.5739L175.896 96.2095L168.191 109.585L168.882 110.689L170.738 110.53L198.755 104.504L213.91 101.787L231.994 98.7149L240.144 102.496L241.036 106.395L237.852 114.311L218.495 119.037L195.826 123.645L162.07 131.592L161.696 131.893L162.137 132.547L177.36 133.925L183.855 134.279H199.774L229.447 136.524L237.215 141.605L241.8 147.867L241.036 152.711L229.065 158.737L213.019 154.956L175.45 145.977L162.587 142.787H160.805V143.85L171.502 154.366L191.242 172.089L215.82 195.011L217.094 200.682L213.91 205.172L210.599 204.699L188.949 188.394L180.544 181.069L161.696 165.118H160.422V166.772L164.752 173.152L187.803 207.771L188.949 218.405L187.294 221.832L181.308 223.959L174.813 222.777L161.187 203.754L147.305 182.486L136.098 163.345L134.745 164.2L128.075 235.42L125.019 239.082L117.887 241.8L111.902 237.31L108.718 229.984L111.902 215.452L115.722 196.547L118.779 181.541L121.58 162.873L123.291 156.636L123.14 156.219L121.773 156.449L107.699 175.752L86.304 204.699L69.3663 222.777L65.291 224.431L58.2867 220.768L58.9235 214.27L62.8713 208.48L86.304 178.705L100.44 160.155L109.551 149.507L109.462 147.967L108.959 147.924L46.6977 188.512L35.6182 189.93L30.7788 185.44L31.4156 178.115L33.7079 175.752L52.4285 162.873Z";
+// ── real logo, split into 16 wedges so every piece animates ──
+const NW=16; let clips='',wedges='';
+for(let i=0;i<NW;i++){const a0=(i*360/NW-360/NW/2-.4)*Math.PI/180,a1=(i*360/NW+360/NW/2+.4)*Math.PI/180,R=400,am=(a0+a1)/2;
+ clips+=`<clipPath id="w${i}"><polygon points="124,124 ${124+R*Math.cos(a0)},${124+R*Math.sin(a0)} ${124+R*1.05*Math.cos(am)},${124+R*1.05*Math.sin(am)} ${124+R*Math.cos(a1)},${124+R*Math.sin(a1)}"/></clipPath>`;
+ wedges+=`<g id="wg${i}" clip-path="url(#w${i})"><path d="${LOGO_D}" fill="#D97757"/></g>`;}
+function makeLogo(cx,cy,size,pfx){const c=clips.replace(/id="w(\d+)"/g,`id="${pfx}w$1"`),w=wedges.replace(/url\(#w(\d+)\)/g,`url(#${pfx}w$1)`);const el=mk(cx,cy,size,size,'',`<svg viewBox="0 0 248 248" width="${size}" height="${size}" style="overflow:visible"><defs>${c}</defs>${w}</svg>`,'z-index:8');return el;}
+// wedge assembly: k in 0..1 per wedge
+const ORDER=[0,5,10,15,4,9,14,3,8,13,2,7,12,1,6,11];
+function logoPieces(root,t,t0,{stag=.022,z=.5,w=20,spin=80,out=70}={}){
+ for(let i=0;i<NW;i++){const k=pop(t,t0+ORDER.indexOf(i)*stag,z,w),ang=i*360/NW*Math.PI/180;
+  const g=root.querySelector('#wg'+i); const s=Math.max(k,0),rd=(1-k)*-out;
+  g.setAttribute('transform',`translate(124 124) rotate(${((1-k)*spin).toFixed(2)}) translate(${(Math.cos(ang)*rd).toFixed(2)} ${(Math.sin(ang)*rd).toFixed(2)}) scale(${s.toFixed(4)}) translate(-124 -124)`);}
+}
+// ═══════════════ the cast ═══════════════
+const BG={}; // full-screen colour layers
+const bgClay=mk(960,540,1920,1080,'','',`background:var(--clay)`);
+const bgInk=mk(960,540,1920,1080,'','',`background:var(--ink)`);
+const bgSky=mk(960,540,1920,1080,'','',`background:var(--sky)`);
+// A · logo + title
+const ring=mk(960,500,100,100,'','',`border:6px solid var(--clay);border-radius:50%;box-sizing:border-box`);
+const dot=mk(960,500,26,26,'','',`background:var(--clay);border-radius:50%`);
+const logo=makeLogo(960,500,520,'a');
+const wMeet=mk(960,690,700,220,'disp','Meet','font-size:210px;text-align:center;display:flex;align-items:center;justify-content:center;overflow:visible');
+const wCl=mk(960,690,900,220,'disp','','');
+// "Meet Claude." as two words centred as one line
+const titleLine=mk(960,700,1500,230,'','<span class="disp" style="font-size:210px;display:inline-block" id="tw1">Meet</span><span class="disp" style="font-size:210px;display:inline-block;margin-left:.28em;color:var(--clay)" id="tw2">Claude.</span>','display:flex;align-items:center;justify-content:center;overflow:visible');
+wMeet.remove();wCl.remove();
+// B · composer
+const pill=mk(960,330,300,300,'card','','border-radius:150px');
+const ptxt=mk(1010,560,760,70,'sans','','font-size:46px;font-weight:450;color:var(--ink);overflow:visible;text-align:left');
+const caret=mk(0,0,4,54,'','','background:var(--clay);border-radius:2px');
+const send=mk(1465,560,112,112,'','<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"><div style="width:44px;height:44px">'+ICON.arrow+'</div></div>','background:var(--ink);border-radius:50%');
+const CHIPS=[['Write',ICON.pen],['Code',ICON.code],['Analyze',ICON.chart],['Create',ICON.grid]].map(([l,ic],i)=>({el:mk(960+(i-1.5)*290,790,248,100,'chip',ic+l,'font-size:36px;justify-content:center'),i}));
+const cursor=mk(0,0,40,52,'','<svg viewBox="0 0 34 44" width="40" height="52"><path d="M4 3L30 22L18 24L26 40L20 43L12 27L4 36Z" fill="#141413" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/></svg>','filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));z-index:50');
+const irisC=mk(1465,560,100,100,'','',`background:var(--clay);border-radius:50%;z-index:20`);
+// C · Write
+const wWrite=mk(960,540,1200,420,'disp','Write','font-size:400px;color:var(--cream);text-align:center;display:flex;align-items:center;justify-content:center;z-index:30');
+const doc=mk(1180,610,880,720,'card','','overflow:hidden');
+doc.innerHTML=`<div style="position:absolute;left:34px;top:30px;display:flex;gap:10px"><i style="width:16px;height:16px;border-radius:50%;background:#E8E5DA"></i><i style="width:16px;height:16px;border-radius:50%;background:#E8E5DA"></i><i style="width:16px;height:16px;border-radius:50%;background:#E8E5DA"></i></div>
+<div id="dTitle" class="disp" style="position:absolute;left:64px;top:96px;font-size:76px"></div>
+<div id="dHL" style="position:absolute;left:58px;top:228px;width:700px;height:50px;background:var(--manilla);border-radius:8px;transform-origin:0 50%;transform:scaleX(0)"></div>
+<div id="dS1" class="sans" style="position:absolute;left:64px;top:232px;font-size:36px;font-weight:450"></div>
+<div id="dS2" class="sans" style="position:absolute;left:64px;top:232px;font-size:36px;font-weight:600;color:var(--clay)"></div>
+<div id="dBars"></div>`;
+const bars=[];for(let i=0;i<5;i++){const b=document.createElement('div');b.style.cssText=`position:absolute;left:64px;top:${330+i*58}px;width:${[700,620,690,420,560][i]}px;height:22px;border-radius:11px;background:#EDEAE0;transform-origin:0 50%`;doc.querySelector('#dBars').appendChild(b);bars.push(b);}
+const dTitle=doc.querySelector('#dTitle'),dHL=doc.querySelector('#dHL'),dS1=doc.querySelector('#dS1'),dS2=doc.querySelector('#dS2');
+const popover=mk(1040,548,350,80,'chip',`<div style="width:30px;height:30px;color:var(--clay)">${ICON.pen.replace(/#D97757/,'#D97757')}</div>Make it punchier`,'background:var(--ink);color:#fff;z-index:12');
+const bubble=mk(1560,430,270,84,'chip','<div style="width:34px;height:34px;border-radius:50%;background:var(--fig);padding:7px;box-sizing:border-box">'+ICON.heart+'</div>Love this','z-index:12');
+const penBadge=mk(0,0,84,84,'','<div style="width:100%;height:100%;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center"><div style="width:42px;height:42px">'+ICON.pen+'</div></div>','z-index:12');
+// D · Code
+const wCode=mk(960,540,1200,420,'disp','Code','font-size:400px;color:var(--cream);text-align:center;display:flex;align-items:center;justify-content:center;z-index:30');
+const win=mk(1180,590,1000,640,'','','background:var(--slate);border-radius:26px;box-shadow:0 60px 120px -40px rgba(0,0,0,.7);overflow:hidden;border:1px solid #3a3835');
+const CODE=[[['def ','#CBCADB'],['launch','#D4A27F'],['(product):','#EBDBBC']],[['  plan ','#EBDBBC'],['= ','#8a867c'],['claude','#D97757'],['.think(product)','#EBDBBC']],[['  copy ','#EBDBBC'],['= ','#8a867c'],['write','#6A9BCC'],['(plan, ','#EBDBBC'],['tone','#C46686'],['=','#8a867c'],['"bold"','#788C5D'],[')','#EBDBBC']],[['  tests ','#EBDBBC'],['= ','#8a867c'],['verify','#6A9BCC'],['(copy)','#EBDBBC']],[['  ','#EBDBBC'],['return ','#C46686'],['ship','#6A9BCC'],['(copy, tests)','#EBDBBC']]];
+let wh=`<div style="position:absolute;left:0;right:0;top:0;height:64px;background:#2d2b29;display:flex;align-items:center;gap:12px;padding-left:28px"><i style="width:16px;height:16px;border-radius:50%;background:#D97757"></i><i style="width:16px;height:16px;border-radius:50%;background:#D4A27F"></i><i style="width:16px;height:16px;border-radius:50%;background:#788C5D"></i><span class="mono" style="margin-left:26px;color:#9a968b;font-size:22px">launch.py</span></div>`;
+CODE.forEach((ln,i)=>{wh+=`<div class="mono" style="position:absolute;left:28px;top:${104+i*68}px;font-size:34px;color:#6b675e">${i+1}</div><div class="mono" id="cl${i}" style="position:absolute;left:84px;top:${104+i*68}px;font-size:34px">${ln.map(([s,c],j)=>`<span id="ct${i}_${j}" style="display:inline-block;color:${c}">${s.replace(/ /g,'&nbsp;')}</span>`).join('')}</div>`;});
+wh+=`<div id="term" style="position:absolute;left:0;right:0;bottom:0;height:200px;background:#1b1a19;border-top:1px solid #3a3835"><div class="mono" style="position:absolute;left:28px;top:20px;font-size:24px;color:#8a867c">$ pytest -q</div><div id="tr0" class="mono" style="position:absolute;left:28px;top:70px;font-size:30px;color:#EBDBBC;display:flex;gap:16px;align-items:center"><span style="width:30px;height:30px;border-radius:50%;background:var(--olive);display:inline-flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;display:block">${ICON.check}</span></span>12 passed</div><div id="tr1" class="mono" style="position:absolute;left:28px;top:124px;font-size:30px;color:#EBDBBC;display:flex;gap:16px;align-items:center"><span style="width:30px;height:30px;border-radius:50%;background:var(--clay);display:inline-flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;display:block">${ICON.check}</span></span>shipped to production</div></div>`;
+win.innerHTML=wh; const term=win.querySelector('#term'),tr0=win.querySelector('#tr0'),tr1=win.querySelector('#tr1');
+const ccaret=mk(0,0,5,44,'','','background:var(--clay);border-radius:2px;z-index:12');
+// E · Analyze
+const wAn=mk(960,540,1500,420,'disp','Analyze','font-size:400px;color:var(--cream);text-align:center;display:flex;align-items:center;justify-content:center;z-index:30');
+const chart=mk(1180,600,1020,680,'card','','overflow:hidden');
+const BARS=[.34,.5,.42,.68,.82,1.0],BCOL=['#D4A27F','#D4A27F','#D4A27F','#D97757','#D97757','#D97757'];
+let ch=`<div class="sans" style="position:absolute;left:52px;top:44px;font-size:30px;font-weight:600;color:#8a867c">Weekly signups</div><div id="big" class="disp" style="position:absolute;left:52px;top:96px;font-size:140px;color:var(--ink)">+0%</div>`;
+for(let g=0;g<4;g++)ch+=`<div style="position:absolute;left:52px;right:52px;top:${330+g*84}px;height:2px;background:#ECE9DF"></div>`;
+BARS.forEach((b,i)=>{ch+=`<div id="bar${i}" style="position:absolute;left:${80+i*150}px;bottom:70px;width:96px;height:${b*300}px;background:${BCOL[i]};border-radius:18px 18px 8px 8px;transform-origin:50% 100%;transform:scaleY(0)"></div>`;});
+ch+=`<svg id="line" viewBox="0 0 1020 680" style="position:absolute;left:0;top:0;width:1020px;height:680px;overflow:visible"><path id="lp" d="M128 520 C 250 480,300 470,400 440 S 600 430,700 330 S 850 250,950 200" fill="none" stroke="#141413" stroke-width="8" stroke-linecap="round" stroke-dasharray="1000" stroke-dashoffset="1000"/></svg>`;
+for(let i=0;i<3;i++)ch+=`<div id="ld${i}" style="position:absolute;width:28px;height:28px;border-radius:50%;background:#fff;border:7px solid var(--ink);box-sizing:border-box;left:${[386,686,936][i]}px;top:${[426,316,186][i]}px"></div>`;
+chart.innerHTML=ch; const big=chart.querySelector('#big'),lp=chart.querySelector('#lp');
+const legend=[['Organic','#D4A27F'],['Launch','#D97757']].map(([l,c],i)=>mk(1380+i*230,350,210,66,'chip',`<i style="width:22px;height:22px;border-radius:7px;background:${c};display:block"></i>${l}`,'z-index:12;font-size:28px'));
+// F · values
+const VAL=[['Helpful.',ICON.heart,'var(--clay)',22.0,300],['Honest.',ICON.check,'var(--olive)',23.0,540],['Harmless.',ICON.shield,'var(--sky)',24.0,780]];
+const rows=VAL.map(([w,ic,c,t0,y])=>({t0,y,ico:mk(330,y,170,170,'','<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"><div style="width:84px;height:84px">'+ic+'</div></div>',`background:${c};border-radius:50%`),word:mk(1080,y,1200,240,'disp',w,'font-size:240px;display:flex;align-items:center;justify-content:flex-start;padding-left:20px;box-sizing:border-box;overflow:visible')}));
+// G · lockup
+const flash=mk(960,540,1920,1080,'','','background:#fff;z-index:90;pointer-events:none');
+const logoG=makeLogo(960,520,640,'b');
+const ringG=mk(960,520,100,100,'','','border:8px solid var(--clay);border-radius:50%;box-sizing:border-box');
+const wm=mk(0,0,1010,236,'','','background:url(assets/wordmark.png) center/100% 100% no-repeat;z-index:5');
+const by=mk(960,720,900,60,'sans','BY ANTHROPIC','font-size:34px;font-weight:600;letter-spacing:.34em;color:#7d796a;text-align:center');
+const url=mk(960,830,700,70,'mono','claude.ai','font-size:44px;color:var(--clay);text-align:center;letter-spacing:.02em');
+// ═══════════════ typing helpers + timing ═══════════════
+const TYPE_B='Help me launch our new product';
+const SENT1='Our product helps teams do their best work.', SENT2='Ship faster. Do your best work.';
+const typed=(s,t,t0,cps)=>s.slice(0,clamp(Math.floor((t-t0)*cps),0,s.length));
+function hand(t){ // cursor spline for scenes B and C
+ const K=[{t:6.2,x:1750,y:980},{t:7.2,x:1470,y:575},{t:7.6,x:1470,y:575},{t:7.9,x:1520,y:640},
+  {t:12.2,x:1500,y:900},{t:12.75,x:1050,y:535},{t:13.1,x:1050,y:535},{t:13.5,x:1250,y:800}];
+ return OM.spline(K,t);}
+const CLICKS=[7.5,13.0];
+// punch: scale pulse on every kick inside [a,b)
+function punch(t,a,b,amp){ if(t<a||t>=b) return 0; const ph=((t-a)%BEAT); return amp*Math.exp(-ph*11); }
+function camAt(t){
+ let z=1,cx=960,cy=540,r=0,sx=0,sy=0;
+ z+=punch(t,4,9.5,.005)+punch(t,10,22,.013)+punch(t,26,28,.012);
+ // push to the send button 7.5 → 10
+ if(t>=7.5&&t<10){const k=ease.expoIn(seg(t,7.5,10)); z*=lerp(1,3.2,k); cx=lerp(960,1465,k); cy=lerp(540,560,k);}
+ // slow push through the breakdown
+ if(t>=22&&t<26){z*=lerp(1,1.07,ease.sineInOut(seg(t,22,26)));}
+ for(const [th,a,d,sd] of [[10,16,8,1],[14,10,9,2],[18,10,9,3],[22,8,9,4],[23,8,9,5],[24,8,9,6],[26,18,8,7],[28,6,9,8],[4.05,6,10,9]]){const s=OM.shake(t,th,{amp:a,decay:d,seed:sd}); sx+=s.x; sy+=s.y; r+=s.rot*0.6;}
+ return {z,cx,cy,r,sx,sy};
+}
+// ═══════════════ seek ═══════════════
+function seek(t){
+ const C=camAt(t);
+ CAM.style.transform=`translate(${(960-C.cx*C.z+C.sx).toFixed(2)}px,${(540-C.cy*C.z+C.sy).toFixed(2)}px) scale(${C.z.toFixed(4)}) rotate(${C.r.toFixed(3)}deg)`;
+ CAM.style.transformOrigin='0 0';
+ // ── backgrounds / irises ──
+ const clayOn=t>=10&&t<14.3, inkOn=t>=14&&t<18.3, skyOn=t>=18&&t<22.3;
+ P(bgClay,0,0,1,0,t>=9.95&&t<14.15?1:0); P(bgInk,0,0,1,0,t>=14&&t<18.15?1:0); P(bgSky,0,0,1,0,t>=18&&t<22.15?1:0);
+ // A: dot, ring, logo
+ { const d=pop(t,.5,.55,24); P(dot,0,0,t<1?d:Math.max(0,1-(t-1)*30),0,t<1.05?1:0);
+   const k=u(t,1.0,1.7); P(ring,0,0,1+k*18,0,t>=1&&t<1.8?(1-k)*.9:0); ring.style.borderWidth=(6*(1-k)+1)+'px';
+   // logo: bursts at 1.0, hops up at 2.0, hops into the composer at 4.0
+   const hop1=pop(t,2.0,.7,16), hop2=pop(t,4.0,.8,15);
+   const x=960+lerp(0,0,hop1)+(480-960)*hop2, y=lerp(500,330,hop1)+(560-330)*hop2*1+(0);
+   const size=lerp(1,300/520,hop1)*lerp(1,110/300,hop2);
+   const ly=lerp(500,330,hop1), lyy=ly+(560-330)*hop2;
+   const op=t<1?0:(t<10?1:0);
+   P(logo,x-960,lyy-500,size,t>=1&&t<4?Math.sin(t*1.6)*2.2*(1-hop2):0,op);
+   logoPieces(logo,t,1.0,{});
+   // title words
+   const tl=sstep(3.65,3.95,t); P(titleLine,0,-tl*70,1,0,t>=2&&t<3.95?1-tl:0);
+   const a=pop(t,2.0,.5,20),b=pop(t,2.5,.5,20), tw1=document.getElementById('tw1'),tw2=document.getElementById('tw2');
+   tw1.style.transform=`translateY(${((1-a)*160).toFixed(1)}px) scale(${(.9+.1*a).toFixed(3)}) skewY(${((1-a)*-6).toFixed(2)}deg)`;tw1.style.opacity=clamp(a*3,0,1);
+   tw2.style.transform=`translateY(${((1-b)*160).toFixed(1)}px) scale(${(.9+.1*b).toFixed(3)}) skewY(${((1-b)*-6).toFixed(2)}deg)`;tw2.style.opacity=clamp(b*3,0,1);
+ }
+ // B: composer morph (square card → pill)
+ { const k=pop(t,4.0,.8,15), on=t>=3.98&&t<9.9;
+   const w=lerp(300,1180,k),h=lerp(300,190,k),cy=lerp(330,560,k),rad=lerp(150,95,Math.min(k,1));
+   pill.style.width=w+'px';pill.style.height=h+'px';pill.style.left=(960-w/2)+'px';pill.style.top=(cy-h/2)+'px';pill.style.borderRadius=rad+'px';P(pill,0,0,1,0,on?1:0);
+   const ty=typed(TYPE_B,t,4.7,15); ptxt.textContent=ty; P(ptxt,0,0,1,0,on&&t>=4.6?1:0);
+   ptxt.style.left=(600)+'px';ptxt.style.top=(560-35)+'px'; ptxt.style.width='760px';
+   const done=ty.length===TYPE_B.length; P(caret,600+ (ty.length*21.4)+6 -0,560-27,1,0,on&&t>=4.6&&!(done&&Math.floor(t*3)%2)&&t<7.4?1:0);
+   caret.style.left='0px';caret.style.top='0px';caret.style.transform=`translate(${(606+ty.length*21.6).toFixed(1)}px,${533}px)`;caret.style.opacity=on&&t>=4.6&&t<7.45&&!(done&&Math.floor(t*4)%2)?1:0;
+   const sb=pop(t,4.75,.5,22), pr=OM.press(t,7.5,{depth:.18,decay:9,omega:28,flash:.4});
+   const pulse=t>=7.0&&t<7.5?1+.07*Math.sin((t-7)*Math.PI*8)*(1-(t-7)/.5):1;
+   P(send,0,0,sb*pulse*pr.s,0,on?sb:0);send.style.background=pr.active||t>=7.5?'var(--clay)':'var(--ink)';
+   CHIPS.forEach(c=>{const t0=4.5+c.i*.25,p=pop(t,t0,.55,18),tx=960+(c.i-1.5)*290,x0=480,y0=560;
+     const x=lerp(x0,tx,p),y=lerp(y0,790,p)-Math.sin(Math.min(p,1)*Math.PI)*90*(p<1.01?1:0);
+     const out=ease.expoIn(seg(t,7.4+c.i*.04,7.9)); P(c.el,x-tx,y-790+out*260,p*(1-out*.3),(1-p)*(c.i%2?-24:24),on?Math.min(p,1)*(1-out):0);});
+   const hp=hand(t); const cs=OM.cursor(t,[{t:6.2,x:1750,y:980},{t:7.2,x:1470,y:575},{t:7.6,x:1470,y:575},{t:7.9,x:1520,y:640},{t:12.2,x:1500,y:900},{t:12.75,x:1050,y:535},{t:13.1,x:1050,y:535},{t:13.5,x:1250,y:800}],CLICKS);
+   const cvis=(t>=6.2&&t<8.1)||(t>=12.2&&t<13.7);
+   P(cursor,cs.x-20,cs.y-26,cs.s,0,cvis?clamp((t<8?t-6.2:t>12?t-12.2:1)*4,0,1)*(t<8?1-sstep(7.9,8.1,t):1-sstep(13.4,13.7,t)):0);
+   const ir=t>=7.5&&t<10.05?lerp(56,2400,ease.expoIn(seg(t,7.7,10))):0; irisC.style.width=irisC.style.height=(ir*2)+'px';irisC.style.left=(1465-ir)+'px';irisC.style.top=(560-ir)+'px';P(irisC,0,0,1,0,t>=7.6&&t<10.05?1:0);
+ }
+ // C: Write
+ { const on=t>=10&&t<14.25;
+   const s0=pop(t,10,.5,24), mv=u(t,10.6,11.1,ease.expoInOut);
+   const wx=lerp(0,-640,mv), wy=lerp(0,-380,mv), ws=lerp(1.6-.6*s0,.36,mv);
+   P(wWrite,wx,wy,ws,(1-s0)*-4,on?clamp(s0*4,0,1):0);
+   const dk=pop(t,10.6,.7,15); P(doc,0,(1-dk)*900,1,(1-dk)*8,on?1:0);
+   dTitle.textContent=typed('Launch plan',t,11.0,17);
+   const words=SENT1.split(' '); const n=clamp(Math.floor((t-11.5)*14),0,words.length); const swapped=t>=13.0;
+   dS1.textContent=words.slice(0,n).join(' ');
+   const hl=u(t,12.0,12.35,ease.expoOut); dHL.style.transform=`scaleX(${swapped?1:hl})`; dHL.style.opacity=swapped?Math.max(0,1-(t-13.0)*6):1;
+   const so=u(t,13.0,13.3); dS1.style.opacity=swapped?0:1; dS1.style.transform=`translateY(${-so*30}px)`;dS1.style.filter=`blur(${so*6}px)`;
+   const n2=clamp(Math.floor((t-13.05)*28),0,SENT2.length); dS2.textContent=SENT2.slice(0,n2);
+   bars.forEach((b,i)=>{const p=pop(t,11.9+i*.0625,.7,20);b.style.transform=`scaleX(${clamp(p,0,1.04)})`;});
+   const pp=pop(t,12.35,.55,20), pq=u(t,13.0,13.2); P(popover,0,0,pp*(1-pq*.2),0,on?Math.min(pp,1)*(1-pq):0);
+   const pb=pop(t,13.25,.5,18); P(bubble,0,(1-pb)*60,pb,(1-pb)*10,on?Math.min(pb,1):0);
+   const pn=pop(t,12.0,.6,18); P(penBadge,lerp(760,1640,u(t,12.0,12.4))-0,lerp(720,500,u(t,12.0,12.4)) ,pn,(t-12)*90,on&&t>=12&&t<13.0?1:0);
+   penBadge.style.left='0px';penBadge.style.top='0px';penBadge.style.transform=`translate(${(760+lerp(0,420,u(t,12.0,12.35))-42).toFixed(1)}px,${(262-42).toFixed(1)}px) rotate(${((t-12)*120).toFixed(1)}deg) scale(${pn})`;
+   penBadge.style.opacity=on&&t>=12&&t<12.4?1:0;
+ }
+ // D: Code
+ { const on=t>=14&&t<18.25, s0=pop(t,14,.5,24), mv=u(t,14.6,15.1,ease.expoInOut);
+   P(wCode,lerp(0,-660,mv),lerp(0,-390,mv),lerp(1.6-.6*s0,.36,mv),(1-s0)*4,on?clamp(s0*4,0,1):0);
+   const dk=pop(t,14.55,.7,15); P(win,0,(1-dk)*900,1,(1-dk)*-8,on?1:0);
+   let nTok=0; const T0=15.0; let caretX=84,caretY=104;
+   CODE.forEach((ln,i)=>ln.forEach((_,j)=>{const el=document.getElementById(`ct${i}_${j}`),p=pop(t,T0+i*.25+j*.045,.6,24);nTok++;
+     el.style.opacity=clamp(p*3,0,1);el.style.transform=`translateY(${((1-p)*26).toFixed(1)}px)`; if(p>0.05){caretX=win.offsetLeft+84+(CODE[i].slice(0,j+1).reduce((a,b)=>a+b[0].length,0))*20.4;caretY=win.offsetTop+104+i*68+(0);}}));
+   const last=t>=T0+1.3; P(ccaret,0,0,1,0,0);ccaret.style.left='0px';ccaret.style.top='0px';ccaret.style.transform=`translate(${caretX.toFixed(1)}px,${(caretY+(on?0:0)+0).toFixed(1)}px)`;ccaret.style.opacity=on&&t>=15.0&&t<17.2&&!(Math.floor(t*4)%2&&last)?1:0;
+   const tp=pop(t,16.5,.7,16); term.style.transform=`translateY(${((1-Math.min(tp,1))*220).toFixed(1)}px)`;
+   const r0=pop(t,16.75,.5,22),r1=pop(t,17.25,.5,22);
+   tr0.style.opacity=clamp(r0*3,0,1);tr0.style.transform=`translateX(${(1-r0)*-50}px) scale(${.9+.1*Math.min(r0,1.1)})`;
+   tr1.style.opacity=clamp(r1*3,0,1);tr1.style.transform=`translateX(${(1-r1)*-50}px) scale(${.9+.1*Math.min(r1,1.1)})`;
+ }
+ // E: Analyze
+ { const on=t>=18&&t<22.25, s0=pop(t,18,.5,24), mv=u(t,18.6,19.1,ease.expoInOut);
+   P(wAn,lerp(0,-520,mv),lerp(0,-390,mv),lerp(1.6-.6*s0,.36,mv),(1-s0)*-4,on?clamp(s0*4,0,1):0);
+   const dk=pop(t,18.55,.7,15); P(chart,0,(1-dk)*900,1,(1-dk)*8,on?1:0);
+   BARS.forEach((b,i)=>{const p=pop(t,19.0+i*.25,.5,18);document.getElementById('bar'+i).style.transform=`scaleY(${Math.max(p,0)})`;});
+   const ld=u(t,20.0,20.9,ease.cubicInOut); lp.style.strokeDashoffset=(1000*(1-ld)).toFixed(1);
+   [0,1,2].forEach(i=>{const p=pop(t,20.25+i*.3,.5,22);const e=chart.querySelector('#ld'+i);e.style.transform=`scale(${Math.max(p,0)})`;});
+   const cnt=Math.round(248*ease.expoOut(seg(t,20.0,21.0))); big.textContent='+'+cnt+'%'; const bp=OM.impact(t,21.0,{decay:8,omega:24,sqx:.05,sqy:.07}); big.style.transform=`scale(${bp.sx},${bp.sy})`;big.style.transformOrigin='0 60%';big.style.color=t>=21?'var(--clay)':'var(--ink)';
+   legend.forEach((l,i)=>{const p=pop(t,21.0+i*.25,.55,20);P(l,0,(1-p)*50,p,0,on?Math.min(p,1):0);});
+ }
+ // F: values
+ { const on=t>=22&&t<26.0;
+   const sc=ease.expoIn(seg(t,25.1,26.0));
+   rows.forEach((r,i)=>{const p=pop(t,r.t0,.5,22),sq=OM.impact(t,r.t0,{decay:7,omega:24,sqx:.05,sqy:.10});
+     const wx=lerp(0,960-1080,sc)+0,wy=lerp(0,540-r.y,sc),s=lerp(1,.05,sc),op=on?clamp(p*3,0,1)*(1-sc*.0):0;
+     P(r.word,wx+(1-p)*300,wy,s*lerp(.8,1,Math.min(p,1.1)),(1-p)*-3+sc*40,op,sq.sx,sq.sy);
+     P(r.ico,lerp(0,960-330,sc),wy,s*Math.max(p,0),(1-p)*-180+sc*200,op);});
+ }
+ // G: lockup
+ { const on=t>=26;
+   const fl=t>=26?Math.max(0,1-(t-26)/.18):0; P(flash,0,0,1,0,fl*.9);
+   const hop=pop(t,27.0,.72,15);
+   const lx=lerp(960,435,hop), ly=lerp(520,500,hop), ls=lerp(1,190/640,hop);
+   P(logoG,lx-960,ly-520,ls,t<27?Math.sin((t-26)*2)*1.5:0,on?1:0); logoPieces(logoG,t,26.0,{stag:.02,z:.45,w:18,spin:120,out:90});
+   const rk=u(t,26.0,26.9); P(ringG,0,0,1+rk*26,0,t>=26&&t<26.95?(1-rk)*.8:0);ringG.style.borderWidth=(8*(1-rk)+1)+'px';
+   const wk=ease.expoOut(seg(t,27.1,27.9)); wm.style.left=(570)+'px';wm.style.top=(500-118)+'px';
+   wm.style.clipPath=`inset(0 ${((1-wk)*100).toFixed(2)}% 0 0)`;P(wm,(1-wk)*-40,0,1,0,t>=27.1?1:0);
+   const bk=pop(t,28.0,.7,18);P(by,0,(1-bk)*30,1,0,t>=28?Math.min(bk,1):0);
+   const uk=pop(t,28.5,.6,18);P(url,0,(1-uk)*30,1,0,t>=28.5?Math.min(uk,1):0);
+ }
+ document.getElementById('hud').textContent='t='+t.toFixed(3);
+ return Promise.resolve();
+}
+window.__seek=async t=>{await seek(t);return true;};
+window.__ready=Promise.all([document.fonts.ready,(window.LOOK&&LOOK.ready)||Promise.resolve()]).then(()=>seek(0));
+const q=new URLSearchParams(location.search);
+if(q.has('t')) __ready.then(()=>seek(parseFloat(q.get('t'))));
+if(q.has('hud')) document.getElementById('hud').style.display='block';
+if(q.has('play')) __ready.then(()=>{const t0=performance.now();(function loop(){seek(((performance.now()-t0)/1000)%30);requestAnimationFrame(loop);})();});
+</script></body></html>

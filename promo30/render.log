@@ -1,0 +1,33 @@
+900 frames on 4 workers · shutter 180°, 8 captures per moving frame
+  35/900  15s
+  64/900  30s
+  95/900  45s
+  123/900  60s
+  151/900  75s
+  179/900  90s
+  208/900  105s
+  236/900  120s
+  264/900  135s
+  299/900  150s
+  328/900  165s
+  358/900  180s
+  386/900  195s
+  414/900  210s
+  442/900  225s
+  466/900  240s
+  494/900  255s
+  522/900  270s
+  546/900  285s
+  573/900  300s
+  599/900  315s
+  628/900  330s
+  657/900  345s
+  685/900  360s
+  713/900  375s
+  741/900  390s
+  769/900  405s
+  794/900  420s
+  822/900  435s
+  853/900  450s
+900 frames, 6894 captures (51 still frames skipped the shutter, 106 kept a cut hard) in 463s on 4 workers; page errors: none
+wrote /home/user/no-entear/promo30/draft.mp4
