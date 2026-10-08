@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertTriangle, Radar, Wifi, WifiOff } from "lucide-react";
 import { getMatchDataWithFallback, MatchDataSource } from "@/lib/api";
 import { MatchProvider } from "@/lib/MatchContext";
@@ -11,6 +11,7 @@ import EventOverlay from "@/components/EventOverlay";
 import VideoSyncPlayer from "@/components/VideoSyncPlayer";
 import AnalyticsPanel from "@/components/AnalyticsPanel";
 import FilterBar from "@/components/FilterBar";
+import UploadPanel from "@/components/UploadPanel";
 
 interface LoadState {
   status: "loading" | "ready" | "error";
@@ -22,15 +23,19 @@ interface LoadState {
 export default function Page() {
   const [state, setState] = useState<LoadState>({ status: "loading", data: null, source: null });
 
-  useEffect(() => {
-    let cancelled = false;
+  // Each load gets a sequence number so a stale response (e.g. the initial
+  // load finishing after a post-upload reload) can't overwrite a newer one.
+  const loadSeq = useRef(0);
+
+  const load = useCallback(() => {
+    const seq = ++loadSeq.current;
     getMatchDataWithFallback()
       .then((res) => {
-        if (cancelled) return;
+        if (seq !== loadSeq.current) return;
         setState({ status: "ready", data: res.data, source: res.source, error: res.error });
       })
       .catch((err) => {
-        if (cancelled) return;
+        if (seq !== loadSeq.current) return;
         setState({
           status: "error",
           data: null,
@@ -38,19 +43,26 @@ export default function Page() {
           error: err instanceof Error ? err.message : String(err),
         });
       });
-    return () => {
-      cancelled = true;
-    };
   }, []);
+
+  useEffect(() => {
+    load();
+    // Invalidate any in-flight load on unmount (the ref is a counter, not a DOM node).
+    const seqRef = loadSeq;
+    return () => {
+      seqRef.current++;
+    };
+  }, [load]);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-4 px-4 py-4 md:px-6">
-      <Header source={state.source} error={state.error} />
+      <Header source={state.source} error={state.error} onProcessed={load} />
 
       {state.status === "loading" && <LoadingState />}
       {state.status === "error" && <ErrorState error={state.error} />}
       {state.status === "ready" && state.data && (
-        <MatchProvider matchData={state.data}>
+        // Keyed by match_id so playback/filter state resets for a newly processed match.
+        <MatchProvider key={state.data.meta.match_id} matchData={state.data}>
           <Dashboard />
         </MatchProvider>
       )}
@@ -58,7 +70,15 @@ export default function Page() {
   );
 }
 
-function Header({ source, error }: { source: MatchDataSource | null; error?: string }) {
+function Header({
+  source,
+  error,
+  onProcessed,
+}: {
+  source: MatchDataSource | null;
+  error?: string;
+  onProcessed: () => void;
+}) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-base-700 bg-base-850 px-4 py-3">
       <div className="flex items-center gap-2.5">
@@ -68,19 +88,23 @@ function Header({ source, error }: { source: MatchDataSource | null; error?: str
           <p className="text-[11px] text-base-400">Tactical video analytics</p>
         </div>
       </div>
-      {source && (
-        <div
-          className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${
-            source === "api"
-              ? "border-good/30 bg-good/10 text-good"
-              : "border-warn/30 bg-warn/10 text-warn"
-          }`}
-          title={error}
-        >
-          {source === "api" ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
-          {source === "api" ? "Live backend" : "Fixture fallback"}
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Uploading needs the real backend; the fixture fallback means it's unreachable. */}
+        {source === "api" && <UploadPanel onCompleted={onProcessed} />}
+        {source && (
+          <div
+            className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+              source === "api"
+                ? "border-good/30 bg-good/10 text-good"
+                : "border-warn/30 bg-warn/10 text-warn"
+            }`}
+            title={error}
+          >
+            {source === "api" ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+            {source === "api" ? "Live backend" : "Fixture fallback"}
+          </div>
+        )}
+      </div>
     </header>
   );
 }

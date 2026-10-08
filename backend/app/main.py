@@ -31,6 +31,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import (
     ALLOWED_VIDEO_CONTENT_TYPES,
     ALLOWED_VIDEO_EXTENSIONS,
+    CORS_ALLOWED_ORIGINS,
     MAX_UPLOAD_SIZE_BYTES,
 )
 from app.mock_data import generate_mock_match
@@ -55,9 +56,9 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    # Explicitly allow the Next.js dev server; "*" is included too since this
-    # is a dev-stage project with no auth/cookies on these endpoints.
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
+    # Origins come from CORS_ALLOWED_ORIGINS (defaults to the Next.js dev
+    # server). Set that env var per deployment instead of allowing "*".
+    allow_origins=CORS_ALLOWED_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],

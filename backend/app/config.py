@@ -23,6 +23,18 @@ def _env_str(name: str, default: str) -> str:
     return os.environ.get(name, default)
 
 
+def _env_list(name: str, default: list[str]) -> list[str]:
+    # Comma-separated list, e.g. "https://a.example, https://b.example".
+    # Whitespace around items and empty items are dropped. An unset or
+    # blank variable falls back to a copy of the default so callers can't
+    # mutate the module-level default by accident.
+    raw = os.environ.get(name)
+    if not raw or not raw.strip():
+        return list(default)
+    items = [item.strip() for item in raw.split(",")]
+    return [item for item in items if item]
+
+
 # Longest clip the real CV pipeline will accept. 20 minutes is the target
 # use case for this deployment (a full fútbol 7 half plus stoppage time);
 # processing time and memory both scale with video length, so this is an
@@ -67,3 +79,11 @@ YOLO_POSE_WEIGHTS_PATH = _env_str("YOLO_POSE_WEIGHTS_PATH", "yolov8n-pose.pt")
 #     motion model; more robust through longer occlusions/collisions at
 #     some extra compute cost).
 TRACKER_BACKEND = _env_str("TRACKER_BACKEND", "bytetrack")
+
+# Origins the browser frontend may call the API from (CORS allow-list).
+# Override with a comma-separated CORS_ALLOWED_ORIGINS env var for
+# deployment. A "*" entry allows any origin and is for local dev only.
+CORS_ALLOWED_ORIGINS = _env_list(
+    "CORS_ALLOWED_ORIGINS",
+    ["http://localhost:3000", "http://127.0.0.1:3000"],
+)

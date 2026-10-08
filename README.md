@@ -83,10 +83,16 @@ Or use the Makefile: `make install`, `make backend`, `make frontend`, `make mock
 
 ## Using real video
 
+From the dashboard: click **Upload video** in the header (shown when the live backend is reachable). It uploads the clip, starts processing, polls the job, and reloads the dashboard when it completes; backend errors (unsupported type, too large, pipeline failure) are shown inline.
+
+Via the API:
+
 1. `POST /api/upload` a video file (multipart) → returns `{video_id, filename}`. Rejects non-video extensions (415) and anything over the upload size limit (413).
 2. `POST /api/process` with `{"video_id": "...", "mock": false}` to run the real CV pipeline: YOLO detection → ByteTrack → homography calibration → team classification → event/heatmap analytics. **Returns immediately** with `status: "processing"` — a real clip can take minutes to run, so it's processed on a background thread rather than blocking the request.
 3. Poll `GET /api/process/{video_id}/status` until `status` is `"completed"` or `"failed"` (with an `error` message).
 4. `GET /api/match-data` returns the processed result in the same schema as the mock data once the job completes, so the frontend needs no changes.
+
+Uploaded files are kept in `backend/app/storage/uploads/`, so a `video_id` stays valid across a backend restart.
 
 `ultralytics`, `supervision`, and `opencv-python-headless` are only imported when the real pipeline actually runs, so the mock flow above works with no model weights, GPU, or internet access required.
 
@@ -99,6 +105,7 @@ Configured centrally in `backend/app/config.py` (override via environment variab
 | Max clip duration | 20 minutes | `MAX_VIDEO_DURATION_SECONDS` |
 | Max upload size | 2 GiB | `MAX_UPLOAD_SIZE_BYTES` |
 | Target processed-frame count | 9000 | `TARGET_MAX_PROCESSED_FRAMES` |
+| CORS allowed origins (comma-separated) | `http://localhost:3000,http://127.0.0.1:3000` | `CORS_ALLOWED_ORIGINS` |
 
 A longer video is rejected up front with a clear error instead of failing silently. To keep a 20-minute clip's processing time and memory bounded:
 - **Streaming, single-pass decoding:** the pipeline never holds more than one decoded frame in memory at a time — a naive "collect every frame first" approach would need tens of GB of RAM for a 20-minute clip.
@@ -149,3 +156,5 @@ TRACKER_BACKEND=botsort   # or "bytetrack" (default)
 make test          # backend: pytest — schema validation, heatmap shape, event heuristics
 cd frontend && npm run build   # frontend: production build + type-check
 ```
+
+For a lightweight test environment (no ultralytics/supervision), install `backend/requirements-dev.txt` instead of `requirements.txt`. CI (`.github/workflows/ci.yml`) runs the backend tests on Python 3.11 and the frontend lint + build on every push and pull request.

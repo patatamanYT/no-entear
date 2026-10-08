@@ -39,7 +39,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
   if (!res.ok) {
-    throw new ApiError(`Request to ${path} failed with status ${res.status}`, res.status);
+    // FastAPI reports errors as {"detail": "..."}; surface that message
+    // (e.g. the 413/415 upload rejections) instead of a bare status code.
+    let detail: string | undefined;
+    try {
+      const body = await res.json();
+      if (typeof body?.detail === "string") detail = body.detail;
+    } catch {
+      // Non-JSON error body — fall back to the generic message.
+    }
+    throw new ApiError(detail ?? `Request to ${path} failed with status ${res.status}`, res.status);
   }
   return (await res.json()) as T;
 }
@@ -81,6 +90,32 @@ export function triggerProcess(payload: ProcessRequest = {}): Promise<ProcessRes
 /** GET /api/process/{video_id}/status — poll a real-pipeline job's progress. */
 export function getProcessStatus(videoId: string): Promise<JobStatusResponse> {
   return request<JobStatusResponse>(`/api/process/${encodeURIComponent(videoId)}/status`);
+}
+
+/**
+ * Polls getProcessStatus until the job leaves "processing". Resolves with
+ * the final status ("completed" or "failed"); rejects if `signal` aborts.
+ */
+export async function waitForProcessing(
+  videoId: string,
+  { intervalMs = 2000, signal }: { intervalMs?: number; signal?: AbortSignal } = {},
+): Promise<JobStatusResponse> {
+  for (;;) {
+    if (signal?.aborted) throw new DOMException("Polling aborted", "AbortError");
+    const job = await getProcessStatus(videoId);
+    if (job.status !== "processing") return job;
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(resolve, intervalMs);
+      signal?.addEventListener(
+        "abort",
+        () => {
+          clearTimeout(timer);
+          reject(new DOMException("Polling aborted", "AbortError"));
+        },
+        { once: true },
+      );
+    });
+  }
 }
 
 export type MatchDataSource = "api" | "fixture";

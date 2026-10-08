@@ -18,8 +18,20 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.pipeline import recommended_frame_stride, validate_video_duration
+from app.storage.store import MatchStore
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def isolated_storage(tmp_path, monkeypatch):
+    # Uploads and match cache go to pytest's tmp_path so nothing is written
+    # into app/storage/uploads and no state leaks between tests.
+    monkeypatch.setattr("app.main.UPLOADS_DIR", tmp_path)
+    monkeypatch.setattr(
+        "app.main.store", MatchStore(cache_path=tmp_path / "match.json", uploads_dir=tmp_path)
+    )
+    return tmp_path
 
 
 # ---------------------------------------------------------------------------
