@@ -19,6 +19,7 @@ frontend/out/
 frontend/.env.local
 frontend/npm-debug.log*
 frontend/.eslintcache
+frontend/*.tsbuildinfo
 
 # OS / editor
 .DS_Store
