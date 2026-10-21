@@ -43,7 +43,7 @@ print(df.shape)
 df.head()
 
 
-# ### 2.0 Exploración inicial
+# ### 2.1 Exploración inicial
 # Revisamos el tamaño de la base, los tipos de datos, si hay valores nulos o registros duplicados, y las estadísticas básicas de la variable objetivo.
 
 # In[3]:
@@ -79,7 +79,7 @@ plt.show()
 
 # **Interpretación:** la base no tiene nulos ni duplicados. `units_sold` tiene sesgo a la derecha (la mayoría de los registros vende poco y pocos venden mucho) y las ventas se concentran en CDMX, Monterrey y Guadalajara, por lo que la **región** será una variable importante.
 
-# ### 2.1 Preparar la fecha
+# ### 2.2 Preparar la fecha
 # La columna `month` viene como texto (January, February…). La convertimos a número y creamos una fecha para poder ordenar los datos en el tiempo.
 
 # In[6]:
@@ -96,7 +96,7 @@ df = df.sort_values(['product_id', 'region', 'fecha']).reset_index(drop=True)
 df[['product_id', 'region', 'fecha', 'units_sold', 'units_expected']].head()
 
 
-# ### 2.2 Las ventas a través del tiempo
+# ### 2.3 Las ventas a través del tiempo
 # Antes de modelar vemos cómo se comportan las ventas reales contra lo que DanuStore esperaba vender.
 
 # In[7]:
@@ -132,6 +132,33 @@ plt.show()
 
 # **Interpretación:** el pronóstico actual (`units_expected`) es casi plano y muy superior a las ventas reales, mientras que las ventas sí tienen picos (noviembre y diciembre) en todas las regiones, y el patrón de 2025 es igual al de 2024. Esto confirma que hace falta un modelo que aprenda el comportamiento real de las ventas.
 
+# ### 2.4 Comportamiento de los productos por categoría
+# Para que DanuStore conozca cómo se comportan sus productos, revisamos las ventas de cada categoría a través del tiempo y qué parte de lo esperado se vende en cada una.
+
+# In[9]:
+
+
+# Ventas de cada categoría por mes
+por_categoria_mes = df.pivot_table(index='fecha', columns='category', values='units_sold', aggfunc='sum')
+
+por_categoria_mes.plot(figsize=(11, 4), marker='.')
+plt.title('Ventas por categoría a través del tiempo')
+plt.ylabel('Unidades')
+plt.grid(alpha=0.3)
+plt.show()
+
+# Resumen por categoría
+por_categoria = df.groupby('category')[['units_sold', 'units_expected']].sum()
+por_categoria['% de las ventas totales'] = (por_categoria['units_sold'] / por_categoria['units_sold'].sum() * 100).round(1)
+por_categoria['% vendido de lo esperado'] = (por_categoria['units_sold'] / por_categoria['units_expected'] * 100).round(1)
+por_categoria.sort_values('% de las ventas totales', ascending=False)
+
+
+# **Interpretación:**
+# - **Casual Wear** es la categoría que más vende (28.7 % de las unidades), seguida de Footwear (26.3 %), Fitness Wear (25.0 %) y Accessories (20.0 %).
+# - Las **cuatro categorías tienen la misma temporada**: suben ~21–25 % sobre su mes promedio en noviembre y diciembre, y bajan ~13–17 % en febrero. Por eso el mes es una variable útil para el modelo.
+# - En todas se vende solo entre **15 % y 18 % de lo esperado**; Footwear es la más sobrepronosticada (15.4 %). El problema del pronóstico es general, no de una sola categoría.
+
 # ## 3. Selección de variables
 # ### 3.1 Universo de variables
 # - **Variable objetivo (y):** `units_sold`.
@@ -142,7 +169,7 @@ plt.show()
 # - `ventas_hace_2` y `ventas_hace_3`: ventas de hace 2 y 3 meses.
 # - `promedio_3_meses`: promedio de los 3 meses anteriores.
 
-# In[9]:
+# In[10]:
 
 
 # Agrupamos por producto y región para que cada serie use SUS propias ventas pasadas
@@ -173,7 +200,7 @@ df[['product_id', 'region', 'fecha', 'units_sold', 'ventas_mes_anterior', 'prome
 
 # ### 3.3 Correlaciones más importantes
 
-# In[10]:
+# In[11]:
 
 
 variables_numericas = ['units_sold', 'ventas_mes_anterior', 'ventas_hace_2', 'ventas_hace_3',
@@ -189,7 +216,7 @@ plt.show()
 print(correlacion['units_sold'].sort_values(ascending=False).round(3))
 
 
-# In[11]:
+# In[12]:
 
 
 # ¿Las ventas de 2025 se parecen a las de 2024?
@@ -208,7 +235,7 @@ print('Diferencia promedio entre 2025 y 2024:', round((tabla[2025] - tabla[2024]
 # 
 # **Variables seleccionadas:** `region`, `category`, `subcategory`, `mes`, `ventas_mes_anterior`, `ventas_hace_2`, `ventas_hace_3`, `promedio_3_meses`.
 
-# In[12]:
+# In[13]:
 
 
 # ¿El precio identifica al producto?
@@ -220,7 +247,7 @@ print('¿Cada producto tiene un solo precio?', (df.groupby('product_id')['static
 # ## 4. Codificar variables categóricas
 # Los modelos solo entienden números. `region`, `category` y `subcategory` son texto, así que se convierten con **One-Hot Encoding** (`pd.get_dummies`): se crea una columna de 0 y 1 por cada categoría.
 
-# In[13]:
+# In[14]:
 
 
 # Quitamos los 3 primeros meses de cada serie (no tienen ventas anteriores para calcular los rezagos)
@@ -249,7 +276,7 @@ X.head()
 # 
 # Las tres particiones tienen **periodos de prueba distintos y que se enciman** (septiembre–diciembre, julio–diciembre y mayo–diciembre), así que sus errores no se pueden comparar directamente para decir que una es "mejor": las diferencias pueden deberse a los meses que se evalúan (por ejemplo, la temporada de noviembre–diciembre). Sirven para ver si el modelo es **estable** con distintas cantidades de datos.
 
-# In[14]:
+# In[15]:
 
 
 particiones = {
@@ -269,7 +296,7 @@ for nombre, corte in particiones.items():
 # - **WAPE:** error total ÷ ventas totales (en %). Es la métrica principal porque se lee fácil: "el pronóstico se equivoca X% de lo que se vende".
 # - **R²:** qué tanto de la variación de las ventas explica el modelo (1 = perfecto).
 
-# In[15]:
+# In[16]:
 
 
 def evaluar(y_real, y_pred):
@@ -287,7 +314,7 @@ def evaluar(y_real, y_pred):
 # 2. **Modelo ingenuo:** "este mes voy a vender lo mismo que el mes pasado".
 # 3. **Ingenuo estacional:** "este mes voy a vender lo mismo que en el mismo mes del año pasado".
 
-# In[16]:
+# In[17]:
 
 
 resultados = []
@@ -317,7 +344,7 @@ pd.DataFrame(resultados)[['Partición', 'Modelo', 'Hiperparámetros', 'MAE', 'RM
 
 # **Interpretación de las líneas base:**
 # - El pronóstico actual de DanuStore se equivoca ~470 %, y repetir el mes pasado ~19 %.
-# - **Repetir el mismo mes del año pasado se equivoca menos del 0.5 %.** Esto no es porque sea un buen método en general, sino porque **en esta base las ventas de 2025 son casi una copia de las de 2024** (sección 3.3). Es el método con menor error entre los evaluados, y esta repetición es la principal limitante del análisis: se reportará al socio formador.
+# - **Repetir el mismo mes del año pasado se equivoca menos del 0.5 %.** Esto no necesariamente es porque sea un buen método en general, sino porque **en esta base las ventas de 2025 son casi una copia de las de 2024** (sección 3.3). Es el método con menor error entre los evaluados, y esta repetición es la principal limitante del análisis: se reportará al socio formador.
 # - Los modelos de ML se construyen **sin** las ventas del año anterior como decisión experimental: así dependen del nivel de ventas reciente, la región y la temporada, y no de copiar el año anterior. Si esto realmente funciona mejor cuando las ventas no se repiten es algo que **queda pendiente de validar** con datos nuevos.
 
 # ## 8. Modelo 1: Random Forest
@@ -328,7 +355,7 @@ pd.DataFrame(resultados)[['Partición', 'Modelo', 'Hiperparámetros', 'MAE', 'RM
 # - `max_depth`: profundidad máxima de cada árbol (None = sin límite).
 # - `min_samples_leaf`: mínimo de registros en cada hoja (evita que el árbol memorice).
 
-# In[17]:
+# In[18]:
 
 
 # Las 3 configuraciones de Random Forest: el texto es el nombre y a la derecha está el modelo
@@ -364,7 +391,7 @@ tabla[tabla['Modelo'] == 'Random Forest'][['Partición', 'Hiperparámetros', 'MA
 # - `learning_rate`: qué tanto corrige cada árbol (más bajo = más lento pero más cuidadoso).
 # - `max_depth`: profundidad máxima de cada árbol.
 
-# In[18]:
+# In[19]:
 
 
 opciones_xgb = {
@@ -393,7 +420,7 @@ tabla[tabla['Modelo'] == 'XGBoost'][['Partición', 'Hiperparámetros', 'MAE', 'R
 
 # ## 10. Comparación de todos los modelos
 
-# In[19]:
+# In[20]:
 
 
 tabla_final = pd.DataFrame(resultados)[['Partición', 'Modelo', 'Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
@@ -401,7 +428,7 @@ tabla_final = tabla_final.sort_values(['Partición', 'WAPE (%)'])
 tabla_final
 
 
-# In[20]:
+# In[21]:
 
 
 # Tabla resumen: el menor WAPE (%) de cada modelo en cada partición
@@ -410,7 +437,7 @@ resumen = resumen[['80/20', '70/30', '60/40']].sort_values('80/20')
 resumen
 
 
-# In[21]:
+# In[22]:
 
 
 # Mejor configuración de cada modelo en la partición 80/20
@@ -426,7 +453,7 @@ mejores[['Modelo', 'Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
 # 2. Se elige **automáticamente** la configuración con menor error en validación para cada modelo.
 # 3. Esas configuraciones son las que se usan en las secciones 11 a 13.
 
-# In[22]:
+# In[23]:
 
 
 entrenamiento_val = datos['fecha'] < '2025-05-01'
@@ -465,7 +492,7 @@ tabla_validacion[['Modelo', 'Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']
 # ## 11. Resultados de los mejores modelos
 # Se entrenan las configuraciones elegidas en validación con todos los datos hasta agosto 2025 y se evalúan en septiembre–diciembre 2025 (partición 80/20) para visualizar sus resultados.
 
-# In[23]:
+# In[24]:
 
 
 corte = '2025-09-01'
@@ -505,7 +532,9 @@ plt.show()
 total_mes.round(0)
 
 
-# In[24]:
+# **Interpretación:** los dos modelos siguen muy de cerca las ventas reales, incluida la subida de noviembre y diciembre. En el total de cada mes, Random Forest se desvía menos de 2 % (la mayor diferencia es septiembre, +1.6 %), mientras que el pronóstico actual espera ~1.15 millones de unidades al mes contra ~170–230 mil que se venden.
+
+# In[25]:
 
 
 # Función que hace las 3 gráficas de errores de un modelo
@@ -545,7 +574,12 @@ graficar_residuales('Random Forest', resultado['pronostico_rf'])
 graficar_residuales('XGBoost', resultado['pronostico_xgb'])
 
 
-# In[25]:
+# **Interpretación:**
+# - **Real vs. estimado:** en los dos modelos los puntos quedan pegados a la línea roja, es decir, los pronósticos se parecen mucho a las ventas reales en productos de venta baja y alta.
+# - **Distribución de residuales:** está centrada en 0 (promedio de −0.34 unidades en Random Forest y 0.14 en XGBoost) y el 90 % de los errores queda entre −30 y +33 unidades. Los modelos no tienden a sobrestimar ni a subestimar.
+# - **Residuales vs. estimado:** no se ve un patrón claro; los errores en unidades se abren en los productos que más venden, lo cual es normal porque un mismo porcentaje de error equivale a más unidades (en porcentaje, el error de esos productos es incluso menor).
+
+# In[26]:
 
 
 # Error de los dos modelos por región
@@ -559,7 +593,9 @@ sumas['WAPE XGBoost (%)'] = (sumas['error_xgb'] / sumas['units_sold'] * 100).rou
 sumas[['WAPE Random Forest (%)', 'WAPE XGBoost (%)']].sort_values('WAPE Random Forest (%)')
 
 
-# In[26]:
+# **Interpretación:** Random Forest tiene un error parejo en todas las regiones (de 5.2 % en CDMX a 8.2 % en el Sureste). XGBoost es mejor en CDMX y Monterrey, pero falla más en las regiones de menor venta (hasta 12.7 % en el Sureste). Por eso Random Forest es más confiable para planear el inventario de todas las regiones.
+
+# In[27]:
 
 
 # ¿Qué variables usa más el modelo? (segundo método de selección de variables)
@@ -572,6 +608,8 @@ plt.xlabel('Importancia')
 plt.show()
 
 
+# **Interpretación:** el **promedio de ventas de los últimos 3 meses** es por mucho la variable más importante (~0.92 de la importancia total), seguido del **mes** (~0.03), que captura la temporada. Región y categoría pesan poco por separado, probablemente porque su efecto ya está reflejado en el nivel de ventas reciente de cada serie. Esto confirma la selección de variables de la sección 3.
+
 # ## 12. Impacto del preprocesamiento
 # Para medir qué tanto ayudó la preparación de los datos, se entrenan los dos modelos (partición 80/20, mejores hiperparámetros) con **4 grupos de variables**:
 # 1. **Básicas:** región, categoría, subcategoría y mes (codificadas con One-Hot).
@@ -579,7 +617,7 @@ plt.show()
 # 3. **Básicas + ventas pasadas** (las variables creadas en el preprocesamiento): **modelo final**.
 # 4. **Básicas + ventas pasadas + precio** (prueba de robustez: ¿cuánto aporta el precio?).
 
-# In[27]:
+# In[28]:
 
 
 from sklearn.base import clone   # clone() hace una copia del modelo SIN entrenar (con los mismos hiperparámetros)
@@ -612,7 +650,7 @@ pd.DataFrame(comparacion)[['Modelo', 'Variables', 'MAE', 'RMSE', 'WAPE (%)', 'R2
 
 # **Interpretación:**
 # - Con solo las variables **básicas** el error es alto: el modelo sabe la región, la categoría y el mes, pero no cuánto vende cada producto.
-# - Con el **precio** el error baja mucho, pero no porque el precio explique las ventas: el modelo lo usa para **reconocer el producto** y "recordar" lo que vendió en 2024, que se repite en 2025.
+# - Con el **precio** el error baja mucho, probablemente porque el modelo lo usa para **reconocer el producto** (cada producto tiene un precio único) y "recordar" lo que vendió en 2024, que se repite en 2025.
 # - Con las **ventas pasadas** (creadas en el preprocesamiento) el error baja casi igual **sin identificar el producto**: el modelo aprende del nivel de ventas reciente de cada serie.
 # - **Prueba de robustez:** agregar el precio a las ventas pasadas casi no cambia el error. Es decir, el modelo final no depende del precio, y por eso se excluyó para reducir esa dependencia. Que esto lo haga más robusto ante cambios de precio es algo pendiente de validar, y el modelo **no sirve para productos nuevos**, porque necesita 3 meses de ventas previas.
 
@@ -621,7 +659,7 @@ pd.DataFrame(comparacion)[['Modelo', 'Variables', 'MAE', 'RMSE', 'WAPE (%)', 'R2
 # 
 # Por eso se hace un **pronóstico recursivo**: se pronostica septiembre; ese pronóstico se usa como "venta del mes anterior" para pronosticar octubre, y así sucesivamente. Los errores se van acumulando, así que este es el **error realista para planear varios meses**.
 
-# In[28]:
+# In[29]:
 
 
 # Función que calcula las ventas pasadas (igual que en la sección 3), pero sobre la columna que le digamos
@@ -674,7 +712,7 @@ tabla_recursiva = pd.DataFrame(recursivo)[['Modelo', 'Mes', 'Meses adelante', 'M
 tabla_recursiva
 
 
-# In[29]:
+# In[30]:
 
 
 # Comparación: error a un mes vs. error recursivo (septiembre–diciembre 2025)
