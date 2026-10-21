@@ -369,92 +369,109 @@ tabla_final
 # In[19]:
 
 
-# Mejor configuración de cada modelo (menor WAPE) en la partición 70/30
-mejores = tabla_final[tabla_final['Partición'] == '70/30'].groupby('Modelo').first().sort_values('WAPE (%)')
-mejores[['Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
+# Menor WAPE (%) de cada modelo en cada partición
+resumen = tabla_final.groupby(['Modelo', 'Partición'])['WAPE (%)'].min().unstack()
+resumen = resumen[['80/20', '70/30', '60/40']].sort_values('80/20')
+resumen
 
-
-# ## 11. Mejor modelo: resultados
-# Se vuelve a entrenar el mejor modelo con la partición 70/30 para ver sus resultados con gráficas.
 
 # In[20]:
 
 
-corte = '2025-07-01'
+# Mejor configuración de cada modelo en la mejor partición (80/20)
+mejores = tabla_final[tabla_final['Partición'] == '80/20'].groupby('Modelo').first().sort_values('WAPE (%)')
+mejores[['Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
+
+
+# ## 11. Resultados de los mejores modelos
+# Se vuelven a entrenar las mejores configuraciones de los dos modelos con la mejor partición (**80/20**: entrenar hasta agosto 2025 y probar con septiembre–diciembre 2025) para visualizar sus resultados.
+
+# In[21]:
+
+
+corte = '2025-09-01'
 entrenamiento = datos['fecha'] < corte
 prueba = datos['fecha'] >= corte
 
 mejor_rf = RandomForestRegressor(n_estimators=100, max_depth=None, min_samples_leaf=1, random_state=42, n_jobs=-1)
 mejor_rf.fit(X[entrenamiento], y[entrenamiento])
 
+mejor_xgb = XGBRegressor(n_estimators=800, learning_rate=0.03, max_depth=8, random_state=42)
+mejor_xgb.fit(X[entrenamiento], y[entrenamiento])
+
 resultado = datos.loc[prueba, ['fecha', 'region', 'units_sold', 'units_expected']].copy()
 resultado['pronostico_rf'] = mejor_rf.predict(X[prueba])
+resultado['pronostico_xgb'] = mejor_xgb.predict(X[prueba])
 
-# Total por mes: real vs. pronóstico del modelo vs. pronóstico actual
-total_mes = resultado.groupby('fecha')[['units_sold', 'pronostico_rf', 'units_expected']].sum()
+# Total por mes: real vs. pronósticos de los dos modelos
+total_mes = resultado.groupby('fecha')[['units_sold', 'pronostico_rf', 'pronostico_xgb', 'units_expected']].sum()
 
 plt.figure(figsize=(10, 4))
 plt.plot(total_mes.index, total_mes['units_sold'], marker='o', label='Ventas reales')
 plt.plot(total_mes.index, total_mes['pronostico_rf'], marker='o', linestyle='--', label='Pronóstico Random Forest')
-plt.title('Julio–diciembre 2025: ventas reales vs. pronóstico de Random Forest')
+plt.plot(total_mes.index, total_mes['pronostico_xgb'], marker='o', linestyle=':', label='Pronóstico XGBoost')
+plt.title('Septiembre–diciembre 2025: ventas reales vs. pronósticos')
 plt.ylabel('Unidades')
 plt.legend()
 plt.grid(alpha=0.3)
 plt.show()
 
 # El pronóstico actual no se grafica porque es ~6 veces mayor y aplastaría la escala
-total_mes['diferencia_rf'] = total_mes['pronostico_rf'] - total_mes['units_sold']
-total_mes['diferencia_actual'] = total_mes['units_expected'] - total_mes['units_sold']
 total_mes.round(0)
-
-
-# In[21]:
-
-
-# Valores reales vs. estimados y residuales (error = real - estimado)
-resultado['residual'] = resultado['units_sold'] - resultado['pronostico_rf']
-
-fig, ax = plt.subplots(1, 3, figsize=(15, 4))
-
-# 1) Real vs. estimado: si el modelo fuera perfecto, todos los puntos caerían en la línea roja
-ax[0].scatter(resultado['units_sold'], resultado['pronostico_rf'], s=5, alpha=0.4)
-maximo = resultado['units_sold'].max()
-ax[0].plot([0, maximo], [0, maximo], color='red')
-ax[0].set_title('Real vs. estimado (Random Forest)')
-ax[0].set_xlabel('Unidades reales')
-ax[0].set_ylabel('Unidades estimadas')
-
-# 2) Distribución de los residuales: deberían estar centrados en 0
-ax[1].hist(resultado['residual'], bins=50)
-ax[1].axvline(0, color='red')
-ax[1].set_title('Distribución de los residuales')
-ax[1].set_xlabel('Real - estimado (unidades)')
-
-# 3) Residuales vs. estimado: no debería haber un patrón
-ax[2].scatter(resultado['pronostico_rf'], resultado['residual'], s=5, alpha=0.4)
-ax[2].axhline(0, color='red')
-ax[2].set_title('Residuales vs. valor estimado')
-ax[2].set_xlabel('Unidades estimadas')
-ax[2].set_ylabel('Residual')
-
-plt.tight_layout()
-plt.show()
-
-print('Residual promedio:', round(resultado['residual'].mean(), 2), 'unidades')
-print('El 90% de los errores está entre', round(resultado['residual'].quantile(0.05), 1), 'y', round(resultado['residual'].quantile(0.95), 1), 'unidades')
 
 
 # In[22]:
 
 
-# Error del mejor modelo por región
-por_region = resultado.groupby('region').apply(
-    lambda g: round(np.abs(g['units_sold'] - g['pronostico_rf']).sum() / g['units_sold'].sum() * 100, 2))
-print('WAPE (%) del Random Forest por región:')
-print(por_region.sort_values())
+# Valores reales vs. estimados y residuales (residual = real - estimado) de los dos modelos
+fig, ax = plt.subplots(2, 3, figsize=(15, 8))
+
+for fila, (nombre, columna) in enumerate([('Random Forest', 'pronostico_rf'), ('XGBoost', 'pronostico_xgb')]):
+    residual = resultado['units_sold'] - resultado[columna]
+
+    # 1) Real vs. estimado: si el modelo fuera perfecto, todos los puntos caerían en la línea roja
+    ax[fila, 0].scatter(resultado['units_sold'], resultado[columna], s=5, alpha=0.4)
+    maximo = resultado['units_sold'].max()
+    ax[fila, 0].plot([0, maximo], [0, maximo], color='red')
+    ax[fila, 0].set_title(f'Real vs. estimado ({nombre})')
+    ax[fila, 0].set_xlabel('Unidades reales')
+    ax[fila, 0].set_ylabel('Unidades estimadas')
+
+    # 2) Distribución de los residuales: deberían estar centrados en 0
+    ax[fila, 1].hist(residual, bins=50)
+    ax[fila, 1].axvline(0, color='red')
+    ax[fila, 1].set_title(f'Distribución de los residuales ({nombre})')
+    ax[fila, 1].set_xlabel('Real - estimado (unidades)')
+
+    # 3) Residuales vs. estimado: no debería haber un patrón
+    ax[fila, 2].scatter(resultado[columna], residual, s=5, alpha=0.4)
+    ax[fila, 2].axhline(0, color='red')
+    ax[fila, 2].set_title(f'Residuales vs. estimado ({nombre})')
+    ax[fila, 2].set_xlabel('Unidades estimadas')
+    ax[fila, 2].set_ylabel('Residual')
+
+    print(f'{nombre}: residual promedio = {residual.mean():.2f} unidades; '
+          f'el 90% de los errores está entre {residual.quantile(0.05):.1f} y {residual.quantile(0.95):.1f} unidades')
+
+plt.tight_layout()
+plt.show()
 
 
 # In[23]:
+
+
+# Error de los dos modelos por región
+por_region = pd.DataFrame({
+    'Random Forest': resultado.groupby('region').apply(
+        lambda g: np.abs(g['units_sold'] - g['pronostico_rf']).sum() / g['units_sold'].sum() * 100),
+    'XGBoost': resultado.groupby('region').apply(
+        lambda g: np.abs(g['units_sold'] - g['pronostico_xgb']).sum() / g['units_sold'].sum() * 100),
+}).round(2)
+print('WAPE (%) por región:')
+por_region.sort_values('Random Forest')
+
+
+# In[24]:
 
 
 # ¿Qué variables usa más el modelo? (segundo método de selección de variables)
@@ -468,16 +485,16 @@ plt.show()
 
 
 # ## 12. Impacto del preprocesamiento
-# Para medir qué tanto ayudó la preparación de los datos, se entrenan los dos modelos (partición 70/30, mejores hiperparámetros) con **4 grupos de variables**:
+# Para medir qué tanto ayudó la preparación de los datos, se entrenan los dos modelos (partición 80/20, mejores hiperparámetros) con **4 grupos de variables**:
 # 1. **Básicas:** región, categoría, subcategoría y mes (codificadas con One-Hot).
 # 2. **Básicas + precio.**
 # 3. **Básicas + ventas pasadas** (las variables creadas en el preprocesamiento).
 # 4. **Todas** (el modelo final).
 
-# In[24]:
+# In[25]:
 
 
-corte = '2025-07-01'
+corte = '2025-09-01'
 entrenamiento = datos['fecha'] < corte
 prueba = datos['fecha'] >= corte
 
@@ -524,20 +541,21 @@ pd.DataFrame(comparacion)[['Modelo', 'Variables', 'MAE', 'RMSE', 'WAPE (%)', 'R2
 # 
 # *(WAPE: error total ÷ ventas totales)*
 # 
-# - **El mejor modelo es Random Forest** (100 árboles, sin límite de profundidad). Tiene el menor WAPE en las tres particiones, un MAE de ~13 unidades y un R² ≈ 0.99. XGBoost queda muy cerca, lo que confirma que el patrón en los datos es real.
-# - **La mejor división es 80/20**, aunque la diferencia entre particiones es mínima (5.88 % a 5.98 %). El modelo es **estable**: incluso entrenando con solo 13 meses (60/40) el error casi no cambia.
+# - **El mejor modelo es Random Forest** (100 árboles, sin límite de profundidad). Tiene el menor WAPE en las tres particiones y, en la 80/20, un MAE de 13.10 unidades y un R² de 0.989.
+# - **XGBoost queda prácticamente empatado:** en la partición 80/20 tiene mejor RMSE (18.67 contra 20.34) y R² (0.990 contra 0.989), pero peor WAPE y MAE. Se eligió Random Forest porque el WAPE es la métrica principal y porque su error es más **parejo entre regiones** (5.1 % a 8.1 %, contra 3.2 % a 11.0 % de XGBoost, que falla más en las regiones de menor venta).
+# - **La mejor división es 80/20** (más meses para entrenar), aunque la diferencia entre particiones es mínima (5.88 % a 5.98 %). El modelo es **estable**: incluso entrenando con solo 13 meses (60/40) el error casi no cambia.
 # - **Los dos modelos le ganan por mucho al pronóstico actual** (~470 % de error, porque siempre espera ~6 veces más de lo que se vende) y al modelo ingenuo (~19 %).
-# - **Residuales:** están centrados en 0 (residual promedio ≈ 0.15 unidades) y el 90 % de los errores está entre −30 y +31 unidades. No hay un patrón claro, es decir, el modelo no sobrestima ni subestima de forma sistemática.
+# - **Residuales:** en los dos modelos están centrados en 0 (promedio de −0.38 unidades en Random Forest y 0.11 en XGBoost), y el 90 % de los errores está entre −30 y +31 unidades. No se ve un patrón: los modelos no sobrestiman ni subestiman de forma sistemática.
 # 
 # **¿Qué impacto tuvo el preprocesamiento?**
-# - **Crear las ventas pasadas** fue lo más importante. Con solo región, categoría, subcategoría y mes el error es de **22.7 %**; con las ventas pasadas baja a **6.1 %** en Random Forest y a 7.0 % en XGBoost.
+# - **Crear las ventas pasadas** fue lo más importante. Con solo región, categoría, subcategoría y mes el error es de **22.6 %**; al agregar las ventas pasadas baja a **6.0 %** en Random Forest y a 6.6 % en XGBoost. Con todas las variables llega a 5.9 %.
 # - **El One-Hot Encoding** permitió usar región, categoría y subcategoría, que son texto.
 # - **Excluir las variables con fuga** (Ventas_Acumuladas, Venta_Promedio_Diaria, Cumplimiento, etc.) evita un modelo "perfecto" pero inútil en la vida real.
 # - **La normalización no fue necesaria** porque los modelos de árboles no dependen de la escala.
 # 
 # **¿Qué impacto tuvo el ajuste de hiperparámetros?**
-# - **Random Forest:** limitar la profundidad (`max_depth` = 8 y `min_samples_leaf` = 5) duplicó el error, de 5.95 % a 12.25 %. Los árboles completos distinguen mejor entre productos y regiones.
-# - **XGBoost:** fue más sensible. Con `max_depth` = 4 el error fue de 11.8 %, y con 800 árboles, `learning_rate` = 0.03 y `max_depth` = 8 bajó a 6.4 %. Es decir, el ajuste redujo el error casi a la mitad.
+# - **Random Forest:** limitar la profundidad (`max_depth` = 8 y `min_samples_leaf` = 5) duplicó el error, de 5.88 % a 12.01 % en la partición 80/20. Los árboles completos distinguen mejor entre productos y regiones.
+# - **XGBoost:** fue más sensible. Con `max_depth` = 4 el error fue de 11.75 %, y con 800 árboles, `learning_rate` = 0.03 y `max_depth` = 8 bajó a 5.93 %. Es decir, el ajuste redujo el error a la mitad.
 # 
 # **Beneficio para DanuStore:** puede planear su stock según lo que realmente se va a vender en cada región y mes, en lugar de un pronóstico plano e inflado, y así reducir el sobreinventario (hoy el stock alcanza para ~208 días en lugar de ~34). Las variables más importantes son el promedio de ventas de los últimos 3 meses y el mes (temporada de noviembre y diciembre).
 # 
