@@ -119,7 +119,8 @@ print('Se vendió el', round(por_mes['units_sold'].sum() / por_mes['units_expect
 # In[8]:
 
 
-por_region_mes = df.groupby(['fecha', 'region'])['units_sold'].sum().unstack()
+# Tabla con una fila por mes y una columna por región
+por_region_mes = df.pivot_table(index='fecha', columns='region', values='units_sold', aggfunc='sum')
 
 por_region_mes.plot(figsize=(11, 4), marker='.')
 plt.title('Ventas por región a través del tiempo')
@@ -276,6 +277,7 @@ def evaluar(y_real, y_pred):
     rmse = np.sqrt(mean_squared_error(y_real, y_pred))
     wape = np.abs(y_real - y_pred).sum() / y_real.sum() * 100
     r2 = r2_score(y_real, y_pred)
+    # float() convierte los resultados a números normales de Python para que se impriman limpios
     return {'MAE': round(float(mae), 2), 'RMSE': round(float(rmse), 2), 'WAPE (%)': round(float(wape), 2), 'R2': round(float(r2), 3)}
 
 
@@ -293,15 +295,21 @@ resultados = []
 for nombre, corte in particiones.items():
     prueba = datos['fecha'] >= corte
     fila = evaluar(y[prueba], datos.loc[prueba, 'units_expected'])
-    fila.update({'Modelo': 'Pronóstico actual (units_expected)', 'Partición': nombre, 'Hiperparámetros': '-'})
+    fila['Modelo'] = 'Pronóstico actual (units_expected)'
+    fila['Partición'] = nombre
+    fila['Hiperparámetros'] = '-'
     resultados.append(fila)
 
     fila = evaluar(y[prueba], datos.loc[prueba, 'ventas_mes_anterior'])
-    fila.update({'Modelo': 'Ingenuo (mes anterior)', 'Partición': nombre, 'Hiperparámetros': '-'})
+    fila['Modelo'] = 'Ingenuo (mes anterior)'
+    fila['Partición'] = nombre
+    fila['Hiperparámetros'] = '-'
     resultados.append(fila)
 
     fila = evaluar(y[prueba], datos.loc[prueba, 'ventas_hace_12'])
-    fila.update({'Modelo': 'Ingenuo estacional (mismo mes del año anterior)', 'Partición': nombre, 'Hiperparámetros': '-'})
+    fila['Modelo'] = 'Ingenuo estacional (mismo mes del año anterior)'
+    fila['Partición'] = nombre
+    fila['Hiperparámetros'] = '-'
     resultados.append(fila)
 
 pd.DataFrame(resultados)[['Partición', 'Modelo', 'Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
@@ -315,7 +323,7 @@ pd.DataFrame(resultados)[['Partición', 'Modelo', 'Hiperparámetros', 'MAE', 'RM
 # ## 8. Modelo 1: Random Forest
 # Entrena muchos árboles de decisión, cada uno con una muestra aleatoria de los datos, y **promedia** sus pronósticos.
 # 
-# Hiperparámetros que se prueban:
+# Hiperparámetros que se prueban (3 configuraciones):
 # - `n_estimators`: número de árboles.
 # - `max_depth`: profundidad máxima de cada árbol (None = sin límite).
 # - `min_samples_leaf`: mínimo de registros en cada hoja (evita que el árbol memorice).
@@ -323,33 +331,35 @@ pd.DataFrame(resultados)[['Partición', 'Modelo', 'Hiperparámetros', 'MAE', 'RM
 # In[17]:
 
 
-configuraciones_rf = [
-    {'n_estimators': 100, 'max_depth': None, 'min_samples_leaf': 1},
-    {'n_estimators': 200, 'max_depth': 15,   'min_samples_leaf': 2},
-    {'n_estimators': 300, 'max_depth': 8,    'min_samples_leaf': 5},
-]
+# Las 3 configuraciones de Random Forest: el texto es el nombre y a la derecha está el modelo
+opciones_rf = {
+    'n_estimators=100, max_depth=None, min_samples_leaf=1': RandomForestRegressor(n_estimators=100, max_depth=None, min_samples_leaf=1, random_state=42),
+    'n_estimators=200, max_depth=15, min_samples_leaf=2':   RandomForestRegressor(n_estimators=200, max_depth=15, min_samples_leaf=2, random_state=42),
+    'n_estimators=300, max_depth=8, min_samples_leaf=5':    RandomForestRegressor(n_estimators=300, max_depth=8, min_samples_leaf=5, random_state=42),
+}
 
 for nombre, corte in particiones.items():
     entrenamiento = datos['fecha'] < corte
     prueba = datos['fecha'] >= corte
 
-    for config in configuraciones_rf:
-        modelo = RandomForestRegressor(**config, random_state=42, n_jobs=-1)
-        modelo.fit(X[entrenamiento], y[entrenamiento])
-        prediccion = modelo.predict(X[prueba])
+    for hiperparametros, modelo in opciones_rf.items():
+        modelo.fit(X[entrenamiento], y[entrenamiento])     # entrenar
+        prediccion = modelo.predict(X[prueba])               # pronosticar
 
-        fila = evaluar(y[prueba], prediccion)
-        fila.update({'Modelo': 'Random Forest', 'Partición': nombre, 'Hiperparámetros': ', '.join(f'{k}={v}' for k, v in config.items())})
+        fila = evaluar(y[prueba], prediccion)                # calcular las métricas
+        fila['Modelo'] = 'Random Forest'
+        fila['Partición'] = nombre
+        fila['Hiperparámetros'] = hiperparametros
         resultados.append(fila)
 
-tabla_rf = pd.DataFrame(resultados)
-tabla_rf[tabla_rf['Modelo'] == 'Random Forest'][['Partición', 'Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
+tabla = pd.DataFrame(resultados)
+tabla[tabla['Modelo'] == 'Random Forest'][['Partición', 'Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
 
 
 # ## 9. Modelo 2: XGBoost
 # Construye árboles **uno tras otro**; cada árbol nuevo corrige los errores de los anteriores.
 # 
-# Hiperparámetros que se prueban:
+# Hiperparámetros que se prueban (3 configuraciones):
 # - `n_estimators`: número de árboles.
 # - `learning_rate`: qué tanto corrige cada árbol (más bajo = más lento pero más cuidadoso).
 # - `max_depth`: profundidad máxima de cada árbol.
@@ -357,27 +367,28 @@ tabla_rf[tabla_rf['Modelo'] == 'Random Forest'][['Partición', 'Hiperparámetros
 # In[18]:
 
 
-configuraciones_xgb = [
-    {'n_estimators': 300, 'learning_rate': 0.1,  'max_depth': 6},
-    {'n_estimators': 500, 'learning_rate': 0.05, 'max_depth': 4},
-    {'n_estimators': 800, 'learning_rate': 0.03, 'max_depth': 8},
-]
+opciones_xgb = {
+    'n_estimators=300, learning_rate=0.1, max_depth=6':  XGBRegressor(n_estimators=300, learning_rate=0.1, max_depth=6, random_state=42),
+    'n_estimators=500, learning_rate=0.05, max_depth=4': XGBRegressor(n_estimators=500, learning_rate=0.05, max_depth=4, random_state=42),
+    'n_estimators=800, learning_rate=0.03, max_depth=8': XGBRegressor(n_estimators=800, learning_rate=0.03, max_depth=8, random_state=42),
+}
 
 for nombre, corte in particiones.items():
     entrenamiento = datos['fecha'] < corte
     prueba = datos['fecha'] >= corte
 
-    for config in configuraciones_xgb:
-        modelo = XGBRegressor(**config, random_state=42)
+    for hiperparametros, modelo in opciones_xgb.items():
         modelo.fit(X[entrenamiento], y[entrenamiento])
         prediccion = modelo.predict(X[prueba])
 
         fila = evaluar(y[prueba], prediccion)
-        fila.update({'Modelo': 'XGBoost', 'Partición': nombre, 'Hiperparámetros': ', '.join(f'{k}={v}' for k, v in config.items())})
+        fila['Modelo'] = 'XGBoost'
+        fila['Partición'] = nombre
+        fila['Hiperparámetros'] = hiperparametros
         resultados.append(fila)
 
-tabla_xgb = pd.DataFrame(resultados)
-tabla_xgb[tabla_xgb['Modelo'] == 'XGBoost'][['Partición', 'Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
+tabla = pd.DataFrame(resultados)
+tabla[tabla['Modelo'] == 'XGBoost'][['Partición', 'Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
 
 
 # ## 10. Comparación de todos los modelos
@@ -386,15 +397,15 @@ tabla_xgb[tabla_xgb['Modelo'] == 'XGBoost'][['Partición', 'Hiperparámetros', '
 
 
 tabla_final = pd.DataFrame(resultados)[['Partición', 'Modelo', 'Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
-tabla_final = tabla_final.sort_values(['Partición', 'WAPE (%)']).reset_index(drop=True)
+tabla_final = tabla_final.sort_values(['Partición', 'WAPE (%)'])
 tabla_final
 
 
 # In[20]:
 
 
-# Menor WAPE (%) de cada modelo en cada partición
-resumen = tabla_final.groupby(['Modelo', 'Partición'])['WAPE (%)'].min().unstack()
+# Tabla resumen: el menor WAPE (%) de cada modelo en cada partición
+resumen = tabla_final.pivot_table(index='Modelo', columns='Partición', values='WAPE (%)', aggfunc='min')
 resumen = resumen[['80/20', '70/30', '60/40']].sort_values('80/20')
 resumen
 
@@ -403,8 +414,10 @@ resumen
 
 
 # Mejor configuración de cada modelo en la partición 80/20
-mejores = tabla_final[tabla_final['Partición'] == '80/20'].groupby('Modelo').first().sort_values('WAPE (%)')
-mejores[['Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
+# (se ordena por WAPE y se deja solo la primera fila de cada modelo)
+mejores = tabla_final[tabla_final['Partición'] == '80/20'].sort_values('WAPE (%)')
+mejores = mejores.drop_duplicates(subset='Modelo')
+mejores[['Modelo', 'Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
 
 
 # ### 10.1 Comprobación de los hiperparámetros con validación temporal
@@ -416,37 +429,35 @@ mejores[['Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
 # In[22]:
 
 
-inicio_validacion = '2025-05-01'
-inicio_prueba = '2025-09-01'
-entrenamiento_val = datos['fecha'] < inicio_validacion
-validacion = (datos['fecha'] >= inicio_validacion) & (datos['fecha'] < inicio_prueba)
+entrenamiento_val = datos['fecha'] < '2025-05-01'
+validacion = (datos['fecha'] >= '2025-05-01') & (datos['fecha'] < '2025-09-01')
 
 tabla_validacion = []
-for config in configuraciones_rf:
-    modelo = RandomForestRegressor(**config, random_state=42, n_jobs=-1)
+
+for hiperparametros, modelo in opciones_rf.items():
     modelo.fit(X[entrenamiento_val], y[entrenamiento_val])
     fila = evaluar(y[validacion], modelo.predict(X[validacion]))
-    fila.update({'Modelo': 'Random Forest', 'config': config})
+    fila['Modelo'] = 'Random Forest'
+    fila['Hiperparámetros'] = hiperparametros
     tabla_validacion.append(fila)
 
-for config in configuraciones_xgb:
-    modelo = XGBRegressor(**config, random_state=42)
+for hiperparametros, modelo in opciones_xgb.items():
     modelo.fit(X[entrenamiento_val], y[entrenamiento_val])
     fila = evaluar(y[validacion], modelo.predict(X[validacion]))
-    fila.update({'Modelo': 'XGBoost', 'config': config})
+    fila['Modelo'] = 'XGBoost'
+    fila['Hiperparámetros'] = hiperparametros
     tabla_validacion.append(fila)
 
-tabla_validacion = pd.DataFrame(tabla_validacion)
-tabla_validacion['Hiperparámetros'] = tabla_validacion['config'].apply(lambda c: ', '.join(f'{k}={v}' for k, v in c.items()))
+tabla_validacion = pd.DataFrame(tabla_validacion).sort_values('WAPE (%)')
 
-# Elegir automáticamente la configuración con menor WAPE en validación
-mejor_config_rf = tabla_validacion[tabla_validacion['Modelo'] == 'Random Forest'].sort_values('WAPE (%)').iloc[0]['config']
-mejor_config_xgb = tabla_validacion[tabla_validacion['Modelo'] == 'XGBoost'].sort_values('WAPE (%)').iloc[0]['config']
-print('Configuración elegida para Random Forest:', mejor_config_rf)
-print('Configuración elegida para XGBoost:', mejor_config_xgb)
+# La mejor configuración de cada modelo es la de menor WAPE en validación
+mejor_hiper_rf = tabla_validacion[tabla_validacion['Modelo'] == 'Random Forest']['Hiperparámetros'].iloc[0]
+mejor_hiper_xgb = tabla_validacion[tabla_validacion['Modelo'] == 'XGBoost']['Hiperparámetros'].iloc[0]
+print('Configuración elegida para Random Forest:', mejor_hiper_rf)
+print('Configuración elegida para XGBoost:', mejor_hiper_xgb)
 
 print('Error en VALIDACIÓN (mayo–agosto 2025):')
-tabla_validacion.sort_values(['Modelo', 'WAPE (%)'])[['Modelo', 'Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
+tabla_validacion[['Modelo', 'Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
 
 
 # **Resultado:** la validación temporal eligió **Random Forest con 100 árboles sin límite de profundidad** y **XGBoost con 800 árboles, `learning_rate` = 0.03 y `max_depth` = 8**, las mismas configuraciones identificadas en el análisis exploratorio. Como los meses de prueba (septiembre–diciembre 2025) ya se habían consultado en las secciones 8–10, **falta una evaluación independiente con datos nuevos**.
@@ -461,12 +472,14 @@ corte = '2025-09-01'
 entrenamiento = datos['fecha'] < corte
 prueba = datos['fecha'] >= corte
 
-mejor_rf = RandomForestRegressor(**mejor_config_rf, random_state=42, n_jobs=-1)
+# Tomamos de los diccionarios los modelos elegidos en la validación y los entrenamos
+mejor_rf = opciones_rf[mejor_hiper_rf]
 mejor_rf.fit(X[entrenamiento], y[entrenamiento])
 
-mejor_xgb = XGBRegressor(**mejor_config_xgb, random_state=42)
+mejor_xgb = opciones_xgb[mejor_hiper_xgb]
 mejor_xgb.fit(X[entrenamiento], y[entrenamiento])
 
+# Guardamos los pronósticos en una tabla
 resultado = datos.loc[prueba, ['fecha', 'region', 'units_sold', 'units_expected']].copy()
 resultado['pronostico_rf'] = mejor_rf.predict(X[prueba])
 resultado['pronostico_xgb'] = mejor_xgb.predict(X[prueba])
@@ -475,7 +488,7 @@ print('Resultado en la prueba (septiembre–diciembre 2025):')
 print('Random Forest:', evaluar(resultado['units_sold'], resultado['pronostico_rf']))
 print('XGBoost:      ', evaluar(resultado['units_sold'], resultado['pronostico_xgb']))
 
-# Total por mes: real vs. pronósticos de los dos modelos
+# Total por mes: ventas reales vs. pronósticos de los dos modelos
 total_mes = resultado.groupby('fecha')[['units_sold', 'pronostico_rf', 'pronostico_xgb', 'units_expected']].sum()
 
 plt.figure(figsize=(10, 4))
@@ -495,38 +508,41 @@ total_mes.round(0)
 # In[24]:
 
 
-# Valores reales vs. estimados y residuales (residual = real - estimado) de los dos modelos
-fig, ax = plt.subplots(2, 3, figsize=(15, 8))
+# Función que hace las 3 gráficas de errores de un modelo
+def graficar_residuales(nombre, pronostico):
+    residual = resultado['units_sold'] - pronostico      # error = real - estimado
 
-for fila, (nombre, columna) in enumerate([('Random Forest', 'pronostico_rf'), ('XGBoost', 'pronostico_xgb')]):
-    residual = resultado['units_sold'] - resultado[columna]
+    fig, ax = plt.subplots(1, 3, figsize=(15, 4))
 
     # 1) Real vs. estimado: si el modelo fuera perfecto, todos los puntos caerían en la línea roja
-    ax[fila, 0].scatter(resultado['units_sold'], resultado[columna], s=5, alpha=0.4)
+    ax[0].scatter(resultado['units_sold'], pronostico, s=5, alpha=0.4)
     maximo = resultado['units_sold'].max()
-    ax[fila, 0].plot([0, maximo], [0, maximo], color='red')
-    ax[fila, 0].set_title(f'Real vs. estimado ({nombre})')
-    ax[fila, 0].set_xlabel('Unidades reales')
-    ax[fila, 0].set_ylabel('Unidades estimadas')
+    ax[0].plot([0, maximo], [0, maximo], color='red')
+    ax[0].set_title('Real vs. estimado (' + nombre + ')')
+    ax[0].set_xlabel('Unidades reales')
+    ax[0].set_ylabel('Unidades estimadas')
 
     # 2) Distribución de los residuales: deberían estar centrados en 0
-    ax[fila, 1].hist(residual, bins=50)
-    ax[fila, 1].axvline(0, color='red')
-    ax[fila, 1].set_title(f'Distribución de los residuales ({nombre})')
-    ax[fila, 1].set_xlabel('Real - estimado (unidades)')
+    ax[1].hist(residual, bins=50)
+    ax[1].axvline(0, color='red')
+    ax[1].set_title('Distribución de los residuales (' + nombre + ')')
+    ax[1].set_xlabel('Real - estimado (unidades)')
 
     # 3) Residuales vs. estimado: no debería haber un patrón
-    ax[fila, 2].scatter(resultado[columna], residual, s=5, alpha=0.4)
-    ax[fila, 2].axhline(0, color='red')
-    ax[fila, 2].set_title(f'Residuales vs. estimado ({nombre})')
-    ax[fila, 2].set_xlabel('Unidades estimadas')
-    ax[fila, 2].set_ylabel('Residual')
+    ax[2].scatter(pronostico, residual, s=5, alpha=0.4)
+    ax[2].axhline(0, color='red')
+    ax[2].set_title('Residuales vs. estimado (' + nombre + ')')
+    ax[2].set_xlabel('Unidades estimadas')
+    ax[2].set_ylabel('Residual')
 
-    print(f'{nombre}: residual promedio = {residual.mean():.2f} unidades; '
-          f'el 90% de los errores está entre {residual.quantile(0.05):.1f} y {residual.quantile(0.95):.1f} unidades')
+    plt.tight_layout()
+    plt.show()
 
-plt.tight_layout()
-plt.show()
+    print(nombre, '-> residual promedio:', round(residual.mean(), 2), 'unidades')
+    print('El 90% de los errores está entre', round(residual.quantile(0.05), 1), 'y', round(residual.quantile(0.95), 1), 'unidades')
+
+graficar_residuales('Random Forest', resultado['pronostico_rf'])
+graficar_residuales('XGBoost', resultado['pronostico_xgb'])
 
 
 # In[25]:
@@ -537,12 +553,10 @@ resultado['error_rf'] = np.abs(resultado['units_sold'] - resultado['pronostico_r
 resultado['error_xgb'] = np.abs(resultado['units_sold'] - resultado['pronostico_xgb'])
 
 sumas = resultado.groupby('region')[['units_sold', 'error_rf', 'error_xgb']].sum()
-por_region = pd.DataFrame({
-    'Random Forest': sumas['error_rf'] / sumas['units_sold'] * 100,
-    'XGBoost': sumas['error_xgb'] / sumas['units_sold'] * 100,
-}).round(2)
-print('WAPE (%) por región:')
-por_region.sort_values('Random Forest')
+sumas['WAPE Random Forest (%)'] = (sumas['error_rf'] / sumas['units_sold'] * 100).round(2)
+sumas['WAPE XGBoost (%)'] = (sumas['error_xgb'] / sumas['units_sold'] * 100).round(2)
+
+sumas[['WAPE Random Forest (%)', 'WAPE XGBoost (%)']].sort_values('WAPE Random Forest (%)')
 
 
 # In[26]:
@@ -568,31 +582,29 @@ plt.show()
 # In[27]:
 
 
-corte = '2025-09-01'
-entrenamiento = datos['fecha'] < corte
-prueba = datos['fecha'] >= corte
+from sklearn.base import clone   # clone() hace una copia del modelo SIN entrenar (con los mismos hiperparámetros)
 
 basicas = ['region', 'category', 'subcategory', 'mes']
 rezagos = ['ventas_mes_anterior', 'ventas_hace_2', 'ventas_hace_3', 'promedio_3_meses']
+
 grupos = {
     '1. Básicas': basicas,
     '2. Básicas + precio': basicas + ['static_price'],
     '3. Básicas + ventas pasadas (modelo final)': basicas + rezagos,
     '4. Básicas + ventas pasadas + precio': basicas + rezagos + ['static_price'],
 }
-modelos = {
-    'Random Forest': lambda: RandomForestRegressor(**mejor_config_rf, random_state=42, n_jobs=-1),
-    'XGBoost': lambda: XGBRegressor(**mejor_config_xgb, random_state=42),
-}
 
 comparacion = []
-for nombre_modelo, crear_modelo in modelos.items():
+for nombre_modelo, modelo_elegido in [('Random Forest', mejor_rf), ('XGBoost', mejor_xgb)]:
     for nombre_grupo, columnas in grupos.items():
         X_grupo = pd.get_dummies(datos[columnas], columns=['region', 'category', 'subcategory'], dtype=int)
-        modelo = crear_modelo()
+
+        modelo = clone(modelo_elegido)
         modelo.fit(X_grupo[entrenamiento], y[entrenamiento])
+
         fila = evaluar(y[prueba], modelo.predict(X_grupo[prueba]))
-        fila.update({'Modelo': nombre_modelo, 'Variables': nombre_grupo})
+        fila['Modelo'] = nombre_modelo
+        fila['Variables'] = nombre_grupo
         comparacion.append(fila)
 
 pd.DataFrame(comparacion)[['Modelo', 'Variables', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
@@ -612,9 +624,7 @@ pd.DataFrame(comparacion)[['Modelo', 'Variables', 'MAE', 'RMSE', 'WAPE (%)', 'R2
 # In[28]:
 
 
-corte = '2025-09-01'
-meses_prueba = sorted(df.loc[df['fecha'] >= corte, 'fecha'].unique())
-
+# Función que calcula las ventas pasadas (igual que en la sección 3), pero sobre la columna que le digamos
 def calcular_rezagos(tabla, columna):
     grupo = tabla.groupby(['product_id', 'region'])[columna]
     tabla['ventas_mes_anterior'] = grupo.shift(1)
@@ -623,27 +633,41 @@ def calcular_rezagos(tabla, columna):
     tabla['promedio_3_meses'] = (tabla['ventas_mes_anterior'] + tabla['ventas_hace_2'] + tabla['ventas_hace_3']) / 3
     return tabla
 
+meses_prueba = ['2025-09-01', '2025-10-01', '2025-11-01', '2025-12-01']
 recursivo = []
-for nombre, modelo in [('Random Forest', mejor_rf), ('XGBoost', mejor_xgb)]:
-    # Historia: ventas reales hasta agosto 2025; desde septiembre se llenan con los pronósticos
+
+for nombre_modelo, modelo in [('Random Forest', mejor_rf), ('XGBoost', mejor_xgb)]:
+
+    # 1) Copiamos los datos y "borramos" las ventas desde septiembre 2025 (como si aún no las conociéramos)
     historia = df.copy()
-    historia['ventas_simuladas'] = historia['units_sold'].where(historia['fecha'] < corte)
+    historia['ventas_simuladas'] = historia['units_sold']
+    historia.loc[historia['fecha'] >= '2025-09-01', 'ventas_simuladas'] = np.nan
 
-    for mes_prueba in meses_prueba:
+    # 2) Pronosticamos un mes a la vez y guardamos el pronóstico como si fuera la venta de ese mes
+    for mes in meses_prueba:
         historia = calcular_rezagos(historia, 'ventas_simuladas')
-        filas = historia['fecha'] == mes_prueba
-        X_mes = pd.get_dummies(historia.loc[filas, variables], columns=['region', 'category', 'subcategory'], dtype=int)
-        X_mes = X_mes.reindex(columns=X.columns, fill_value=0)   # mismas columnas que en el entrenamiento
-        historia.loc[filas, 'ventas_simuladas'] = modelo.predict(X_mes)
+        X_historia = pd.get_dummies(historia[variables], columns=['region', 'category', 'subcategory'], dtype=int)
 
-    prueba_rec = historia[historia['fecha'] >= corte]
-    for mes_prueba in meses_prueba:
-        m = prueba_rec[prueba_rec['fecha'] == mes_prueba]
-        fila = evaluar(m['units_sold'], m['ventas_simuladas'])
-        fila.update({'Modelo': nombre, 'Mes': str(mes_prueba)[:7], 'Meses adelante': meses_prueba.index(mes_prueba) + 1})
+        filas_del_mes = historia['fecha'] == mes
+        historia.loc[filas_del_mes, 'ventas_simuladas'] = modelo.predict(X_historia[filas_del_mes])
+
+    # 3) Comparamos los pronósticos contra las ventas reales, mes por mes
+    numero_de_mes = 1
+    for mes in meses_prueba:
+        filas_del_mes = historia['fecha'] == mes
+        fila = evaluar(historia.loc[filas_del_mes, 'units_sold'], historia.loc[filas_del_mes, 'ventas_simuladas'])
+        fila['Modelo'] = nombre_modelo
+        fila['Mes'] = mes[:7]
+        fila['Meses adelante'] = numero_de_mes
         recursivo.append(fila)
-    fila = evaluar(prueba_rec['units_sold'], prueba_rec['ventas_simuladas'])
-    fila.update({'Modelo': nombre, 'Mes': 'Total sep–dic', 'Meses adelante': '1 a 4'})
+        numero_de_mes = numero_de_mes + 1
+
+    # 4) Y el bloque completo septiembre–diciembre
+    filas_prueba = historia['fecha'] >= '2025-09-01'
+    fila = evaluar(historia.loc[filas_prueba, 'units_sold'], historia.loc[filas_prueba, 'ventas_simuladas'])
+    fila['Modelo'] = nombre_modelo
+    fila['Mes'] = 'Bloque sep–dic'
+    fila['Meses adelante'] = '1 a 4'
     recursivo.append(fila)
 
 tabla_recursiva = pd.DataFrame(recursivo)[['Modelo', 'Mes', 'Meses adelante', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
@@ -653,15 +677,20 @@ tabla_recursiva
 # In[29]:
 
 
-# Comparación: error a un mes vs. error recursivo (sep–dic 2025)
-resumen_rec = pd.DataFrame({
+# Comparación: error a un mes vs. error recursivo (septiembre–diciembre 2025)
+bloque = tabla_recursiva[tabla_recursiva['Mes'] == 'Bloque sep–dic']
+
+comparacion_horizonte = pd.DataFrame({
+    'Modelo': ['Random Forest', 'XGBoost', 'Pronóstico actual (units_expected)'],
     'A un mes (ventas reales)': [evaluar(resultado['units_sold'], resultado['pronostico_rf'])['WAPE (%)'],
-                                 evaluar(resultado['units_sold'], resultado['pronostico_xgb'])['WAPE (%)']],
-    'Recursivo (bloque sep–dic)': tabla_recursiva[tabla_recursiva['Mes'] == 'Total sep–dic']['WAPE (%)'].values,
-}, index=['Random Forest', 'XGBoost'])
-resumen_rec.loc['Pronóstico actual (units_expected)'] = evaluar(resultado['units_sold'], resultado['units_expected'])['WAPE (%)']
+                                 evaluar(resultado['units_sold'], resultado['pronostico_xgb'])['WAPE (%)'],
+                                 evaluar(resultado['units_sold'], resultado['units_expected'])['WAPE (%)']],
+    'Recursivo (bloque sep–dic)': [bloque['WAPE (%)'].iloc[0],
+                                   bloque['WAPE (%)'].iloc[1],
+                                   evaluar(resultado['units_sold'], resultado['units_expected'])['WAPE (%)']],
+})
 print('WAPE (%) en septiembre–diciembre 2025:')
-resumen_rec
+comparacion_horizonte
 
 
 # **Interpretación:** al pronosticar varios meses con sus propios pronósticos, el error **crece mes a mes** porque los errores se acumulan. El error **del bloque completo** septiembre–diciembre es el que se compara en la tabla; el error **a cuatro meses de horizonte** (solo diciembre) es mayor, y aparece en la tabla anterior. Aun así, los dos son mucho menores que el error del pronóstico actual de DanuStore.
