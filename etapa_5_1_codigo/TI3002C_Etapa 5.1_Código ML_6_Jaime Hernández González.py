@@ -226,7 +226,7 @@ X.head()
 
 
 # ## 5. Normalización / estandarización
-# **No es necesaria.** Random Forest y XGBoost son modelos de **árboles de decisión**: separan los datos con reglas del tipo "¿ventas del mes anterior > 150?". Esas reglas funcionan igual si la variable está en unidades, en miles o estandarizada, así que la escala no cambia el resultado. La normalización sí sería necesaria en modelos basados en distancias o gradientes, como KNN, regresión regularizada o redes neuronales.
+# **No es necesaria.** Random Forest y XGBoost son modelos de **árboles de decisión**: separan los datos con reglas del tipo "¿ventas del mes anterior > 150?". Esas reglas funcionan igual si la variable está en unidades, en miles o estandarizada, así que la escala no cambia el resultado. La normalización sí sería necesaria en modelos que comparan distancias o usan coeficientes, como KNN, regresión lineal regularizada (Ridge/Lasso) o redes neuronales.
 
 # ## 6. Partición de los datos (temporal)
 # Como queremos pronosticar el **futuro**, no se usa una partición aleatoria: se entrena con los meses más antiguos y se prueba con los más recientes. Se prueban **tres particiones** (los datos con rezagos van de abril 2024 a diciembre 2025, 21 meses):
@@ -461,11 +461,13 @@ plt.show()
 
 
 # Error de los dos modelos por región
+resultado['error_rf'] = np.abs(resultado['units_sold'] - resultado['pronostico_rf'])
+resultado['error_xgb'] = np.abs(resultado['units_sold'] - resultado['pronostico_xgb'])
+
+sumas = resultado.groupby('region')[['units_sold', 'error_rf', 'error_xgb']].sum()
 por_region = pd.DataFrame({
-    'Random Forest': resultado.groupby('region').apply(
-        lambda g: np.abs(g['units_sold'] - g['pronostico_rf']).sum() / g['units_sold'].sum() * 100),
-    'XGBoost': resultado.groupby('region').apply(
-        lambda g: np.abs(g['units_sold'] - g['pronostico_xgb']).sum() / g['units_sold'].sum() * 100),
+    'Random Forest': sumas['error_rf'] / sumas['units_sold'] * 100,
+    'XGBoost': sumas['error_xgb'] / sumas['units_sold'] * 100,
 }).round(2)
 print('WAPE (%) por región:')
 por_region.sort_values('Random Forest')
@@ -554,10 +556,10 @@ pd.DataFrame(comparacion)[['Modelo', 'Variables', 'MAE', 'RMSE', 'WAPE (%)', 'R2
 # - **La normalización no fue necesaria** porque los modelos de árboles no dependen de la escala.
 # 
 # **¿Qué impacto tuvo el ajuste de hiperparámetros?**
-# - **Random Forest:** limitar la profundidad (`max_depth` = 8 y `min_samples_leaf` = 5) duplicó el error, de 5.88 % a 12.01 % en la partición 80/20. Los árboles completos distinguen mejor entre productos y regiones.
+# - **Random Forest:** limitar la profundidad de los árboles empeoró el error en la partición 80/20: con `max_depth` = 15 subió a 7.18 % y con `max_depth` = 8 (y `min_samples_leaf` = 5) a 12.01 %, el doble que sin límite (5.88 %). Los árboles completos distinguen mejor entre productos y regiones.
 # - **XGBoost:** fue más sensible. Con `max_depth` = 4 el error fue de 11.75 %, y con 800 árboles, `learning_rate` = 0.03 y `max_depth` = 8 bajó a 5.93 %. Es decir, el ajuste redujo el error a la mitad.
 # 
-# **Beneficio para DanuStore:** puede planear su stock según lo que realmente se va a vender en cada región y mes, en lugar de un pronóstico plano e inflado, y así reducir el sobreinventario (hoy el stock alcanza para ~208 días en lugar de ~34). Las variables más importantes son el promedio de ventas de los últimos 3 meses y el mes (temporada de noviembre y diciembre).
+# **Beneficio para DanuStore:** puede planear su stock según lo que realmente se va a vender en cada región y mes, en lugar de un pronóstico plano e inflado, y así reducir el sobreinventario (según el análisis de la investigación 5.1, hoy el stock alcanza para ~208 días de venta real en lugar de los ~34 planeados). Las variables más importantes son el promedio de ventas de los últimos 3 meses y el mes (temporada de noviembre y diciembre).
 # 
 # **Limitantes:**
 # 1. **Las ventas de 2025 repiten casi exactamente las de 2024** (76.6 % de los registros son idénticos). Esto hace que el pronóstico sea más fácil de lo normal, por lo que hay que validar el modelo con datos nuevos antes de usarlo.
