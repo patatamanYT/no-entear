@@ -201,21 +201,31 @@ print('Diferencia promedio entre 2025 y 2024:', round((tabla[2025] - tabla[2024]
 # **Interpretación y selección:**
 # - Las ventas de los meses anteriores (`ventas_mes_anterior`, `promedio_3_meses`) son las variables más relacionadas con `units_sold`, por eso se seleccionan.
 # - `units_expected` tiene una correlación menor: ordena bien qué productos venden más, pero no acierta en la cantidad.
-# - `static_price` y `mes` tienen correlación baja por sí solas, pero se conservan porque los árboles pueden encontrar **combinaciones** (por ejemplo, región × mes) que una correlación no detecta.
+# - `mes` tiene correlación baja por sí sola, pero se conserva porque los árboles pueden encontrar **combinaciones** (por ejemplo, región × mes, o la temporada de noviembre–diciembre) que una correlación no detecta.
+# - **`static_price` NO se usa:** cada producto tiene un precio único (ver la celda siguiente), así que el precio funciona como un **identificador del producto**. Como las ventas de 2025 repiten las de 2024, el modelo lo usaría para "recordar" cuánto vendió cada producto en lugar de aprender patrones, y dejaría de funcionar si los precios cambian (descuentos, inflación o productos nuevos). En la sección 12 se comprueba que quitarlo casi no cambia el error.
 # - **`ventas_hace_12` NO se usa:** su correlación es prácticamente 1 porque en la base **las ventas de 2025 repiten casi exactamente las de 2024**. Si la usáramos, el modelo solo copiaría el año anterior y no aprendería ningún patrón. Este hallazgo se reportará al socio formador como una observación sobre la calidad de los datos.
 # 
-# **Variables seleccionadas:** `region`, `category`, `subcategory`, `mes`, `static_price`, `ventas_mes_anterior`, `ventas_hace_2`, `ventas_hace_3`, `promedio_3_meses`.
+# **Variables seleccionadas:** `region`, `category`, `subcategory`, `mes`, `ventas_mes_anterior`, `ventas_hace_2`, `ventas_hace_3`, `promedio_3_meses`.
+
+# In[12]:
+
+
+# ¿El precio identifica al producto?
+print('Productos distintos:', df['product_id'].nunique())
+print('Precios distintos:', df['static_price'].nunique())
+print('¿Cada producto tiene un solo precio?', (df.groupby('product_id')['static_price'].nunique() == 1).all())
+
 
 # ## 4. Codificar variables categóricas
 # Los modelos solo entienden números. `region`, `category` y `subcategory` son texto, así que se convierten con **One-Hot Encoding** (`pd.get_dummies`): se crea una columna de 0 y 1 por cada categoría.
 
-# In[12]:
+# In[13]:
 
 
 # Quitamos los 3 primeros meses de cada serie (no tienen ventas anteriores para calcular los rezagos)
 datos = df.dropna(subset=['promedio_3_meses']).copy()
 
-variables = ['region', 'category', 'subcategory', 'mes', 'static_price',
+variables = ['region', 'category', 'subcategory', 'mes',
              'ventas_mes_anterior', 'ventas_hace_2', 'ventas_hace_3', 'promedio_3_meses']
 
 X = pd.get_dummies(datos[variables], columns=['region', 'category', 'subcategory'], dtype=int)
@@ -234,7 +244,7 @@ X.head()
 # - **70/30:** entrenar hasta junio 2025 (15 meses) y probar con julio–diciembre 2025 (6 meses).
 # - **60/40:** entrenar hasta abril 2025 (13 meses) y probar con mayo–diciembre 2025 (8 meses).
 
-# In[13]:
+# In[14]:
 
 
 particiones = {
@@ -254,7 +264,7 @@ for nombre, corte in particiones.items():
 # - **WAPE:** error total ÷ ventas totales (en %). Es la métrica principal porque se lee fácil: "el pronóstico se equivoca X% de lo que se vende".
 # - **R²:** qué tanto de la variación de las ventas explica el modelo (1 = perfecto).
 
-# In[14]:
+# In[15]:
 
 
 def evaluar(y_real, y_pred):
@@ -270,7 +280,7 @@ def evaluar(y_real, y_pred):
 # 1. **Pronóstico actual de DanuStore** (`units_expected`).
 # 2. **Modelo ingenuo:** "este mes voy a vender lo mismo que el mes pasado".
 
-# In[15]:
+# In[16]:
 
 
 resultados = []
@@ -296,7 +306,7 @@ pd.DataFrame(resultados)[['Partición', 'Modelo', 'Hiperparámetros', 'MAE', 'RM
 # - `max_depth`: profundidad máxima de cada árbol (None = sin límite).
 # - `min_samples_leaf`: mínimo de registros en cada hoja (evita que el árbol memorice).
 
-# In[16]:
+# In[17]:
 
 
 configuraciones_rf = [
@@ -330,7 +340,7 @@ tabla_rf[tabla_rf['Modelo'] == 'Random Forest'][['Partición', 'Hiperparámetros
 # - `learning_rate`: qué tanto corrige cada árbol (más bajo = más lento pero más cuidadoso).
 # - `max_depth`: profundidad máxima de cada árbol.
 
-# In[17]:
+# In[18]:
 
 
 configuraciones_xgb = [
@@ -358,7 +368,7 @@ tabla_xgb[tabla_xgb['Modelo'] == 'XGBoost'][['Partición', 'Hiperparámetros', '
 
 # ## 10. Comparación de todos los modelos
 
-# In[18]:
+# In[19]:
 
 
 tabla_final = pd.DataFrame(resultados)[['Partición', 'Modelo', 'Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
@@ -366,7 +376,7 @@ tabla_final = tabla_final.sort_values(['Partición', 'WAPE (%)']).reset_index(dr
 tabla_final
 
 
-# In[19]:
+# In[20]:
 
 
 # Menor WAPE (%) de cada modelo en cada partición
@@ -375,7 +385,7 @@ resumen = resumen[['80/20', '70/30', '60/40']].sort_values('80/20')
 resumen
 
 
-# In[20]:
+# In[21]:
 
 
 # Mejor configuración de cada modelo en la mejor partición (80/20)
@@ -386,7 +396,7 @@ mejores[['Hiperparámetros', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
 # ## 11. Resultados de los mejores modelos
 # Se vuelven a entrenar las mejores configuraciones de los dos modelos con la mejor partición (**80/20**: entrenar hasta agosto 2025 y probar con septiembre–diciembre 2025) para visualizar sus resultados.
 
-# In[21]:
+# In[22]:
 
 
 corte = '2025-09-01'
@@ -420,7 +430,7 @@ plt.show()
 total_mes.round(0)
 
 
-# In[22]:
+# In[23]:
 
 
 # Valores reales vs. estimados y residuales (residual = real - estimado) de los dos modelos
@@ -457,7 +467,7 @@ plt.tight_layout()
 plt.show()
 
 
-# In[23]:
+# In[24]:
 
 
 # Error de los dos modelos por región
@@ -473,7 +483,7 @@ print('WAPE (%) por región:')
 por_region.sort_values('Random Forest')
 
 
-# In[24]:
+# In[25]:
 
 
 # ¿Qué variables usa más el modelo? (segundo método de selección de variables)
@@ -489,11 +499,11 @@ plt.show()
 # ## 12. Impacto del preprocesamiento
 # Para medir qué tanto ayudó la preparación de los datos, se entrenan los dos modelos (partición 80/20, mejores hiperparámetros) con **4 grupos de variables**:
 # 1. **Básicas:** región, categoría, subcategoría y mes (codificadas con One-Hot).
-# 2. **Básicas + precio.**
-# 3. **Básicas + ventas pasadas** (las variables creadas en el preprocesamiento).
-# 4. **Todas** (el modelo final).
+# 2. **Básicas + precio** (el precio como identificador del producto).
+# 3. **Básicas + ventas pasadas** (las variables creadas en el preprocesamiento): **modelo final**.
+# 4. **Básicas + ventas pasadas + precio** (prueba de robustez: ¿cuánto aporta el precio?).
 
-# In[25]:
+# In[26]:
 
 
 corte = '2025-09-01'
@@ -505,8 +515,8 @@ rezagos = ['ventas_mes_anterior', 'ventas_hace_2', 'ventas_hace_3', 'promedio_3_
 grupos = {
     '1. Básicas': basicas,
     '2. Básicas + precio': basicas + ['static_price'],
-    '3. Básicas + ventas pasadas': basicas + rezagos,
-    '4. Todas (modelo final)': basicas + ['static_price'] + rezagos,
+    '3. Básicas + ventas pasadas (modelo final)': basicas + rezagos,
+    '4. Básicas + ventas pasadas + precio': basicas + rezagos + ['static_price'],
 }
 modelos = {
     'Random Forest': lambda: RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1),
@@ -527,41 +537,102 @@ pd.DataFrame(comparacion)[['Modelo', 'Variables', 'MAE', 'RMSE', 'WAPE (%)', 'R2
 
 
 # **Interpretación:**
-# - Con solo las variables **básicas** el error es alto: el modelo sabe la región, la categoría y el mes, pero no sabe cuánto vende cada producto en particular.
-# - Al agregar el **precio**, el error baja muchísimo. Cada producto tiene un precio único, así que el precio funciona como "identificador" del producto, y como **las ventas de 2025 repiten las de 2024**, el modelo puede "recordar" cuánto vendió ese producto en el mismo mes del año pasado. Es un buen resultado, pero depende de que los datos se repitan.
-# - Al agregar las **ventas pasadas** (creadas en el preprocesamiento), el error también baja mucho **sin necesidad de identificar el producto**: el modelo aprende del nivel de ventas reciente, lo cual es más útil si en el futuro las ventas cambian o entran productos nuevos.
-# - Por eso el modelo final usa **todas** las variables.
+# - Con solo las variables **básicas** el error es alto: el modelo sabe la región, la categoría y el mes, pero no cuánto vende cada producto.
+# - Con el **precio** el error baja mucho, pero no porque el precio explique las ventas: el modelo lo usa para **reconocer el producto** y "recordar" lo que vendió en 2024, que se repite en 2025.
+# - Con las **ventas pasadas** (creadas en el preprocesamiento) el error baja casi igual **sin identificar el producto**: el modelo aprende del nivel de ventas reciente de cada serie.
+# - **Prueba de robustez:** agregar el precio a las ventas pasadas casi no cambia el error. Es decir, el modelo final no depende del precio, y por eso se excluyó: así sigue funcionando si los precios cambian o entran productos nuevos.
 
-# ## 13. Conclusiones
+# ## 13. Pronóstico de varios meses (recursivo)
+# Hasta aquí, para pronosticar cada mes de prueba el modelo usó las **ventas reales** del mes anterior (pronóstico a **un mes**). En la vida real, si DanuStore quiere planear septiembre–diciembre desde agosto, todavía no conoce las ventas de septiembre, octubre ni noviembre.
+# 
+# Por eso se hace un **pronóstico recursivo**: se pronostica septiembre; ese pronóstico se usa como "venta del mes anterior" para pronosticar octubre, y así sucesivamente. Los errores se van acumulando, así que este es el **error realista para planear varios meses**.
+
+# In[27]:
+
+
+corte = '2025-09-01'
+meses_prueba = sorted(df.loc[df['fecha'] >= corte, 'fecha'].unique())
+
+def calcular_rezagos(tabla, columna):
+    grupo = tabla.groupby(['product_id', 'region'])[columna]
+    tabla['ventas_mes_anterior'] = grupo.shift(1)
+    tabla['ventas_hace_2'] = grupo.shift(2)
+    tabla['ventas_hace_3'] = grupo.shift(3)
+    tabla['promedio_3_meses'] = (tabla['ventas_mes_anterior'] + tabla['ventas_hace_2'] + tabla['ventas_hace_3']) / 3
+    return tabla
+
+recursivo = []
+for nombre, modelo in [('Random Forest', mejor_rf), ('XGBoost', mejor_xgb)]:
+    # Historia: ventas reales hasta agosto 2025; desde septiembre se llenan con los pronósticos
+    historia = df.copy()
+    historia['ventas_simuladas'] = historia['units_sold'].where(historia['fecha'] < corte)
+
+    for mes_prueba in meses_prueba:
+        historia = calcular_rezagos(historia, 'ventas_simuladas')
+        filas = historia['fecha'] == mes_prueba
+        X_mes = pd.get_dummies(historia.loc[filas, variables], columns=['region', 'category', 'subcategory'], dtype=int)
+        X_mes = X_mes.reindex(columns=X.columns, fill_value=0)   # mismas columnas que en el entrenamiento
+        historia.loc[filas, 'ventas_simuladas'] = modelo.predict(X_mes)
+
+    prueba_rec = historia[historia['fecha'] >= corte]
+    for mes_prueba in meses_prueba:
+        m = prueba_rec[prueba_rec['fecha'] == mes_prueba]
+        fila = evaluar(m['units_sold'], m['ventas_simuladas'])
+        fila.update({'Modelo': nombre, 'Mes': str(mes_prueba)[:7], 'Meses adelante': meses_prueba.index(mes_prueba) + 1})
+        recursivo.append(fila)
+    fila = evaluar(prueba_rec['units_sold'], prueba_rec['ventas_simuladas'])
+    fila.update({'Modelo': nombre, 'Mes': 'Total sep–dic', 'Meses adelante': '1 a 4'})
+    recursivo.append(fila)
+
+tabla_recursiva = pd.DataFrame(recursivo)[['Modelo', 'Mes', 'Meses adelante', 'MAE', 'RMSE', 'WAPE (%)', 'R2']]
+tabla_recursiva
+
+
+# In[28]:
+
+
+# Comparación: error a un mes vs. error recursivo (sep–dic 2025)
+resumen_rec = pd.DataFrame({
+    'A un mes (ventas reales)': [evaluar(resultado['units_sold'], resultado['pronostico_rf'])['WAPE (%)'],
+                                 evaluar(resultado['units_sold'], resultado['pronostico_xgb'])['WAPE (%)']],
+    'Recursivo (4 meses)': tabla_recursiva[tabla_recursiva['Mes'] == 'Total sep–dic']['WAPE (%)'].values,
+}, index=['Random Forest', 'XGBoost'])
+resumen_rec.loc['Pronóstico actual (units_expected)'] = evaluar(resultado['units_sold'], resultado['units_expected'])['WAPE (%)']
+print('WAPE (%) en septiembre–diciembre 2025:')
+resumen_rec
+
+
+# **Interpretación:** al pronosticar varios meses con sus propios pronósticos, el error **crece mes a mes** porque los errores se acumulan. Aun así, el error total de 4 meses sigue siendo mucho menor que el del pronóstico actual de DanuStore. Este es el número que debería usar el área de planeación.
+
+# ## 14. Conclusiones
 # **¿Qué modelo y qué división funcionaron mejor?**
 # 
 # | Partición | Random Forest (mejor) | XGBoost (mejor) | Ingenuo | Pronóstico actual |
 # |---|---|---|---|---|
-# | 80/20 | **5.88 %** | 5.93 % | 19.8 % | 468 % |
-# | 70/30 | **5.95 %** | 6.38 % | 18.7 % | 471 % |
-# | 60/40 | **5.98 %** | 6.24 % | 18.2 % | 483 % |
+# | 80/20 | **5.98 %** | 6.58 % | 19.8 % | 468 % |
+# | 70/30 | **6.07 %** | 6.97 % | 18.7 % | 471 % |
+# | 60/40 | **6.12 %** | 7.05 % | 18.2 % | 483 % |
 # 
-# *(WAPE: error total ÷ ventas totales)*
+# *(WAPE a un mes: error total ÷ ventas totales)*
 # 
-# - **El mejor modelo es Random Forest** (100 árboles, sin límite de profundidad). Tiene el menor WAPE en las tres particiones y, en la 80/20, un MAE de 13.10 unidades y un R² de 0.989.
-# - **XGBoost queda prácticamente empatado:** en la partición 80/20 tiene mejor RMSE (18.67 contra 20.34) y R² (0.990 contra 0.989), pero peor WAPE y MAE. Se eligió Random Forest porque el WAPE es la métrica principal y porque su error es más **parejo entre regiones** (5.1 % a 8.1 %, contra 3.2 % a 11.0 % de XGBoost, que falla más en las regiones de menor venta).
-# - **La mejor división es 80/20** (más meses para entrenar), aunque la diferencia entre particiones es mínima (5.88 % a 5.98 %). El modelo es **estable**: incluso entrenando con solo 13 meses (60/40) el error casi no cambia.
-# - **Los dos modelos le ganan por mucho al pronóstico actual** (~470 % de error, porque siempre espera ~6 veces más de lo que se vende) y al modelo ingenuo (~19 %).
-# - **Residuales:** en los dos modelos están centrados en 0 (promedio de −0.38 unidades en Random Forest y 0.11 en XGBoost), y el 90 % de los errores está entre −30 y +31 unidades. No se ve un patrón: los modelos no sobrestiman ni subestiman de forma sistemática.
+# - **El mejor modelo es Random Forest** (100 árboles, sin límite de profundidad). Tiene el menor WAPE en las tres particiones y, en la 80/20, un MAE de 13.31 unidades y un R² de 0.988. XGBoost queda cerca (mismo R² y RMSE ligeramente menor, 20.54 contra 20.80), pero su error es menos **parejo entre regiones**: Random Forest va de 5.2 % a 8.2 %, y XGBoost de 3.6 % a 12.7 %, fallando más en las regiones de menor venta.
+# - **La mejor división es 80/20** (más meses para entrenar), aunque la diferencia entre particiones es pequeña (5.98 % a 6.12 %). El modelo es **estable**: incluso entrenando con solo 13 meses (60/40) el error casi no cambia.
+# - **Pronóstico de varios meses (el número realista para planear):** si el modelo pronostica septiembre–diciembre desde agosto, usando sus propios pronósticos como entrada, el error sube mes a mes (5.8 %, 9.4 %, 10.9 % y 12.3 %) y queda en **9.9 % en total** para Random Forest y 10.2 % para XGBoost. Sigue siendo muchísimo mejor que el pronóstico actual (468 %) y que el ingenuo (~19 % a solo un mes).
+# - **Residuales:** en los dos modelos están centrados en 0 (promedio de −0.34 unidades en Random Forest y 0.14 en XGBoost), y el 90 % de los errores está entre −30 y +33 unidades. No se ve un patrón: los modelos no sobrestiman ni subestiman de forma sistemática.
 # 
 # **¿Qué impacto tuvo el preprocesamiento?**
-# - **Crear las ventas pasadas** fue lo más importante. Con solo región, categoría, subcategoría y mes el error es de **22.6 %**; al agregar las ventas pasadas baja a **6.0 %** en Random Forest y a 6.6 % en XGBoost. Con todas las variables llega a 5.9 %.
-# - **El One-Hot Encoding** permitió usar región, categoría y subcategoría, que son texto.
+# - **Crear las ventas pasadas** fue lo más importante. Con solo región, categoría, subcategoría y mes el error es de **22.6 %**; con las ventas pasadas baja a **6.0 %** en Random Forest y 6.6 % en XGBoost.
+# - **Excluir `static_price`:** como cada producto tiene un precio único, el precio funcionaba como identificador del producto y permitía "recordar" las ventas de 2024. La prueba de robustez muestra que quitarlo casi no cambia el error (5.87 % con precio contra 5.98 % sin él), así que el modelo no depende de él y seguirá funcionando si los precios cambian.
 # - **Excluir las variables con fuga** (Ventas_Acumuladas, Venta_Promedio_Diaria, Cumplimiento, etc.) evita un modelo "perfecto" pero inútil en la vida real.
-# - **La normalización no fue necesaria** porque los modelos de árboles no dependen de la escala.
+# - **El One-Hot Encoding** permitió usar región, categoría y subcategoría, que son texto. **La normalización no fue necesaria** porque los modelos de árboles no dependen de la escala.
 # 
 # **¿Qué impacto tuvo el ajuste de hiperparámetros?**
-# - **Random Forest:** limitar la profundidad de los árboles empeoró el error en la partición 80/20: con `max_depth` = 15 subió a 7.18 % y con `max_depth` = 8 (y `min_samples_leaf` = 5) a 12.01 %, el doble que sin límite (5.88 %). Los árboles completos distinguen mejor entre productos y regiones.
-# - **XGBoost:** fue más sensible. Con `max_depth` = 4 el error fue de 11.75 %, y con 800 árboles, `learning_rate` = 0.03 y `max_depth` = 8 bajó a 5.93 %. Es decir, el ajuste redujo el error a la mitad.
+# - **Random Forest:** limitar la profundidad de los árboles empeoró el error en la partición 80/20. Con `max_depth` = 15 subió a 7.44 % y con `max_depth` = 8 (y `min_samples_leaf` = 5) a 12.10 %, el doble que sin límite (5.98 %).
+# - **XGBoost:** fue más sensible. Con `max_depth` = 4 el error fue de 11.79 %, y con 800 árboles, `learning_rate` = 0.03 y `max_depth` = 8 bajó a 6.58 %, casi a la mitad.
 # 
 # **Beneficio para DanuStore:** puede planear su stock según lo que realmente se va a vender en cada región y mes, en lugar de un pronóstico plano e inflado, y así reducir el sobreinventario (según el análisis de la investigación 5.1, hoy el stock alcanza para ~208 días de venta real en lugar de los ~34 planeados). Las variables más importantes son el promedio de ventas de los últimos 3 meses y el mes (temporada de noviembre y diciembre).
 # 
 # **Limitantes:**
-# 1. **Las ventas de 2025 repiten casi exactamente las de 2024** (76.6 % de los registros son idénticos). Esto hace que el pronóstico sea más fácil de lo normal, por lo que hay que validar el modelo con datos nuevos antes de usarlo.
+# 1. **Las ventas de 2025 repiten casi exactamente las de 2024** (76.6 % de los registros son idénticos). Esto hace que cualquier modelo parezca más preciso de lo normal, así que los errores reportados son **optimistas**: hay que validar el modelo con datos nuevos antes de usarlo.
 # 2. Las ventas son solo de clientes registrados.
-# 3. El modelo pronostica **un mes adelante**; para varios meses habría que usar sus propios pronósticos como entrada.
+# 3. El error crece con el horizonte: ~6 % a un mes, pero ~10 % para 4 meses y ~12 % en el cuarto mes. Para planear más lejos habría que reentrenar el modelo cada mes con las ventas reales.
