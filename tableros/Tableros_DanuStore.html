@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tableros DanuStore</title>
+<style>
+
+:root{
+  --yellow:#F5C636; --teal:#14B3A0; --orange:#F57442; --gray:#B3B3B3; --ink:#252423;
+  --paper:#FFFFFF; --blue:#094780; --green:#7CB86A; --red:#D64550;
+  --line:#E5E5E5; --muted:#5F6368; --soft:#F5F6F7;
+  --radius:14px; --gap:16px;
+}
+
+html,body{margin:0;height:100%;background:#E9EBED;font-family:'Segoe UI',Arial,sans-serif;color:var(--ink)}
+
+.view[hidden]{display:none}
+.view .tabs a{border-radius:999px;padding:7px 22px;font-size:13px;text-decoration:none;color:var(--ink)}
+.view .tabs a:hover{background:var(--soft)}
+.view .tabs a[aria-current="page"]{background:var(--ink);color:#fff;font-weight:600}
+
+#v1 *{box-sizing:border-box}
+#v1 button,#v1 select,#v1 input{font:inherit;color:inherit}
+#v1 button{cursor:pointer}
+#v1 button:focus-visible,#v1 select:focus-visible,#v1 [tabindex]:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+#v1 /* Lienzo 1440 × 900 que se escala para caber en una pantalla */
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#v1 #board{flex:none;width:1440px;height:900px;background:var(--paper);padding:20px 24px 14px;display:grid;
+  grid-template-rows:auto auto auto 1fr auto;gap:12px;transform-origin:center center;box-shadow:0 8px 30px #0000001a}
+#v1 /* 1. Marca,#v1 nombre y corte + 2. navegación */
+header{display:flex;align-items:center;justify-content:space-between;gap:24px}
+#v1 .brand{display:flex;align-items:center;gap:16px}
+#v1 .mark{width:46px;height:46px;border-radius:12px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:700;font-size:20px}
+#v1 .brand h1{font-size:26px;margin:0;line-height:1.1}
+#v1 .brand p{margin:3px 0 0;font-size:12px;color:var(--muted)}
+#v1 .tabs{display:flex;border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px}
+#v1 .tabs button{border:0;background:transparent;border-radius:999px;padding:7px 22px;font-size:13px}
+#v1 .tabs a{border-radius:999px;padding:7px 22px;font-size:13px;text-decoration:none;color:var(--ink)}
+#v1 .tabs a:hover{background:var(--soft)}
+#v1 .tabs a[aria-current="page"]{background:var(--ink);color:#fff;font-weight:600}
+#v1 /* 3. Filtros */
+.filters{display:flex;align-items:center;gap:12px;min-width:0;border:1px solid var(--line);border-radius:var(--radius);padding:9px 14px;flex-wrap:nowrap}
+#v1 .fgroup{display:flex;align-items:center;gap:6px}
+#v1 .flabel{font-size:12px;font-weight:700;white-space:nowrap}
+#v1 .chips{display:flex;gap:3px}
+#v1 .chip{border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 8px;font-size:12px;white-space:nowrap}
+#v1 .chip:hover{background:var(--soft)}
+#v1 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+#v1 select{border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:12px;background:#fff}
+#v1 .reset{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 12px;font-size:12px;white-space:nowrap}
+#v1 .scope{font-size:13px;color:var(--muted);margin:0;display:flex;justify-content:space-between}
+#v1 .scope b{color:var(--ink)}
+#v1 /* 4. Resumen (KPI) */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap)}
+#v1 .kpi{border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;position:relative}
+#v1 .kpi .name{font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+#v1 .kpi .val{font-size:34px;font-weight:700;margin:4px 0 2px;line-height:1.1;font-variant-numeric:tabular-nums}
+#v1 .kpi .val small{font-size:15px;font-weight:600;margin-left:4px}
+#v1 .kpi .cmp{font-size:12px;color:var(--muted)}
+#v1 .state{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;margin-top:6px}
+#v1 .state::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--c)}
+#v1 .state{background:color-mix(in srgb,var(--c) 18%,#fff)}
+#v1 .info{border:1px solid var(--line);background:#fff;width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:700;color:var(--muted);padding:0;position:relative}
+#v1 .info .tip{display:none;position:absolute;right:0;top:24px;width:250px;background:var(--ink);color:#fff;font-weight:400;font-size:11.5px;line-height:1.45;text-align:left;padding:10px 12px;border-radius:8px;z-index:5}
+#v1 .info:hover .tip,#v1 .info:focus .tip{display:block}
+#v1 /* Comparaciones y detalle */
+.main{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) 320px;gap:var(--gap);min-height:0}
+#v1 .col{display:grid;gap:var(--gap);min-height:0}
+#v1 .col2{grid-template-rows:1fr 1fr}
+#v1 .panel{border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;min-height:0;display:flex;flex-direction:column}
+#v1 .panel h2{font-size:18px;margin:0}
+#v1 .panel .sub{font-size:12px;color:var(--muted);margin:3px 0 8px}
+#v1 .legend{display:flex;gap:14px;font-size:12px;margin-bottom:4px;flex-wrap:wrap}
+#v1 .legend span{display:inline-flex;align-items:center;gap:6px}
+#v1 .legend i{width:12px;height:12px;border-radius:3px;background:var(--k);display:inline-block}
+#v1 .legend i.ln{height:3px;border-radius:2px}
+#v1 svg{display:block;width:100%;flex:1;min-height:0}
+#v1 #ch-region{margin-top:4px}
+#v1 svg text{font-family:'Segoe UI',Arial,sans-serif;fill:var(--ink)}
+#v1 svg text{pointer-events:none}
+#v1 .hit{cursor:pointer}
+#v1 .hit:hover .bg{fill:var(--soft)}
+#v1 .note{font-size:11px;color:var(--muted);margin-top:4px}
+#v1 /* Agente */
+.agent{background:#FBFBFC}
+#v1 .agent-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+#v1 .avatar{width:36px;height:36px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-weight:700}
+#v1 .agent-head h2{font-size:18px}
+#v1 .agent-head p{margin:0;font-size:11px;color:var(--muted)}
+#v1 .alerts{display:grid;gap:6px;margin-bottom:10px}
+#v1 .alert{border:1px solid var(--line);border-left:4px solid var(--c);background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.4}
+#v1 .alert b{display:block;font-size:12px}
+#v1 .qs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+#v1 .qs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 10px;font-size:11.5px}
+#v1 .qs button:hover{background:var(--soft)}
+#v1 .chat{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:6px;padding-right:2px}
+#v1 .bubble{font-size:12.5px;line-height:1.45;padding:8px 11px;border-radius:12px;max-width:92%}
+#v1 .bubble.u{align-self:flex-end;background:var(--ink);color:#fff;border-bottom-right-radius:4px}
+#v1 .bubble.b{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+#v1 .ask{display:flex;gap:6px;margin-top:8px}
+#v1 .ask input{flex:1;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12px;background:#fff}
+#v1 .ask button{border:0;background:var(--ink);color:#fff;border-radius:8px;padding:7px 12px;font-size:12px}
+#v1 footer{display:flex;justify-content:space-between;gap:20px;font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:7px}
+#v2 *{box-sizing:border-box}
+#v2 button,#v2 select,#v2 input{font:inherit;color:inherit}
+#v2 button{cursor:pointer}
+#v2 button:focus-visible,#v2 select:focus-visible,#v2 [tabindex]:focus-visible,#v2 a:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+#v2 #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#v2 #board{flex:none;width:1440px;height:900px;background:var(--paper);padding:20px 24px 14px;display:grid;
+  grid-template-rows:auto auto auto auto 1fr auto;gap:12px;transform-origin:center center;box-shadow:0 8px 30px #0000001a}
+#v2 header{display:flex;align-items:center;justify-content:space-between;gap:24px}
+#v2 .brand{display:flex;align-items:center;gap:16px}
+#v2 .mark{width:46px;height:46px;border-radius:12px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:700;font-size:20px}
+#v2 .brand h1{font-size:26px;margin:0;line-height:1.1}
+#v2 .brand p{margin:3px 0 0;font-size:12px;color:var(--muted)}
+#v2 .tabs{display:flex;border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px}
+#v2 .tabs a{border-radius:999px;padding:7px 22px;font-size:13px;text-decoration:none;color:var(--ink)}
+#v2 .tabs a:hover{background:var(--soft)}
+#v2 .tabs a[aria-current="page"]{background:var(--ink);color:#fff;font-weight:600}
+#v2 .filters{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:var(--radius);padding:9px 14px;min-width:0}
+#v2 .fgroup{display:flex;align-items:center;gap:6px}
+#v2 .flabel{font-size:12px;font-weight:700;white-space:nowrap}
+#v2 .chips{display:flex;gap:3px}
+#v2 .chip{border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 7px;font-size:11.5px;white-space:nowrap}
+#v2 .chip:hover{background:var(--soft)}
+#v2 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+#v2 .reset{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 9px;font-size:12px;white-space:nowrap}
+#v2 .scope{font-size:13px;color:var(--muted);margin:0;display:flex;justify-content:space-between}
+#v2 .scope b{color:var(--ink)}
+#v2 .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap)}
+#v2 .kpi{border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px}
+#v2 .kpi .name{font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:6px}
+#v2 .kpi .model{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+#v2 .kpi .val{font-size:34px;font-weight:700;margin:2px 0 2px;line-height:1.1;font-variant-numeric:tabular-nums}
+#v2 .kpi .val small{font-size:15px;font-weight:600;margin-left:4px}
+#v2 .kpi .cmp{font-size:12px;color:var(--muted)}
+#v2 .state{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;margin-top:6px;background:color-mix(in srgb,var(--c) 18%,#fff)}
+#v2 .state::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--c)}
+#v2 .info{border:1px solid var(--line);background:#fff;width:20px;height:20px;flex:none;border-radius:50%;font-size:11px;font-weight:700;color:var(--muted);padding:0;position:relative}
+#v2 .info .tip{display:none;position:absolute;right:0;top:24px;width:260px;background:var(--ink);color:#fff;font-weight:400;font-size:11.5px;line-height:1.45;text-align:left;padding:10px 12px;border-radius:8px;z-index:5}
+#v2 .info:hover .tip,#v2 .info:focus .tip{display:block}
+#v2 .main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr) 320px;grid-template-rows:minmax(0,1.08fr) minmax(0,1fr);gap:var(--gap);min-height:0}
+#v2 .panel{border:1px solid var(--line);border-radius:var(--radius);padding:11px 14px;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+#v2 .panel h2{font-size:18px;margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+#v2 .panel h2 .tag{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+#v2 .panel .sub{font-size:11.5px;color:var(--muted);margin:2px 0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#v2 .agent{grid-row:1 / span 2;grid-column:3;background:#FBFBFC}
+#v2 /* Grupos K-Means */
+.groups{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:1;min-height:0}
+#v2 .group{border:1px solid var(--line);border-top:5px solid var(--c);border-radius:10px;padding:9px 10px;text-align:left;background:#fff;display:flex;flex-direction:column;gap:2px}
+#v2 .group:hover{background:var(--soft)}
+#v2 .group[aria-pressed="true"]{border-color:var(--ink);border-top-color:var(--c);box-shadow:0 0 0 1px var(--ink)}
+#v2 .group.dim{opacity:.35}
+#v2 .group .gname{font-size:13px;font-weight:700;line-height:1.25;min-height:32px}
+#v2 .group .gnum{font-size:24px;font-weight:700;line-height:1.1;margin-top:2px}
+#v2 .group .gnum small{font-size:12px;font-weight:600;color:var(--muted)}
+#v2 .group dl{margin:4px 0 4px;display:grid;grid-template-columns:1fr auto;gap:1px 6px;font-size:11.5px}
+#v2 .group dt{color:var(--muted)}
+#v2 .group dd{margin:0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+#v2 .group .act{margin-top:auto;font-size:11px;background:var(--soft);border-radius:6px;padding:5px 7px;line-height:1.35}
+#v2 /* Matriz */
+.matrix{display:grid;grid-template-columns:62px repeat(4,1fr);grid-template-rows:auto repeat(3,minmax(0,1fr));gap:4px;flex:1;min-height:0}
+#v2 .mh{font-size:12px;font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center;gap:5px}
+#v2 .mh i{width:9px;height:9px;border-radius:50%;background:var(--c);display:inline-block}
+#v2 .mr{font-size:12px;font-weight:700;display:flex;align-items:center}
+#v2 .cell{border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,var(--c) var(--p),#fff);padding:3px 5px;text-align:center;display:flex;flex-direction:column;justify-content:center;gap:0;min-height:0;overflow:hidden}
+#v2 .cell:hover{outline:2px solid #C9CCCF}
+#v2 .cell[aria-pressed="true"]{outline:2px solid var(--ink)}
+#v2 .cell.dim{opacity:.35}
+#v2 .cell b{font-size:16px;font-variant-numeric:tabular-nums}
+#v2 .cell span{font-size:10.5px;line-height:1.2}
+#v2 /* Tablas */
+table{border-collapse:collapse;width:100%;font-size:12px}
+#v2 th{text-align:left;background:var(--ink);color:#fff;font-weight:600;padding:6px 8px;font-size:11.5px}
+#v2 td{padding:2px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+#v2 td.num{text-align:right;font-variant-numeric:tabular-nums}
+#v2 tbody tr.hit{cursor:pointer}
+#v2 tbody tr.hit:hover{background:var(--soft)}
+#v2 tbody tr.sel{background:#EEF0F2;font-weight:600}
+#v2 tbody tr.dim{opacity:.35}
+#v2 .lvl{display:inline-flex;align-items:center;gap:5px;font-weight:600}
+#v2 .det{font-size:11px;color:var(--muted);margin-left:6px}
+#v2 .lvl::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--c)}
+#v2 .scroll{overflow:auto;min-height:0;flex:1}
+#v2 .empty{font-size:12px;color:var(--muted);padding:14px 4px}
+#v2 .empty button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:3px 8px;font-size:11.5px;margin-left:6px}
+#v2 /* Agente */
+.agent-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+#v2 .avatar{width:36px;height:36px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-weight:700}
+#v2 .agent-head p{margin:0;font-size:11px;color:var(--muted)}
+#v2 .alerts{display:grid;gap:6px;margin-bottom:10px}
+#v2 .alert{border:1px solid var(--line);border-left:4px solid var(--c);background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.4}
+#v2 .alert b{display:block;font-size:12px}
+#v2 .qs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+#v2 .qs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 10px;font-size:11.5px}
+#v2 .qs button:hover{background:var(--soft)}
+#v2 .chat{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:6px;padding-right:2px}
+#v2 .bubble{font-size:12.5px;line-height:1.45;padding:8px 11px;border-radius:12px;max-width:92%}
+#v2 .bubble.u{align-self:flex-end;background:var(--ink);color:#fff;border-bottom-right-radius:4px}
+#v2 .bubble.b{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+#v2 .ask{display:flex;gap:6px;margin-top:8px}
+#v2 .ask input{flex:1;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12px;background:#fff;min-width:0}
+#v2 .ask button{border:0;background:var(--ink);color:#fff;border-radius:8px;padding:7px 12px;font-size:12px}
+#v2 footer{display:flex;justify-content:space-between;gap:20px;white-space:nowrap;font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:7px}
+</style>
+</head>
+<body>
+<section class="view" id="v1">
+<div id="stage">
+<main id="board" aria-label="Tablero descriptivo de inventario DanuStore">
+
+  <header>
+    <div class="brand">
+      <div class="mark" aria-hidden="true">D</div>
+      <div>
+        <h1>Inventario DanuStore</h1>
+        <p>Tablero descriptivo · Datos mensuales ene 2024 – dic 2025 · Equipo 6 – Nexxus Consulting</p>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Tableros"><a href="#v1" data-view="v1" aria-current="page">Descriptivo</a><a href="#v2" data-view="v2">Solución de ML</a></nav>
+  </header>
+
+  <section class="filters" aria-label="Filtros">
+    <div class="fgroup"><span class="flabel">Región:</span><div class="chips" id="f-region"></div></div>
+    <div class="fgroup"><span class="flabel">Categoría:</span><div class="chips" id="f-cat"></div></div>
+    <div class="fgroup"><label class="flabel" for="f-month">Mes:</label><select id="f-month"></select></div>
+    <button class="reset" id="reset">⟲ Restablecer</button>
+  </section>
+
+  <p class="scope"><span id="scope"></span><span>Vendido vs. esperado (plan de DanuStore, <code>units_expected</code>)</span></p>
+
+  <section class="kpis" id="kpis" aria-label="Indicadores principales"></section>
+
+  <section class="main">
+    <div class="col">
+      <article class="panel">
+        <h2>Cobertura de inventario por región</h2>
+        <p class="sub">Días que tarda en venderse el stock al ritmo real · Clic en una región para filtrar</p>
+        <div class="legend">
+          <span><i style="--k:var(--green)"></i>Saludable (&lt; 90 días)</span>
+          <span><i style="--k:var(--yellow)"></i>Baja rotación (90–180)</span>
+          <span><i style="--k:var(--red)"></i>Sobrestock (&gt; 180)</span>
+        </div>
+        <svg id="ch-region" role="img" aria-label="Cobertura y cumplimiento por región"></svg>
+      </article>
+    </div>
+    <div class="col col2">
+      <article class="panel">
+        <h2>Venta real vs. plan por mes</h2>
+        <p class="sub">Índice de temporada (mes promedio = 1.00) · Total DanuStore 2024–2025 · Clic en un mes</p>
+        <div class="legend">
+          <span><i class="ln" style="--k:var(--orange)"></i>Venta real</span>
+          <span><i class="ln" style="--k:var(--gray)"></i>Plan (units_expected): ≈ 1.00 todo el año</span>
+        </div>
+        <svg id="ch-month" role="img" aria-label="Índice mensual de venta real y del plan"></svg>
+      </article>
+      <article class="panel">
+        <h2>Cumplimiento por categoría</h2>
+        <p class="sub">% de las unidades esperadas que realmente se vendió · Clic en una categoría</p>
+        <svg id="ch-cat" role="img" aria-label="Cumplimiento por categoría"></svg>
+      </article>
+    </div>
+    <aside class="panel agent" aria-label="Agente Danu Inventarios">
+      <div class="agent-head">
+        <div class="avatar" aria-hidden="true">D</div>
+        <div><h2>Danu Inventarios</h2><p>Asistente interno · responde con los datos del tablero</p></div>
+      </div>
+      <div class="alerts" id="alerts"></div>
+      <div class="qs" id="qs"></div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <form class="ask" id="ask">
+        <input id="q" placeholder="Pregunta a Danu (diseño: usa las sugerencias)" aria-label="Pregunta para Danu">
+        <button>Enviar</button>
+      </form>
+    </aside>
+  </section>
+
+  <footer>
+    <span><b>Fuente:</b> base mensual DanuStore (21,840 registros producto × región × mes, solo clientes registrados). Cobertura = mediana mensual de stock ÷ venta diaria real.</span>
+    <span>Diseño del tablero 1 · Los cruces región × categoría y región × mes se conectan en la versión final.</span>
+  </footer>
+</main>
+</div>
+
+</section>
+<section class="view" id="v2" hidden>
+<div id="stage">
+<main id="board" aria-label="Tablero de la solución de Machine Learning DanuStore">
+
+  <header>
+    <div class="brand">
+      <div class="mark" aria-hidden="true">D</div>
+      <div>
+        <h1>Solución de Machine Learning · DanuStore</h1>
+        <p>K-Means (grupos de inventario) + Red Neuronal MLP (nivel de sobrestock del próximo trimestre) · Equipo 6 – Nexxus Consulting</p>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Tableros"><a href="#v1" data-view="v1">Descriptivo</a><a href="#v2" data-view="v2" aria-current="page">Solución de ML</a></nav>
+  </header>
+
+  <section class="filters" aria-label="Filtros">
+    <div class="fgroup"><span class="flabel">Grupo:</span><div class="chips" id="f-group"></div></div>
+    <div class="fgroup"><span class="flabel">Región:</span><div class="chips" id="f-region"></div></div>
+    <div class="fgroup"><span class="flabel">Nivel:</span><div class="chips" id="f-level"></div></div>
+    <button class="reset" id="reset">⟲ Restablecer</button>
+  </section>
+
+  <p class="scope"><span id="scope"></span><span>Nivel = meses de inventario del próximo trimestre (t+1 a t+3)</span></p>
+
+  <section class="kpis" id="kpis" aria-label="Indicadores principales"></section>
+
+  <section class="main">
+    <article class="panel">
+      <h2>Grupos de inventario <span class="tag">K-Means · k = 3</span></h2>
+      <p class="sub">910 combinaciones producto × región · promedio 2024–2025 · Clic en un grupo para filtrar</p>
+      <div class="groups" id="groups"></div>
+    </article>
+
+    <article class="panel">
+      <h2>Matriz de acción <span class="tag">Red Neuronal · prueba 70/30</span></h2>
+      <p class="sub">% de los pronósticos del set de prueba · demanda esperada × nivel pronosticado · Clic en una celda</p>
+      <div class="matrix" id="matrix"></div>
+    </article>
+
+    <aside class="panel agent" aria-label="Agente Danu Inventarios">
+      <div class="agent-head">
+        <div class="avatar" aria-hidden="true">D</div>
+        <div><h2>Danu Inventarios</h2><p>Asistente interno · explica los resultados de los modelos</p></div>
+      </div>
+      <div class="alerts" id="alerts"></div>
+      <div class="qs" id="qs"></div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <form class="ask" id="ask">
+        <input id="q" placeholder="Pregunta a Danu (diseño: usa las sugerencias)" aria-label="Pregunta para Danu">
+        <button>Enviar</button>
+      </form>
+    </aside>
+
+    <article class="panel">
+      <h2>Resultado por región <span class="tag">K-Means + Red Neuronal</span></h2>
+      <p class="sub">Grupo mayoritario y nivel pronosticado predominante · Clic en una región</p>
+      <div class="scroll"><table id="t-region"></table></div>
+    </article>
+
+    <article class="panel">
+      <h2>Pronósticos del set de prueba <span class="tag">Red Neuronal</span></h2>
+      <p class="sub">Ejemplos que el modelo no vio al entrenar · pronóstico vs. nivel real</p>
+      <div class="scroll" id="t-examples"></div>
+    </article>
+  </section>
+
+  <footer>
+    <span><b>Fuente:</b> notebook Evidencia 2_6 · K-Means C (silueta 0.352) · MLP (64,) · Dinero detenido = (stock − venta) × precio, solo referencia</span>
+    <span>B/B/S = Bags, Boots y Sneakers · Solo clientes registrados</span>
+  </footer>
+</main>
+</div>
+
+</section>
+<script>
+(function(root){
+  'use strict';
+  const document = {
+    getElementById: id => root.querySelector('#' + id),
+    querySelector: sel => root.querySelector(sel),
+    querySelectorAll: sel => root.querySelectorAll(sel),
+  };
+
+
+// ---------- Datos (base mensual 2024–2025) ----------
+const TOTAL = {name:'DanuStore', sold:4532817, exp:26699265, cumpl:17.0, ratio:5.9, cob:208, cobPlan:34, wape:489, rot:1.8, y24:2263105, y25:2269712};
+const REGIONS = [
+  {name:'CDMX',        sold:1613905, exp:4816879, share:35.6, cumpl:33.5, ratio:3.0,  cob:113},
+  {name:'Monterrey',   sold:1005706, exp:4444635, share:22.2, cumpl:22.6, ratio:4.4,  cob:165},
+  {name:'Guadalajara', sold:719212,  exp:4094143, share:15.9, cumpl:17.6, ratio:5.7,  cob:205},
+  {name:'Bajío',       sold:428871,  exp:3739537, share:9.5,  cumpl:11.5, ratio:8.7,  cob:301},
+  {name:'Noroeste',    sold:300129,  exp:3390806, share:6.6,  cumpl:8.9,  ratio:11.3, cob:374},
+  {name:'Sur',         sold:252017,  exp:3017374, share:5.6,  cumpl:8.4,  ratio:12.0, cob:382},
+  {name:'Sureste',     sold:212977,  exp:3195891, share:4.7,  cumpl:6.7,  ratio:15.0, cob:478},
+];
+const CATS = [
+  {name:'Casual Wear',  sold:1301064, exp:7243201, share:28.7, cumpl:18.0, ratio:5.6, cob:197},
+  {name:'Footwear',     sold:1194283, exp:7762632, share:26.3, cumpl:15.4, ratio:6.5, cob:230},
+  {name:'Fitness Wear', sold:1132457, exp:6306122, share:25.0, cumpl:18.0, ratio:5.6, cob:197},
+  {name:'Accessories',  sold:905013,  exp:5387310, share:20.0, cumpl:16.8, ratio:6.0, cob:209},
+];
+const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const SEASON = [0.94,0.85,0.97,0.91,0.94,1.01,1.04,1.06,0.90,0.94,1.22,1.22];
+
+const C = {green:'var(--green)', yellow:'var(--yellow)', red:'var(--red)', gray:'var(--gray)'};
+const fmt = n => n.toLocaleString('es-MX');
+const fmtM = n => (n/1e6).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})+' M';
+const covState = d => d < 90 ? ['Saludable',C.green] : d <= 180 ? ['Baja rotación',C.yellow] : ['Sobrestock',C.red];
+
+// ---------- Estado de filtros ----------
+let state = {region:null, cat:null, month:null};
+const current = () => state.region ? REGIONS.find(r=>r.name===state.region)
+                   : state.cat ? CATS.find(c=>c.name===state.cat) : null;
+
+// ---------- Filtros ----------
+function chips(el, items, key){
+  el.innerHTML = ['Todas',...items].map(n=>{
+    const val = n==='Todas'?null:n;
+    return `<button class="chip" data-key="${key}" data-val="${n}" aria-pressed="${state[key]===val}">${n}</button>`;
+  }).join('');
+}
+const selMonth = document.getElementById('f-month');
+selMonth.innerHTML = '<option value="">Todos</option>' + MONTHS_FULL.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+document.querySelector('.filters').addEventListener('click', e=>{
+  const b = e.target.closest('.chip'); if(!b) return;
+  const val = b.dataset.val==='Todas' ? null : b.dataset.val;
+  setFilter(b.dataset.key, val);
+});
+selMonth.addEventListener('change', ()=>{ state.month = selMonth.value===''?null:+selMonth.value; render(); });
+document.getElementById('reset').addEventListener('click', ()=>{ state={region:null,cat:null,month:null}; render(); });
+
+function setFilter(key, val){
+  // Región y categoría se ven por separado: elegir una limpia la otra
+  if(key==='region'){ state.region = state.region===val?null:val; if(state.region) state.cat=null; }
+  if(key==='cat'){ state.cat = state.cat===val?null:val; if(state.cat) state.region=null; }
+  render();
+}
+
+// ---------- KPI ----------
+function tip(t){ return `<button class="info" aria-label="Definición">i<span class="tip" role="tooltip">${t}</span></button>`; }
+function stateTag(label,c){ return `<span class="state" style="--c:${c}">${label}</span>`; }
+function renderKPIs(){
+  const s = current(), d = s || TOTAL;
+  const [cl,cc] = covState(d.cob);
+  const cumplState = d.cumpl < 20 ? ['Desfavorable / fuera del objetivo',C.red] : ['Atención / revisar',C.yellow];
+  const vs = s ? `vs. ${TOTAL.cumpl.toFixed(1)} % total DanuStore` : 'Se vende 1 de cada 6 piezas planeadas';
+  const k = [
+    {name:'Cumplimiento del plan', val:`${d.cumpl.toFixed(1)}<small>%</small>`, cmp:vs, st:stateTag(...cumplState),
+     tip:'Unidades vendidas ÷ unidades esperadas (units_expected) × 100. Periodo: ene 2024 – dic 2025.'},
+    {name:'Plan vs. venta real', val:`${d.ratio.toFixed(1)}<small>× lo vendido</small>`, cmp:`Esperado ${fmtM(d.exp)} · vendido ${fmtM(d.sold)}`, st:stateTag('Desfavorable / sobrepronóstico',C.red),
+     tip:'Unidades esperadas ÷ unidades vendidas. Un valor de 1.0× significaría que el plan acierta.'},
+    {name:'Cobertura real de inventario', val:`${fmt(d.cob)}<small>días</small>`, cmp: s ? `Total: ${TOTAL.cob} días · sano: 60–90` : `Planeada: ${TOTAL.cobPlan} días · sano: 60–90`, st:stateTag(cl,cc),
+     tip:'Stock ÷ (venta real del mes ÷ días del mes); mediana mensual. Rangos del equipo: <90 saludable, 90–180 baja rotación, >180 sobrestock.'},
+    {name:'Unidades vendidas', val:`${fmtM(d.sold)}`, cmp: s ? `${(s.share).toFixed(1)} % de la venta total` : `2025: ${fmtM(TOTAL.y25)} · 2024: ${fmtM(TOTAL.y24)} (+0.3 %)`, st:stateTag(s?'Participación':'Venta estable',C.gray),
+     tip:'Suma de units_sold, 2024 + 2025. Solo ventas de clientes registrados.'},
+    s ? {name:'Error del plan (WAPE)', val:'Sin dato', cmp:'Disponible para el total; por segmento en la versión final', st:stateTag('Sin dato / no aplica',C.gray),
+         tip:'Σ|real − esperado| ÷ Σ real. Calculado para el total de DanuStore.'}
+      : {name:'Error del plan (WAPE)', val:`${TOTAL.wape}<small>%</small>`, cmp:`Rotación ${TOTAL.rot} vueltas/año (industria: 4–6)`, st:stateTag('Desfavorable / fuera del objetivo',C.red),
+         tip:'Σ|real − esperado| ÷ Σ real. Mientras más bajo, mejor: 0 % sería un plan perfecto.'},
+  ];
+  document.getElementById('kpis').innerHTML = k.map(x=>`<div class="kpi"><div class="name">${x.name}${tip(x.tip)}</div><div class="val">${x.val}</div><div class="cmp">${x.cmp}</div>${x.st}</div>`).join('');
+  const what = state.region ? `Región: <b>${state.region}</b>` : state.cat ? `Categoría: <b>${state.cat}</b>` : '<b>Todas las regiones y categorías</b>';
+  const mon = state.month!==null ? ` · Mes resaltado: <b>${MONTHS_FULL[state.month]}</b>` : '';
+  document.getElementById('scope').innerHTML = `${what} · Ene 2024 – dic 2025 (acumulado)${mon}`;
+}
+
+// ---------- Gráfica: regiones ----------
+function renderRegions(){
+  const svg = document.getElementById('ch-region'), W=600, H=430;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('preserveAspectRatio','xMidYMin meet');
+  const x0=104, x1=395, max=500, top=30, rowH=(H-top-28)/REGIONS.length;
+  const sx = v => x0 + (v/max)*(x1-x0);
+  let g = `<text x="${x1+92}" y="18" font-size="12" font-weight="700" text-anchor="middle">Cumplim.</text>
+           <text x="${x1+165}" y="18" font-size="12" font-weight="700" text-anchor="middle">% venta</text>`;
+  [0,90,180,300,400,500].forEach(v=>{
+    g += `<line x1="${sx(v)}" x2="${sx(v)}" y1="${top-6}" y2="${H-26}" stroke="${v===90||v===180?'#C9CCCF':'#EEE'}" ${v===90||v===180?'stroke-dasharray="4 4"':''}/>
+          <text x="${sx(v)}" y="${H-10}" font-size="11" text-anchor="middle" fill="#5F6368">${v}</text>`;
+  });
+  REGIONS.forEach((r,i)=>{
+    const y = top + i*rowH, bh = rowH*0.56, [lab,col] = covState(r.cob);
+    const dim = state.region && state.region!==r.name, sel = state.region===r.name;
+    g += `<g class="hit" tabindex="0" role="button" aria-label="Filtrar ${r.name}: ${r.cob} días, ${lab}" data-region="${r.name}" opacity="${dim?0.3:1}">
+      <rect class="bg" x="0" y="${y}" width="${W}" height="${rowH}" fill="${sel?'#F1F2F3':'transparent'}" rx="6"/>
+      <text x="${x0-10}" y="${y+rowH/2+5}" font-size="14" text-anchor="end" font-weight="${sel?700:400}">${r.name}</text>
+      <rect x="${x0}" y="${y+(rowH-bh)/2}" width="${sx(r.cob)-x0}" height="${bh}" fill="${col}" rx="3"/>
+      <text x="${sx(r.cob)+6}" y="${y+rowH/2+5}" font-size="13" font-weight="700">${r.cob} d</text>
+      <text x="${x1+92}" y="${y+rowH/2+5}" font-size="13" text-anchor="middle">${r.cumpl.toFixed(1)} %</text>
+      <text x="${x1+165}" y="${y+rowH/2+5}" font-size="13" text-anchor="middle">${r.share.toFixed(1)} %</text>
+    </g>`;
+  });
+    svg.innerHTML = g;
+}
+
+// ---------- Gráfica: temporada ----------
+function renderMonths(){
+  const svg = document.getElementById('ch-month'), W=520, H=170;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('preserveAspectRatio','xMidYMin meet');
+  const l=34, r=W-12, t=10, b=H-22, lo=0.8, hi=1.3;
+  const sx = i => l + i*(r-l)/11, sy = v => b - (v-lo)/(hi-lo)*(b-t);
+  let g='';
+  [0.8,0.9,1.0,1.1,1.2,1.3].forEach(v=>{ g+=`<line x1="${l}" x2="${r}" y1="${sy(v)}" y2="${sy(v)}" stroke="#EEE"/><text x="${l-6}" y="${sy(v)+4}" font-size="10" text-anchor="end" fill="#5F6368">${v.toFixed(1)}</text>`; });
+  g += `<line x1="${l}" x2="${r}" y1="${sy(1)}" y2="${sy(1)}" stroke="var(--gray)" stroke-width="3" stroke-dasharray="7 4"/>`;
+  g += `<polyline points="${SEASON.map((v,i)=>`${sx(i)},${sy(v)}`).join(' ')}" fill="none" stroke="var(--orange)" stroke-width="3"/>`;
+  SEASON.forEach((v,i)=>{
+    const sel = state.month===i;
+    g += `<g class="hit" tabindex="0" role="button" data-month="${i}" aria-label="${MONTHS_FULL[i]}: índice ${v.toFixed(2)}">
+      <rect x="${sx(i)-18}" y="${t}" width="36" height="${b-t+16}" fill="transparent"/>
+      <circle cx="${sx(i)}" cy="${sy(v)}" r="${sel?7:4.5}" fill="var(--orange)" stroke="#fff" stroke-width="2"/>
+      <text x="${sx(i)}" y="${H-6}" font-size="11" text-anchor="middle" font-weight="${sel?700:400}">${MONTHS[i]}</text>
+      ${(sel||i===1||i===10||i===11)?`<text x="${sx(i)}" y="${sy(v)-11}" font-size="11" font-weight="700" text-anchor="middle">${v.toFixed(2)}</text>`:''}
+    </g>`;
+  });
+    svg.innerHTML = g;
+}
+
+// ---------- Gráfica: categorías ----------
+function renderCats(){
+  const svg = document.getElementById('ch-cat'), W=520, H=170;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('preserveAspectRatio','xMidYMin meet');
+  const l=40, r=W-10, t=14, b=H-22, max=40, bw=58;
+  const sy = v => b - v/max*(b-t);
+  let g='';
+  [0,10,20,30,40].forEach(v=>{ g+=`<line x1="${l}" x2="${r}" y1="${sy(v)}" y2="${sy(v)}" stroke="#EEE"/><text x="${l-6}" y="${sy(v)+4}" font-size="10" text-anchor="end" fill="#5F6368">${v} %</text>`; });
+  g += `<line x1="${l}" x2="${r}" y1="${sy(TOTAL.cumpl)}" y2="${sy(TOTAL.cumpl)}" stroke="var(--ink)" stroke-dasharray="4 3"/><text x="${r}" y="${t-2}" font-size="11" text-anchor="end">- - - Total DanuStore ${TOTAL.cumpl.toFixed(1)} %</text>`;
+  CATS.forEach((c,i)=>{
+    const cx = l + (i+0.5)*(r-l)/CATS.length, dim = state.cat && state.cat!==c.name, sel = state.cat===c.name;
+    g += `<g class="hit" tabindex="0" role="button" data-cat="${c.name}" aria-label="Filtrar ${c.name}: ${c.cumpl} %" opacity="${dim?0.3:1}">
+      <rect class="bg" x="${cx-60}" y="${t-6}" width="120" height="${b-t+28}" fill="${sel?'#F1F2F3':'transparent'}" rx="6"/>
+      <rect x="${cx-bw/2}" y="${sy(c.cumpl)}" width="${bw}" height="${b-sy(c.cumpl)}" fill="var(--orange)" rx="3"/>
+      <text x="${cx}" y="${sy(c.cumpl)-6}" font-size="13" font-weight="700" text-anchor="middle">${c.cumpl.toFixed(1)} %</text>
+      <text x="${cx}" y="${H-6}" font-size="12" text-anchor="middle" font-weight="${sel?700:400}">${c.name}</text>
+    </g>`;
+  });
+  svg.innerHTML = g;
+}
+
+// Interactividad entre gráficas: clic en una barra o punto filtra el tablero
+document.querySelector('.main').addEventListener('click', e=>{
+  const h = e.target.closest('.hit'); if(!h) return;
+  if(h.dataset.region) setFilter('region', h.dataset.region);
+  if(h.dataset.cat) setFilter('cat', h.dataset.cat);
+  if(h.dataset.month){ const m=+h.dataset.month; state.month = state.month===m?null:m; render(); }
+});
+document.querySelector('.main').addEventListener('keydown', e=>{
+  if((e.key==='Enter'||e.key===' ') && e.target.classList.contains('hit')){ e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click',{bubbles:true})); }
+});
+
+// ---------- Agente Danu ----------
+const QUESTIONS = {
+  sobra:'¿Dónde sobra más inventario?',
+  mover:'¿A dónde muevo el inventario?',
+  mes:'¿Qué mes vende más?',
+  plan:'¿Qué tan bueno es el plan actual?'
+};
+function answer(id){
+  const s = current();
+  if(id==='sobra'){
+    if(state.region){ const r=s, [lab]=covState(r.cob); return `🔴 <b>${r.name}</b> tiene <b>${r.cob} días</b> de cobertura (${lab.toLowerCase()}) y vende solo el <b>${r.cumpl.toFixed(1)} %</b> de lo esperado. Lo sano es 60–90 días.`; }
+    if(state.cat){ return `En <b>${s.name}</b> el inventario dura <b>${s.cob} días</b> y se vende el <b>${s.cumpl.toFixed(1)} %</b> de lo esperado. Para ver dónde sobra más, elige una región.`; }
+    return `🔴 <b>Sureste</b> (478 días), <b>Sur</b> (382) y <b>Noroeste</b> (374). Ninguna región llega a 90 días; CDMX es la mejor con 113.`;
+  }
+  if(id==='mover'){
+    const src = state.region && !['CDMX','Monterrey'].includes(state.region) ? state.region : 'Sureste, Sur y Noroeste';
+    return `Propuesta: trasladar de <b>${src}</b> hacia <b>CDMX</b> (113 días) y <b>Monterrey</b> (165), que son las que más rápido venden. La decisión la aprueba el gerente regional.`;
+  }
+  if(id==='mes'){
+    const m = state.month;
+    if(m!==null){ const v=SEASON[m]; return `<b>${MONTHS_FULL[m]}</b> vende ${v>=1?'+':''}${Math.round((v-1)*100)} % frente a un mes promedio (índice ${v.toFixed(2)}). El plan lo trata igual que cualquier otro mes.`; }
+    return `<b>Noviembre y diciembre</b> venden <b>22 % más</b> que un mes promedio y <b>febrero 15 % menos</b>. El plan es casi igual todos los meses.`;
+  }
+  if(id==='plan'){
+    const d = s || TOTAL;
+    return `El plan espera <b>${d.ratio.toFixed(1)} veces</b> lo que se vende${s?` en ${s.name}`:''}: se cumple el <b>${d.cumpl.toFixed(1)} %</b>.${s?'':` Su error (WAPE) es de <b>${TOTAL.wape} %</b>.`} El modelo del Tablero 2 lo corrige.`;
+  }
+}
+function renderAgent(){
+  const s = current();
+  const alerts = state.region ? [
+      [covState(s.cob)[1], `${s.name}: ${s.cob} días de cobertura`, `${covState(s.cob)[0]} · referencia sana 60–90 días`],
+      [C.red, `Plan ${s.ratio.toFixed(1)}× arriba de la venta`, `Se cumple el ${s.cumpl.toFixed(1)} % de lo esperado`],
+    ] : state.cat ? [
+      [covState(s.cob)[1], `${s.name}: ${s.cob} días de cobertura`, `Participación de ${s.share.toFixed(1)} % en la venta`],
+      [C.red, `Cumplimiento de ${s.cumpl.toFixed(1)} %`, `El plan espera ${s.ratio.toFixed(1)}× lo vendido`],
+    ] : [
+      [C.red, 'Sureste: 478 días de cobertura', 'Vende 6.7 % de lo esperado · revisar compras'],
+      [C.yellow, 'Nov–dic: +22 % de venta', 'El plan no anticipa la temporada'],
+      [C.green, 'CDMX: la región que mejor rota', '113 días · destino sugerido de traslados'],
+    ];
+  document.getElementById('alerts').innerHTML = alerts.map(([c,t,d])=>`<div class="alert" style="--c:${c}"><b>${t}</b>${d}</div>`).join('');
+  document.getElementById('qs').innerHTML = Object.entries(QUESTIONS).map(([k,q])=>`<button data-q="${k}">${q}</button>`).join('');
+}
+const chat = document.getElementById('chat');
+function ask(id, text){
+  chat.insertAdjacentHTML('beforeend', `<div class="bubble u">${text}</div><div class="bubble b">${answer(id)}</div>`);
+  chat.scrollTop = chat.scrollHeight;
+}
+document.getElementById('qs').addEventListener('click', e=>{ const b=e.target.closest('button'); if(b) ask(b.dataset.q, QUESTIONS[b.dataset.q]); });
+document.getElementById('ask').addEventListener('submit', e=>{
+  e.preventDefault();
+  const v = document.getElementById('q').value.trim().toLowerCase(); if(!v) return;
+  const id = /mov|trasl|redistr/.test(v)?'mover' : /mes|tempor|nov|dic/.test(v)?'mes' : /plan|pron|error/.test(v)?'plan' : 'sobra';
+  ask(id, document.getElementById('q').value.trim().replace(/[<>&]/g,''));
+  document.getElementById('q').value='';
+});
+
+// ---------- Render y ajuste a pantalla ----------
+function render(){
+  chips(document.getElementById('f-region'), REGIONS.map(r=>r.name), 'region');
+  chips(document.getElementById('f-cat'), CATS.map(c=>c.name), 'cat');
+  selMonth.value = state.month===null ? '' : String(state.month);
+  renderKPIs(); renderRegions(); renderMonths(); renderCats(); renderAgent();
+}
+function fit(){
+  const s = Math.min(window.innerWidth/1440, window.innerHeight/900);
+  document.getElementById('board').style.transform = `scale(${s})`;
+}
+window.addEventListener('resize', fit);
+render(); fit();
+chat.innerHTML = '<div class="bubble b">Hola, soy <b>Danu Inventarios</b>. Elige una región o categoría y pregúntame dónde sobra inventario o a dónde moverlo.</div>';
+
+})(window.document.getElementById('v1'));
+(function(root){
+  'use strict';
+  const document = {
+    getElementById: id => root.querySelector('#' + id),
+    querySelector: sel => root.querySelector(sel),
+    querySelectorAll: sel => root.querySelectorAll(sel),
+  };
+
+
+// ---------- Resultados del notebook Evidencia 2_6 ----------
+// Parte A · K-Means (910 producto-región)
+const GROUPS = [
+  {id:0, name:'Baja rotación', color:'var(--yellow)', n:322, cob:159, cumpl:25.2, price:69, stock:1761, sales:377, money:31.05, moneyPct:34.7,
+   action:'Venta cruzada y frenar nuevas compras', who:'CDMX, Monterrey y Guadalajara'},
+  {id:1, name:'Sobrestock de precio alto', color:'var(--orange)', n:169, cob:336, cumpl:12.5, price:155, stock:1417, sales:169, money:33.15, moneyPct:37.0,
+   action:'Descuentos dirigidos y traspaso a zonas metropolitanas', who:'Productos caros de las 7 regiones (67 % Footwear)'},
+  {id:2, name:'Sobrestock severo', color:'var(--red)', n:419, cob:370, cumpl:9.6, price:66, stock:1025, sales:93, money:25.37, moneyPct:28.3,
+   action:'Liquidación y dejar de surtir', who:'Bajío, Noroeste, Sur y Sureste'},
+];
+// Proporción de cada grupo que pertenece a cada región (crosstab normalize='index' del notebook)
+const REGION_SHARE = {
+  'CDMX':        [0.37,0.07,0.00],
+  'Monterrey':   [0.31,0.14,0.02],
+  'Guadalajara': [0.25,0.16,0.05],
+  'Bajío':       [0.07,0.18,0.18],
+  'Noroeste':    [0.00,0.16,0.25],
+  'Sur':         [0.00,0.15,0.25],
+  'Sureste':     [0.00,0.15,0.25],
+};
+// Parte B · Red Neuronal: nivel predominante por región (cubo región × subcategoría del notebook)
+const LEVELS = ['Bajo','Medio','Alto','Crítico'];
+const LEVEL_COLOR = {Bajo:'var(--green)', Medio:'var(--yellow)', Alto:'var(--orange)', 'Crítico':'var(--red)'};
+const LEVEL_RANGE = {Bajo:'≤ 5.4 meses', Medio:'5.4–8.8 meses', Alto:'8.8–12.6 meses', 'Crítico':'> 12.6 meses'};
+const REGION_LEVEL = {
+  'CDMX':        {lvl:'Bajo',    note:'Todas'},
+  'Monterrey':   {lvl:'Bajo',    note:'Bags, Boots, Sneakers: Medio'},
+  'Guadalajara': {lvl:'Medio',   note:'Todas'},
+  'Bajío':       {lvl:'Alto',    note:'Todas'},
+  'Noroeste':    {lvl:'Alto',    note:'Bags, Boots, Sneakers: Crítico'},
+  'Sur':         {lvl:'Alto',    note:'Bags, Boots, Sneakers: Crítico'},
+  'Sureste':     {lvl:'Crítico', note:'Todas'},
+};
+// Matriz de acción (% del set de prueba, partición 70/30)
+const DEMANDS = ['Baja','Media','Alta'];
+const MATRIX = {
+  'Baja':  [[4.6,'Mantener stock mínimo'],[4.3,'Promoción ligera'],[15.0,'Promoción y frenar compras'],[9.8,'Liquidar o transferir']],
+  'Media': [[5.9,'Mantener'],[6.0,'Monitorear'],[12.8,'Reducir el próximo pedido'],[8.7,'Transferir a otra región']],
+  'Alta':  [[13.8,'Mantener o reabastecer'],[8.7,'Ajustar compras'],[6.8,'Revisar el pronóstico'],[3.8,'Redistribuir y revisar el pronóstico']],
+};
+// Ejemplos aleatorios del set de prueba (B.10.1 del notebook)
+const EXAMPLES = [
+  ['Pants Product 46','Guadalajara','Jul 2025','Medio',94,'Medio'],
+  ['Belts Product 90','Monterrey','Nov 2024','Bajo',83,'Bajo'],
+  ['Shirts Product 41','Noroeste','Dic 2024','Alto',75,'Alto'],
+  ['Dresses Product 57','Sur','Sep 2025','Alto',73,'Alto'],
+  ['Belts Product 94','Guadalajara','May 2025','Medio',93,'Medio'],
+  ['Outerwear Product 24','Sureste','Jun 2024','Crítico',86,'Alto'],
+  ['Sneakers Product 129','Bajío','Nov 2024','Alto',80,'Alto'],
+  ['Boots Product 113','Guadalajara','Jun 2025','Medio',92,'Medio'],
+  ['Sneakers Product 127','Noroeste','Dic 2024','Crítico',67,'Crítico'],
+  ['Shirts Product 43','Sur','Ene 2025','Alto',70,'Alto'],
+];
+const MLP = {f1:0.818, auc:0.955, acc:0.816, f1Future:0.837, f1Tree:0.812, f1Region:0.732};
+
+const REGIONS = Object.keys(REGION_SHARE);
+const C = {green:'var(--green)', yellow:'var(--yellow)', red:'var(--red)', gray:'var(--gray)', orange:'var(--orange)'};
+// Producto-región de cada región en cada grupo (aprox.: proporción × tamaño del grupo)
+const regionCounts = r => REGION_SHARE[r].map((p,i)=>Math.round(p*GROUPS[i].n));
+const majority = r => { const c = regionCounts(r), t = c.reduce((a,b)=>a+b,0), i = c.indexOf(Math.max(...c)); return {g:GROUPS[i], pct:Math.round(c[i]/t*100)}; };
+
+// ---------- Estado ----------
+let state = {group:null, region:null, level:null, demand:null};
+
+function chips(el, items, key){
+  el.innerHTML = [['Todos',null],...items].map(([label,val])=>
+    `<button class="chip" data-key="${key}" data-val="${val===null?'':val}" aria-pressed="${state[key]===val}">${label}</button>`).join('');
+}
+document.querySelector('.filters').addEventListener('click', e=>{
+  const b = e.target.closest('.chip'); if(!b) return;
+  const key = b.dataset.key, raw = b.dataset.val;
+  const val = raw==='' ? null : key==='group' ? +raw : raw;
+  toggle(key, val);
+});
+document.getElementById('reset').addEventListener('click', ()=>{ state={group:null,region:null,level:null,demand:null}; render(); });
+function toggle(key, val){
+  state[key] = state[key]===val ? null : val;
+  if(key==='level' && state.level===null) state.demand=null;
+  render();
+}
+
+// ---------- KPI ----------
+const tip = t => `<button class="info" aria-label="Definición">i<span class="tip" role="tooltip">${t}</span></button>`;
+const tag = (label,c) => `<span class="state" style="--c:${c}">${label}</span>`;
+function renderKPIs(){
+  const g = state.group!==null ? GROUPS[state.group] : null;
+  const over = GROUPS[1].n + GROUPS[2].n;
+  const highCrit = DEMANDS.reduce((a,d)=>a+MATRIX[d][2][0]+MATRIX[d][3][0],0);
+  const lvlPct = state.level ? DEMANDS.reduce((a,d)=>a+MATRIX[d][LEVELS.indexOf(state.level)][0],0) : null;
+  const k = [
+    g ? {model:'K-Means', name:'Grupo seleccionado', val:`${g.n}<small>de 910</small>`, cmp:`${g.name} · ${g.cob} días de cobertura`,
+         st: g.id===0 ? tag('Atención / revisar',C.yellow) : tag('Desfavorable / sobrestock',C.red), tip:'Producto-región asignados a este grupo por K-Means (k = 3, k-means++, n_init = 50).'}
+      : state.region ? {model:'K-Means', name:'Producto-región con sobrestock', val:`≈ ${regionCounts(state.region)[1]+regionCounts(state.region)[2]}<small>de 130</small>`, cmp:`${state.region} · precio alto + severo`, st:tag('Desfavorable / fuera del objetivo',C.red),
+         tip:'Aproximado: proporción de cada grupo que pertenece a la región × tamaño del grupo. Cada región tiene 130 producto-región.'}
+      : {model:'K-Means', name:'Producto-región con sobrestock', val:`${over}<small>de 910</small>`, cmp:`${(over/910*100).toFixed(0)} % están en los grupos de sobrestock`, st:tag('Desfavorable / fuera del objetivo',C.red),
+         tip:'Suma de los grupos "Sobrestock de precio alto" (169) y "Sobrestock severo" (419).'},
+    {model:'K-Means', name:'Dinero detenido', val: g ? `${g.moneyPct.toFixed(1)}<small>%</small>` : `$${(GROUPS.reduce((a,x)=>a+x.money,0)).toFixed(1)}<small>M</small>`,
+     cmp: g ? `$${g.money.toFixed(1)} M del total de $89.6 M` : 'Precio alto concentra el 37 %',
+     st: tag('Referencia (precio de venta)',C.gray), tip:'(Stock promedio − venta promedio) × precio de venta. La base no tiene costo, así que es solo una referencia.'},
+    state.level ? {model:'Red Neuronal', name:`Pronosticados en ${state.level}`, val:`${lvlPct.toFixed(1)}<small>%</small>`, cmp:`del set de prueba · ${LEVEL_RANGE[state.level]}`,
+         st: tag(state.level, LEVEL_COLOR[state.level]), tip:'Suma de la columna del nivel en la matriz de acción.'}
+      : {model:'Red Neuronal', name:'Pronosticados en Alto o Crítico', val:`${highCrit.toFixed(1)}<small>%</small>`, cmp:'del set de prueba · > 8.8 meses', st:tag('Desfavorable / requiere acción',C.red),
+         tip:'Suma de las columnas Alto y Crítico de la matriz de acción (partición 70/30).'},
+    {model:'Red Neuronal', name:'Exactitud del pronóstico', val:`${MLP.f1.toFixed(3)}<small>F1</small>`, cmp:`AUC ${MLP.auc} · azar = 0.25`, st:tag('Favorable / dentro del objetivo',C.green),
+     tip:'F1 macro en la partición 70/30. Le da el mismo peso a los cuatro niveles. Cuando falla, solo confunde niveles vecinos (acierto ±1 nivel = 100 %).'},
+    {model:'Red Neuronal', name:'Prueba con meses futuros', val:`${MLP.f1Future.toFixed(3)}<small>F1</small>`, cmp:`Árbol ${MLP.f1Tree} · solo región ${MLP.f1Region}`, st:tag('Favorable / dentro del objetivo',C.green),
+     tip:'Entrenado con los meses pasados y probado con los últimos meses, que el modelo no vio. Es la prueba más realista.'},
+  ];
+  document.getElementById('kpis').innerHTML = k.map(x=>`<div class="kpi"><div class="model">${x.model}</div><div class="name">${x.name}${tip(x.tip)}</div><div class="val">${x.val}</div><div class="cmp">${x.cmp}</div>${x.st}</div>`).join('');
+  const parts = [];
+  if(g) parts.push(`Grupo: <b>${g.name}</b>`);
+  if(state.region) parts.push(`Región: <b>${state.region}</b>`);
+  if(state.level) parts.push(`Nivel: <b>${state.level}</b>`);
+  if(state.demand) parts.push(`Demanda esperada: <b>${state.demand}</b>`);
+  document.getElementById('scope').innerHTML = parts.length ? parts.join(' · ') : '<b>Todos los grupos, regiones y niveles</b> · Resultados del notebook Evidencia 2_6';
+}
+
+// ---------- Grupos ----------
+function renderGroups(){
+  const counts = state.region ? regionCounts(state.region) : null;
+  document.getElementById('groups').innerHTML = GROUPS.map(g=>{
+    const sel = state.group===g.id, dim = state.group!==null && !sel;
+    const num = counts ? `≈ ${counts[g.id]}<small> de 130</small>` : `${g.n}<small> de 910</small>`;
+    return `<button class="group${dim?' dim':''}" style="--c:${g.color}" data-group="${g.id}" aria-pressed="${sel}">
+      <span class="gname">${g.name}</span>
+      <span class="gnum">${num}</span>
+      <dl><dt>Cobertura</dt><dd>${g.cob} d</dd><dt>Cumplim.</dt><dd>${g.cumpl.toFixed(1)} %</dd><dt>$ detenido</dt><dd>${g.moneyPct.toFixed(1)} %</dd></dl>
+      <span class="act"><b>Acción:</b> ${g.action}</span>
+    </button>`;
+  }).join('');
+}
+document.getElementById('groups').addEventListener('click', e=>{ const b=e.target.closest('.group'); if(b) toggle('group', +b.dataset.group); });
+
+// ---------- Matriz ----------
+function renderMatrix(){
+  let h = '<div></div>' + LEVELS.map(l=>`<div class="mh"><i style="--c:${LEVEL_COLOR[l]}"></i>${l}</div>`).join('');
+  DEMANDS.forEach(d=>{
+    h += `<div class="mr">Demanda ${d.toLowerCase()}</div>`;
+    MATRIX[d].forEach(([p,a],i)=>{
+      const l = LEVELS[i], sel = state.level===l && state.demand===d;
+      const dim = (state.level && state.level!==l) || (state.demand && state.demand!==d);
+      h += `<button class="cell${dim?' dim':''}" style="--c:${LEVEL_COLOR[l]};--p:${Math.round(12+p*3)}%" data-level="${l}" data-demand="${d}" aria-pressed="${sel}" aria-label="Demanda ${d}, nivel ${l}: ${p} %, ${a}">
+        <b>${p.toFixed(1)} %</b><span>${a}</span></button>`;
+    });
+  });
+  document.getElementById('matrix').innerHTML = h;
+}
+document.getElementById('matrix').addEventListener('click', e=>{
+  const c = e.target.closest('.cell'); if(!c) return;
+  const same = state.level===c.dataset.level && state.demand===c.dataset.demand;
+  state.level = same?null:c.dataset.level; state.demand = same?null:c.dataset.demand; render();
+});
+
+// ---------- Tabla por región ----------
+function renderRegionTable(){
+  const rows = REGIONS.map(r=>{
+    const m = majority(r), lv = REGION_LEVEL[r];
+    const inGroup = state.group!==null ? `≈ ${regionCounts(r)[state.group]}` : `${m.g.name} (≈ ${m.pct} %)`;
+    const sel = state.region===r;
+    const dim = (state.level && lv.lvl!==state.level) || (state.group!==null && regionCounts(r)[state.group]===0);
+    return `<tr class="hit${sel?' sel':''}${dim&&!sel?' dim':''}" tabindex="0" data-region="${r}">
+      <td>${r}</td><td>${inGroup}</td>
+      <td><span class="lvl" style="--c:${LEVEL_COLOR[lv.lvl]}">${lv.lvl}</span>${lv.note==='Todas'?'':`<span class="det" title="${lv.note}">${lv.note.replace('Bags, Boots, Sneakers','B/B/S')}</span>`}</td></tr>`;
+  }).join('');
+  const head = state.group!==null ? 'En el grupo elegido' : 'Grupo mayoritario';
+  document.getElementById('t-region').innerHTML = `<thead><tr><th>Región</th><th>${head}</th><th>Nivel pronosticado</th></tr></thead><tbody>${rows}</tbody>`;
+}
+document.getElementById('t-region').addEventListener('click', e=>{ const tr=e.target.closest('tr.hit'); if(tr) toggle('region', tr.dataset.region); });
+document.getElementById('t-region').addEventListener('keydown', e=>{ const tr=e.target.closest('tr.hit'); if(tr && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); toggle('region', tr.dataset.region); } });
+
+// ---------- Ejemplos del set de prueba ----------
+function renderExamples(){
+  const rows = EXAMPLES.filter(([,r,,p])=> (!state.region || r===state.region) && (!state.level || p===state.level));
+  const el = document.getElementById('t-examples');
+  if(!rows.length){ el.innerHTML = `<div class="empty">Sin datos para esta selección.<button id="clear-ex">Restablecer filtros</button></div>`;
+    document.getElementById('clear-ex').onclick = ()=>{ state={group:null,region:null,level:null,demand:null}; render(); }; return; }
+  el.innerHTML = `<table><thead><tr><th>Producto</th><th>Región</th><th>Mes t</th><th>Pronóstico</th><th class="num">Confianza</th><th>Real</th></tr></thead><tbody>${
+    rows.map(([p,r,m,pr,cf,re])=>`<tr><td>${p}</td><td>${r}</td><td>${m}</td>
+      <td><span class="lvl" style="--c:${LEVEL_COLOR[pr]}">${pr}</span></td><td class="num">${cf} %</td>
+      <td>${re} ${pr===re?'✓':'✗'}</td></tr>`).join('')}</tbody></table>`;
+}
+
+// ---------- Agente Danu ----------
+const QUESTIONS = {
+  hacer:'¿Qué hago con este grupo?',
+  primero:'¿Dónde actúo primero?',
+  confiable:'¿Qué tan confiable es el pronóstico?',
+  niveles:'¿Qué significa cada nivel?',
+};
+function answer(id){
+  const g = state.group!==null ? GROUPS[state.group] : null;
+  if(id==='hacer'){
+    if(g) return `<b>${g.name}</b> (${g.n} producto-región, ${g.cob} días): <b>${g.action.toLowerCase()}</b>. Concentra el ${g.moneyPct.toFixed(1)} % del dinero detenido.`;
+    if(state.level && state.demand){ const a = MATRIX[state.demand][LEVELS.indexOf(state.level)]; return `Con demanda ${state.demand.toLowerCase()} y nivel <b>${state.level}</b> (${a[0]} % de los casos): <b>${a[1].toLowerCase()}</b>.`; }
+    return 'Elige un grupo arriba. En resumen: venta cruzada en las zonas metropolitanas, descuentos y traspasos para los productos caros, y liquidación en las regiones con menos ventas.';
+  }
+  if(id==='primero'){
+    if(state.region){ const lv=REGION_LEVEL[state.region], m=majority(state.region); return `En <b>${state.region}</b> el modelo pronostica nivel <b>${lv.lvl}</b> (${lv.note==='Todas' ? 'en todas las subcategorías' : lv.note}). Su grupo mayoritario es <b>${m.g.name}</b>: ${m.g.action.toLowerCase()}.`; }
+    return '🔴 <b>Sureste</b>: nivel Crítico en todas las subcategorías. Después, <b>Bags, Boots y Sneakers</b> en Noroeste y Sur. Y el grupo de <b>precio alto</b>, que tiene el 37 % del dinero detenido.';
+  }
+  if(id==='confiable') return `El pronóstico acierta con F1 de <b>${MLP.f1}</b> (AUC ${MLP.auc}) y de <b>${MLP.f1Future}</b> en meses que no vio. Cuando falla, solo confunde niveles vecinos (por ejemplo, Alto por Crítico). Ojo: 2025 se parece mucho a 2024.`;
+  if(id==='niveles') return 'Son los meses de inventario del próximo trimestre: <b>Bajo</b> ≤ 5.4 · <b>Medio</b> 5.4–8.8 · <b>Alto</b> 8.8–12.6 · <b>Crítico</b> > 12.6. Los cortes son cuartiles y coinciden con los centros de un K-Means auxiliar.';
+}
+function renderAgent(){
+  const g = state.group!==null ? GROUPS[state.group] : null;
+  let alerts;
+  if(state.region){
+    const lv = REGION_LEVEL[state.region], m = majority(state.region);
+    alerts = [[LEVEL_COLOR[lv.lvl], `${state.region}: nivel ${lv.lvl} pronosticado`, lv.note==='Todas' ? 'En todas las subcategorías' : lv.note],
+              [m.g.color, `Grupo mayoritario: ${m.g.name}`, `Acción: ${m.g.action}`]];
+  } else if(g){
+    alerts = [[g.color, `${g.name}: ${g.n} producto-región`, `${g.cob} días de cobertura · ${g.who}`],
+              [C.gray, `${g.moneyPct.toFixed(1)} % del dinero detenido`, `Acción: ${g.action}`]];
+  } else {
+    alerts = [[C.red, 'Sureste: Crítico todo el trimestre', 'Más de 12.6 meses de inventario pronosticados'],
+              [C.orange, 'Precio alto: 37 % del dinero detenido', 'Solo 169 producto-región · 67 % Footwear'],
+              [C.red, '15 % con demanda baja y nivel Alto', 'Acción: promoción y frenar compras']];
+  }
+  document.getElementById('alerts').innerHTML = alerts.map(([c,t,d])=>`<div class="alert" style="--c:${c}"><b>${t}</b>${d}</div>`).join('');
+  document.getElementById('qs').innerHTML = Object.entries(QUESTIONS).map(([k,q])=>`<button data-q="${k}">${q}</button>`).join('');
+}
+const chat = document.getElementById('chat');
+function ask(id, text){
+  chat.insertAdjacentHTML('beforeend', `<div class="bubble u">${text}</div><div class="bubble b">${answer(id)}</div>`);
+  chat.scrollTop = chat.scrollHeight;
+}
+document.getElementById('qs').addEventListener('click', e=>{ const b=e.target.closest('button'); if(b) ask(b.dataset.q, QUESTIONS[b.dataset.q]); });
+document.getElementById('ask').addEventListener('submit', e=>{
+  e.preventDefault();
+  const raw = document.getElementById('q').value.trim(), v = raw.toLowerCase(); if(!v) return;
+  const id = /confi|precis|exact|f1/.test(v)?'confiable' : /nivel|signific/.test(v)?'niveles' : /primero|dónde|donde|región|region/.test(v)?'primero' : 'hacer';
+  ask(id, raw.replace(/[<>&]/g,''));
+  document.getElementById('q').value='';
+});
+
+// ---------- Render y ajuste ----------
+function render(){
+  chips(document.getElementById('f-group'), GROUPS.map(g=>[g.name.replace('Sobrestock de precio alto','Precio alto').replace('Sobrestock severo','Sobrestock severo'), g.id]), 'group');
+  chips(document.getElementById('f-region'), REGIONS.map(r=>[r,r]), 'region');
+  chips(document.getElementById('f-level'), LEVELS.map(l=>[l,l]), 'level');
+  renderKPIs(); renderGroups(); renderMatrix(); renderRegionTable(); renderExamples(); renderAgent();
+}
+function fit(){
+  const s = Math.min(window.innerWidth/1440, window.innerHeight/900);
+  document.getElementById('board').style.transform = `scale(${s})`;
+}
+window.addEventListener('resize', fit);
+render(); fit();
+chat.innerHTML = '<div class="bubble b">Hola, soy <b>Danu Inventarios</b>. Elige un grupo, una región o una celda de la matriz y te digo qué acción tomar.</div>';
+
+})(window.document.getElementById('v2'));
+
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-view]'); if (!a) return;
+  e.preventDefault();
+  document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== a.dataset.view; });
+  window.dispatchEvent(new Event('resize'));
+});
+
+</script>
+</body>
+</html>
