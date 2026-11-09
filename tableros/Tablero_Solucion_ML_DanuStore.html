@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tablero Solución ML DanuStore</title>
+<style>
+:root{
+  --yellow:#F5C636; --teal:#14B3A0; --orange:#F57442; --gray:#B3B3B3; --ink:#252423;
+  --paper:#FFFFFF; --blue:#094780; --green:#7CB86A; --red:#D64550;
+  --line:#E5E5E5; --muted:#5F6368; --soft:#F5F6F7;
+  --radius:14px; --gap:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#E9EBED;font-family:'Segoe UI',Arial,sans-serif;color:var(--ink)}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,select:focus-visible,[tabindex]:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#board{width:1440px;height:900px;background:var(--paper);padding:20px 24px 14px;display:grid;
+  grid-template-rows:auto auto auto auto 1fr auto;gap:12px;transform-origin:center center;box-shadow:0 8px 30px #0000001a}
+
+header{display:flex;align-items:center;justify-content:space-between;gap:24px}
+.brand{display:flex;align-items:center;gap:16px}
+.mark{width:46px;height:46px;border-radius:12px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:700;font-size:20px}
+.brand h1{font-size:26px;margin:0;line-height:1.1}
+.brand p{margin:3px 0 0;font-size:12px;color:var(--muted)}
+.tabs{display:flex;border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px}
+.tabs a{border-radius:999px;padding:7px 22px;font-size:13px;text-decoration:none;color:var(--ink)}
+.tabs a:hover{background:var(--soft)}
+.tabs a[aria-current="page"]{background:var(--ink);color:#fff;font-weight:600}
+
+.filters{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:var(--radius);padding:9px 14px;min-width:0}
+.fgroup{display:flex;align-items:center;gap:6px}
+.flabel{font-size:12px;font-weight:700;white-space:nowrap}
+.chips{display:flex;gap:3px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 7px;font-size:11.5px;white-space:nowrap}
+.chip:hover{background:var(--soft)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.reset{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 9px;font-size:12px;white-space:nowrap}
+.scope{font-size:13px;color:var(--muted);margin:0;display:flex;justify-content:space-between}
+.scope b{color:var(--ink)}
+
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap)}
+.kpi{border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px}
+.kpi .name{font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.kpi .model{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.kpi .val{font-size:34px;font-weight:700;margin:2px 0 2px;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .val small{font-size:15px;font-weight:600;margin-left:4px}
+.kpi .cmp{font-size:12px;color:var(--muted)}
+.state{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;margin-top:6px;background:color-mix(in srgb,var(--c) 18%,#fff)}
+.state::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--c)}
+.info{border:1px solid var(--line);background:#fff;width:20px;height:20px;flex:none;border-radius:50%;font-size:11px;font-weight:700;color:var(--muted);padding:0;position:relative}
+.info .tip{display:none;position:absolute;right:0;top:24px;width:260px;background:var(--ink);color:#fff;font-weight:400;font-size:11.5px;line-height:1.45;text-align:left;padding:10px 12px;border-radius:8px;z-index:5}
+.info:hover .tip,.info:focus .tip{display:block}
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr) 320px;grid-template-rows:minmax(0,1.08fr) minmax(0,1fr);gap:var(--gap);min-height:0}
+.panel{border:1px solid var(--line);border-radius:var(--radius);padding:11px 14px;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.panel h2{font-size:18px;margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.panel h2 .tag{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.panel .sub{font-size:11.5px;color:var(--muted);margin:2px 0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent{grid-row:1 / span 2;grid-column:3;background:#FBFBFC}
+
+/* Grupos K-Means */
+.groups{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:1;min-height:0}
+.group{border:1px solid var(--line);border-top:5px solid var(--c);border-radius:10px;padding:9px 10px;text-align:left;background:#fff;display:flex;flex-direction:column;gap:2px}
+.group:hover{background:var(--soft)}
+.group[aria-pressed="true"]{border-color:var(--ink);border-top-color:var(--c);box-shadow:0 0 0 1px var(--ink)}
+.group.dim{opacity:.35}
+.group .gname{font-size:13px;font-weight:700;line-height:1.25;min-height:32px}
+.group .gnum{font-size:24px;font-weight:700;line-height:1.1;margin-top:2px}
+.group .gnum small{font-size:12px;font-weight:600;color:var(--muted)}
+.group dl{margin:4px 0 4px;display:grid;grid-template-columns:1fr auto;gap:1px 6px;font-size:11.5px}
+.group dt{color:var(--muted)}
+.group dd{margin:0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.group .act{margin-top:auto;font-size:11px;background:var(--soft);border-radius:6px;padding:5px 7px;line-height:1.35}
+
+/* Matriz */
+.matrix{display:grid;grid-template-columns:62px repeat(4,1fr);grid-template-rows:auto repeat(3,minmax(0,1fr));gap:4px;flex:1;min-height:0}
+.mh{font-size:12px;font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center;gap:5px}
+.mh i{width:9px;height:9px;border-radius:50%;background:var(--c);display:inline-block}
+.mr{font-size:12px;font-weight:700;display:flex;align-items:center}
+.cell{border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,var(--c) var(--p),#fff);padding:3px 5px;text-align:center;display:flex;flex-direction:column;justify-content:center;gap:0;min-height:0;overflow:hidden}
+.cell:hover{outline:2px solid #C9CCCF}
+.cell[aria-pressed="true"]{outline:2px solid var(--ink)}
+.cell.dim{opacity:.35}
+.cell b{font-size:16px;font-variant-numeric:tabular-nums}
+.cell span{font-size:10.5px;line-height:1.2}
+
+/* Tablas */
+table{border-collapse:collapse;width:100%;font-size:12px}
+th{text-align:left;background:var(--ink);color:#fff;font-weight:600;padding:6px 8px;font-size:11.5px}
+td{padding:3px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr.hit{cursor:pointer}
+tbody tr.hit:hover{background:var(--soft)}
+tbody tr.sel{background:#EEF0F2;font-weight:600}
+tbody tr.dim{opacity:.35}
+.lvl{display:inline-flex;align-items:center;gap:5px;font-weight:600}
+.det{font-size:11px;color:var(--muted);margin-left:6px}
+.lvl::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--c)}
+.scroll{overflow:auto;min-height:0;flex:1}
+.empty{font-size:12px;color:var(--muted);padding:14px 4px}
+.empty button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:3px 8px;font-size:11.5px;margin-left:6px}
+
+/* Agente */
+.agent-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-weight:700}
+.agent-head p{margin:0;font-size:11px;color:var(--muted)}
+.alerts{display:grid;gap:6px;margin-bottom:10px}
+.alert{border:1px solid var(--line);border-left:4px solid var(--c);background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.4}
+.alert b{display:block;font-size:12px}
+.qs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.qs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 10px;font-size:11.5px}
+.qs button:hover{background:var(--soft)}
+.chat{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:6px;padding-right:2px}
+.bubble{font-size:12.5px;line-height:1.45;padding:8px 11px;border-radius:12px;max-width:92%}
+.bubble.u{align-self:flex-end;background:var(--ink);color:#fff;border-bottom-right-radius:4px}
+.bubble.b{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+.ask{display:flex;gap:6px;margin-top:8px}
+.ask input{flex:1;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12px;background:#fff;min-width:0}
+.ask button{border:0;background:var(--ink);color:#fff;border-radius:8px;padding:7px 12px;font-size:12px}
+
+footer{display:flex;justify-content:space-between;gap:20px;font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:7px}
+</style>
+</head>
+<body>
+<div id="stage">
+<main id="board" aria-label="Tablero de la solución de Machine Learning DanuStore">
+
+  <header>
+    <div class="brand">
+      <div class="mark" aria-hidden="true">D</div>
+      <div>
+        <h1>Solución de Machine Learning · DanuStore</h1>
+        <p>K-Means (grupos de inventario) + Red Neuronal MLP (nivel de sobrestock del próximo trimestre) · Equipo 6 – Nexxus Consulting</p>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Tableros">
+      <a href="Tablero_Descriptivo_DanuStore.html">Descriptivo</a>
+      <a href="#" aria-current="page">Solución de ML</a>
+    </nav>
+  </header>
+
+  <section class="filters" aria-label="Filtros">
+    <div class="fgroup"><span class="flabel">Grupo:</span><div class="chips" id="f-group"></div></div>
+    <div class="fgroup"><span class="flabel">Región:</span><div class="chips" id="f-region"></div></div>
+    <div class="fgroup"><span class="flabel">Nivel:</span><div class="chips" id="f-level"></div></div>
+    <button class="reset" id="reset">⟲ Restablecer</button>
+  </section>
+
+  <p class="scope"><span id="scope"></span><span>Nivel = meses de inventario del próximo trimestre (t+1 a t+3)</span></p>
+
+  <section class="kpis" id="kpis" aria-label="Indicadores principales"></section>
+
+  <section class="main">
+    <article class="panel">
+      <h2>Grupos de inventario <span class="tag">K-Means · k = 3</span></h2>
+      <p class="sub">910 combinaciones producto × región · promedio 2024–2025 · Clic en un grupo para filtrar</p>
+      <div class="groups" id="groups"></div>
+    </article>
+
+    <article class="panel">
+      <h2>Matriz de acción <span class="tag">Red Neuronal · prueba 70/30</span></h2>
+      <p class="sub">% de los pronósticos del set de prueba · demanda esperada × nivel pronosticado · Clic en una celda</p>
+      <div class="matrix" id="matrix"></div>
+    </article>
+
+    <aside class="panel agent" aria-label="Agente Danu Inventarios">
+      <div class="agent-head">
+        <div class="avatar" aria-hidden="true">D</div>
+        <div><h2>Danu Inventarios</h2><p>Asistente interno · explica los resultados de los modelos</p></div>
+      </div>
+      <div class="alerts" id="alerts"></div>
+      <div class="qs" id="qs"></div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <form class="ask" id="ask">
+        <input id="q" placeholder="Pregunta a Danu (diseño: usa las sugerencias)" aria-label="Pregunta para Danu">
+        <button>Enviar</button>
+      </form>
+    </aside>
+
+    <article class="panel">
+      <h2>Resultado por región <span class="tag">K-Means + Red Neuronal</span></h2>
+      <p class="sub">Grupo mayoritario y nivel pronosticado predominante · Clic en una región</p>
+      <div class="scroll"><table id="t-region"></table></div>
+    </article>
+
+    <article class="panel">
+      <h2>Pronósticos del set de prueba <span class="tag">Red Neuronal</span></h2>
+      <p class="sub">Ejemplos que el modelo no vio al entrenar · pronóstico vs. nivel real</p>
+      <div class="scroll" id="t-examples"></div>
+    </article>
+  </section>
+
+  <footer>
+    <span><b>Fuente:</b> notebook Evidencia 2_6 (Parte A: K-Means C, silueta 0.352 · Parte B: MLP (64,), F1 macro 0.818, AUC 0.955). Dinero detenido = (stock − venta) × precio de venta, solo referencia.</span>
+    <span>B/B/S = Bags, Boots y Sneakers · Diseño del tablero 2 · Solo clientes registrados.</span>
+  </footer>
+</main>
+</div>
+
+<script>
+'use strict';
+// ---------- Resultados del notebook Evidencia 2_6 ----------
+// Parte A · K-Means (910 producto-región)
+const GROUPS = [
+  {id:0, name:'Baja rotación', color:'var(--yellow)', n:322, cob:159, cumpl:25.2, price:69, stock:1761, sales:377, money:31.05, moneyPct:34.7,
+   action:'Venta cruzada y frenar nuevas compras', who:'CDMX, Monterrey y Guadalajara'},
+  {id:1, name:'Sobrestock de precio alto', color:'var(--orange)', n:169, cob:336, cumpl:12.5, price:155, stock:1417, sales:169, money:33.15, moneyPct:37.0,
+   action:'Descuentos dirigidos y traspaso a zonas metropolitanas', who:'Productos caros de las 7 regiones (67 % Footwear)'},
+  {id:2, name:'Sobrestock severo', color:'var(--red)', n:419, cob:370, cumpl:9.6, price:66, stock:1025, sales:93, money:25.37, moneyPct:28.3,
+   action:'Liquidación y dejar de surtir', who:'Bajío, Noroeste, Sur y Sureste'},
+];
+// Proporción de cada grupo que pertenece a cada región (crosstab normalize='index' del notebook)
+const REGION_SHARE = {
+  'CDMX':        [0.37,0.07,0.00],
+  'Monterrey':   [0.31,0.14,0.02],
+  'Guadalajara': [0.25,0.16,0.05],
+  'Bajío':       [0.07,0.18,0.18],
+  'Noroeste':    [0.00,0.16,0.25],
+  'Sur':         [0.00,0.15,0.25],
+  'Sureste':     [0.00,0.15,0.25],
+};
+// Parte B · Red Neuronal: nivel predominante por región (cubo región × subcategoría del notebook)
+const LEVELS = ['Bajo','Medio','Alto','Crítico'];
+const LEVEL_COLOR = {Bajo:'var(--green)', Medio:'var(--yellow)', Alto:'var(--orange)', 'Crítico':'var(--red)'};
+const LEVEL_RANGE = {Bajo:'≤ 5.4 meses', Medio:'5.4–8.8 meses', Alto:'8.8–12.6 meses', 'Crítico':'> 12.6 meses'};
+const REGION_LEVEL = {
+  'CDMX':        {lvl:'Bajo',    note:'Todas'},
+  'Monterrey':   {lvl:'Bajo',    note:'Bags, Boots, Sneakers: Medio'},
+  'Guadalajara': {lvl:'Medio',   note:'Todas'},
+  'Bajío':       {lvl:'Alto',    note:'Todas'},
+  'Noroeste':    {lvl:'Alto',    note:'Bags, Boots, Sneakers: Crítico'},
+  'Sur':         {lvl:'Alto',    note:'Bags, Boots, Sneakers: Crítico'},
+  'Sureste':     {lvl:'Crítico', note:'Todas'},
+};
+// Matriz de acción (% del set de prueba, partición 70/30)
+const DEMANDS = ['Baja','Media','Alta'];
+const MATRIX = {
+  'Baja':  [[4.6,'Mantener stock mínimo'],[4.3,'Promoción ligera'],[15.0,'Promoción y frenar compras'],[9.8,'Liquidar o transferir']],
+  'Media': [[5.9,'Mantener'],[6.0,'Monitorear'],[12.8,'Reducir el próximo pedido'],[8.7,'Transferir a otra región']],
+  'Alta':  [[13.8,'Mantener o reabastecer'],[8.7,'Ajustar compras'],[6.8,'Revisar el pronóstico'],[3.8,'Redistribuir y revisar el pronóstico']],
+};
+// Ejemplos aleatorios del set de prueba (B.10.1 del notebook)
+const EXAMPLES = [
+  ['Pants Product 46','Guadalajara','Jul 2025','Medio',94,'Medio'],
+  ['Belts Product 90','Monterrey','Nov 2024','Bajo',83,'Bajo'],
+  ['Shirts Product 41','Noroeste','Dic 2024','Alto',75,'Alto'],
+  ['Dresses Product 57','Sur','Sep 2025','Alto',73,'Alto'],
+  ['Belts Product 94','Guadalajara','May 2025','Medio',93,'Medio'],
+  ['Outerwear Product 24','Sureste','Jun 2024','Crítico',86,'Alto'],
+  ['Sneakers Product 129','Bajío','Nov 2024','Alto',80,'Alto'],
+  ['Boots Product 113','Guadalajara','Jun 2025','Medio',92,'Medio'],
+  ['Sneakers Product 127','Noroeste','Dic 2024','Crítico',67,'Crítico'],
+  ['Shirts Product 43','Sur','Ene 2025','Alto',70,'Alto'],
+];
+const MLP = {f1:0.818, auc:0.955, acc:0.816, f1Future:0.837, f1Tree:0.812, f1Region:0.732};
+
+const REGIONS = Object.keys(REGION_SHARE);
+const C = {green:'var(--green)', yellow:'var(--yellow)', red:'var(--red)', gray:'var(--gray)', orange:'var(--orange)'};
+// Producto-región de cada región en cada grupo (aprox.: proporción × tamaño del grupo)
+const regionCounts = r => REGION_SHARE[r].map((p,i)=>Math.round(p*GROUPS[i].n));
+const majority = r => { const c = regionCounts(r), t = c.reduce((a,b)=>a+b,0), i = c.indexOf(Math.max(...c)); return {g:GROUPS[i], pct:Math.round(c[i]/t*100)}; };
+
+// ---------- Estado ----------
+let state = {group:null, region:null, level:null, demand:null};
+
+function chips(el, items, key){
+  el.innerHTML = [['Todos',null],...items].map(([label,val])=>
+    `<button class="chip" data-key="${key}" data-val="${val===null?'':val}" aria-pressed="${state[key]===val}">${label}</button>`).join('');
+}
+document.querySelector('.filters').addEventListener('click', e=>{
+  const b = e.target.closest('.chip'); if(!b) return;
+  const key = b.dataset.key, raw = b.dataset.val;
+  const val = raw==='' ? null : key==='group' ? +raw : raw;
+  toggle(key, val);
+});
+document.getElementById('reset').addEventListener('click', ()=>{ state={group:null,region:null,level:null,demand:null}; render(); });
+function toggle(key, val){
+  state[key] = state[key]===val ? null : val;
+  if(key==='level' && state.level===null) state.demand=null;
+  render();
+}
+
+// ---------- KPI ----------
+const tip = t => `<button class="info" aria-label="Definición">i<span class="tip" role="tooltip">${t}</span></button>`;
+const tag = (label,c) => `<span class="state" style="--c:${c}">${label}</span>`;
+function renderKPIs(){
+  const g = state.group!==null ? GROUPS[state.group] : null;
+  const over = GROUPS[1].n + GROUPS[2].n;
+  const highCrit = DEMANDS.reduce((a,d)=>a+MATRIX[d][2][0]+MATRIX[d][3][0],0);
+  const lvlPct = state.level ? DEMANDS.reduce((a,d)=>a+MATRIX[d][LEVELS.indexOf(state.level)][0],0) : null;
+  const k = [
+    g ? {model:'K-Means', name:'Grupo seleccionado', val:`${g.n}<small>de 910</small>`, cmp:`${g.name} · ${g.cob} días de cobertura`,
+         st: g.id===0 ? tag('Atención / revisar',C.yellow) : tag('Desfavorable / sobrestock',C.red), tip:'Producto-región asignados a este grupo por K-Means (k = 3, k-means++, n_init = 50).'}
+      : state.region ? {model:'K-Means', name:'Producto-región con sobrestock', val:`≈ ${regionCounts(state.region)[1]+regionCounts(state.region)[2]}<small>de 130</small>`, cmp:`${state.region} · grupos de precio alto y sobrestock severo`, st:tag('Desfavorable / fuera del objetivo',C.red),
+         tip:'Aproximado: proporción de cada grupo que pertenece a la región × tamaño del grupo. Cada región tiene 130 producto-región.'}
+      : {model:'K-Means', name:'Producto-región con sobrestock', val:`${over}<small>de 910</small>`, cmp:`${(over/910*100).toFixed(0)} % están en los grupos de sobrestock`, st:tag('Desfavorable / fuera del objetivo',C.red),
+         tip:'Suma de los grupos "Sobrestock de precio alto" (169) y "Sobrestock severo" (419).'},
+    {model:'K-Means', name:'Dinero detenido', val: g ? `${g.moneyPct.toFixed(1)}<small>%</small>` : `$${(GROUPS.reduce((a,x)=>a+x.money,0)).toFixed(1)}<small>M</small>`,
+     cmp: g ? `$${g.money.toFixed(1)} M del total de $89.6 M` : 'Precio alto concentra el 37 %',
+     st: tag('Referencia (precio de venta)',C.gray), tip:'(Stock promedio − venta promedio) × precio de venta. La base no tiene costo, así que es solo una referencia.'},
+    state.level ? {model:'Red Neuronal', name:`Pronosticados en ${state.level}`, val:`${lvlPct.toFixed(1)}<small>%</small>`, cmp:`del set de prueba · ${LEVEL_RANGE[state.level]} de inventario`,
+         st: tag(state.level, LEVEL_COLOR[state.level]), tip:'Suma de la columna del nivel en la matriz de acción.'}
+      : {model:'Red Neuronal', name:'Pronosticados en Alto o Crítico', val:`${highCrit.toFixed(1)}<small>%</small>`, cmp:'del set de prueba · > 8.8 meses de inventario', st:tag('Desfavorable / requiere acción',C.red),
+         tip:'Suma de las columnas Alto y Crítico de la matriz de acción (partición 70/30).'},
+    {model:'Red Neuronal', name:'Exactitud del pronóstico', val:`${MLP.f1.toFixed(3)}<small>F1</small>`, cmp:`AUC ${MLP.auc} · azar = 0.25`, st:tag('Favorable / dentro del objetivo',C.green),
+     tip:'F1 macro en la partición 70/30. Le da el mismo peso a los cuatro niveles. Cuando falla, solo confunde niveles vecinos (acierto ±1 nivel = 100 %).'},
+    {model:'Red Neuronal', name:'Prueba con meses futuros', val:`${MLP.f1Future.toFixed(3)}<small>F1</small>`, cmp:`Árbol ${MLP.f1Tree} · solo región ${MLP.f1Region}`, st:tag('Favorable / dentro del objetivo',C.green),
+     tip:'Entrenado con los meses pasados y probado con los últimos meses, que el modelo no vio. Es la prueba más realista.'},
+  ];
+  document.getElementById('kpis').innerHTML = k.map(x=>`<div class="kpi"><div class="model">${x.model}</div><div class="name">${x.name}${tip(x.tip)}</div><div class="val">${x.val}</div><div class="cmp">${x.cmp}</div>${x.st}</div>`).join('');
+  const parts = [];
+  if(g) parts.push(`Grupo: <b>${g.name}</b>`);
+  if(state.region) parts.push(`Región: <b>${state.region}</b>`);
+  if(state.level) parts.push(`Nivel: <b>${state.level}</b>`);
+  if(state.demand) parts.push(`Demanda esperada: <b>${state.demand}</b>`);
+  document.getElementById('scope').innerHTML = parts.length ? parts.join(' · ') : '<b>Todos los grupos, regiones y niveles</b> · Resultados del notebook Evidencia 2_6';
+}
+
+// ---------- Grupos ----------
+function renderGroups(){
+  const counts = state.region ? regionCounts(state.region) : null;
+  document.getElementById('groups').innerHTML = GROUPS.map(g=>{
+    const sel = state.group===g.id, dim = state.group!==null && !sel;
+    const num = counts ? `≈ ${counts[g.id]}<small> de 130</small>` : `${g.n}<small> de 910</small>`;
+    return `<button class="group${dim?' dim':''}" style="--c:${g.color}" data-group="${g.id}" aria-pressed="${sel}">
+      <span class="gname">${g.name}</span>
+      <span class="gnum">${num}</span>
+      <dl><dt>Cobertura</dt><dd>${g.cob} d</dd><dt>Cumplim.</dt><dd>${g.cumpl.toFixed(1)} %</dd><dt>$ detenido</dt><dd>${g.moneyPct.toFixed(1)} %</dd></dl>
+      <span class="act"><b>Acción:</b> ${g.action}</span>
+    </button>`;
+  }).join('');
+}
+document.getElementById('groups').addEventListener('click', e=>{ const b=e.target.closest('.group'); if(b) toggle('group', +b.dataset.group); });
+
+// ---------- Matriz ----------
+function renderMatrix(){
+  let h = '<div></div>' + LEVELS.map(l=>`<div class="mh"><i style="--c:${LEVEL_COLOR[l]}"></i>${l}</div>`).join('');
+  DEMANDS.forEach(d=>{
+    h += `<div class="mr">Demanda ${d.toLowerCase()}</div>`;
+    MATRIX[d].forEach(([p,a],i)=>{
+      const l = LEVELS[i], sel = state.level===l && state.demand===d;
+      const dim = (state.level && state.level!==l) || (state.demand && state.demand!==d);
+      h += `<button class="cell${dim?' dim':''}" style="--c:${LEVEL_COLOR[l]};--p:${Math.round(12+p*3)}%" data-level="${l}" data-demand="${d}" aria-pressed="${sel}" aria-label="Demanda ${d}, nivel ${l}: ${p} %, ${a}">
+        <b>${p.toFixed(1)} %</b><span>${a}</span></button>`;
+    });
+  });
+  document.getElementById('matrix').innerHTML = h;
+}
+document.getElementById('matrix').addEventListener('click', e=>{
+  const c = e.target.closest('.cell'); if(!c) return;
+  const same = state.level===c.dataset.level && state.demand===c.dataset.demand;
+  state.level = same?null:c.dataset.level; state.demand = same?null:c.dataset.demand; render();
+});
+
+// ---------- Tabla por región ----------
+function renderRegionTable(){
+  const rows = REGIONS.map(r=>{
+    const m = majority(r), lv = REGION_LEVEL[r];
+    const inGroup = state.group!==null ? `≈ ${regionCounts(r)[state.group]}` : `${m.g.name} (≈ ${m.pct} %)`;
+    const sel = state.region===r;
+    const dim = (state.level && lv.lvl!==state.level) || (state.group!==null && regionCounts(r)[state.group]===0);
+    return `<tr class="hit${sel?' sel':''}${dim&&!sel?' dim':''}" tabindex="0" data-region="${r}">
+      <td>${r}</td><td>${inGroup}</td>
+      <td><span class="lvl" style="--c:${LEVEL_COLOR[lv.lvl]}">${lv.lvl}</span>${lv.note==='Todas'?'':`<span class="det" title="${lv.note}">${lv.note.replace('Bags, Boots, Sneakers','B/B/S')}</span>`}</td></tr>`;
+  }).join('');
+  const head = state.group!==null ? 'En el grupo elegido' : 'Grupo mayoritario';
+  document.getElementById('t-region').innerHTML = `<thead><tr><th>Región</th><th>${head}</th><th>Nivel pronosticado</th></tr></thead><tbody>${rows}</tbody>`;
+}
+document.getElementById('t-region').addEventListener('click', e=>{ const tr=e.target.closest('tr.hit'); if(tr) toggle('region', tr.dataset.region); });
+document.getElementById('t-region').addEventListener('keydown', e=>{ const tr=e.target.closest('tr.hit'); if(tr && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); toggle('region', tr.dataset.region); } });
+
+// ---------- Ejemplos del set de prueba ----------
+function renderExamples(){
+  const rows = EXAMPLES.filter(([,r,,p])=> (!state.region || r===state.region) && (!state.level || p===state.level));
+  const el = document.getElementById('t-examples');
+  if(!rows.length){ el.innerHTML = `<div class="empty">Sin datos para esta selección.<button id="clear-ex">Restablecer filtros</button></div>`;
+    document.getElementById('clear-ex').onclick = ()=>{ state={group:null,region:null,level:null,demand:null}; render(); }; return; }
+  el.innerHTML = `<table><thead><tr><th>Producto</th><th>Región</th><th>Mes t</th><th>Pronóstico</th><th class="num">Confianza</th><th>Real</th></tr></thead><tbody>${
+    rows.map(([p,r,m,pr,cf,re])=>`<tr><td>${p}</td><td>${r}</td><td>${m}</td>
+      <td><span class="lvl" style="--c:${LEVEL_COLOR[pr]}">${pr}</span></td><td class="num">${cf} %</td>
+      <td>${re} ${pr===re?'✓':'✗'}</td></tr>`).join('')}</tbody></table>`;
+}
+
+// ---------- Agente Danu ----------
+const QUESTIONS = {
+  hacer:'¿Qué hago con este grupo?',
+  primero:'¿Dónde actúo primero?',
+  confiable:'¿Qué tan confiable es el pronóstico?',
+  niveles:'¿Qué significa cada nivel?',
+};
+function answer(id){
+  const g = state.group!==null ? GROUPS[state.group] : null;
+  if(id==='hacer'){
+    if(g) return `<b>${g.name}</b> (${g.n} producto-región, ${g.cob} días): <b>${g.action.toLowerCase()}</b>. Concentra el ${g.moneyPct.toFixed(1)} % del dinero detenido.`;
+    if(state.level && state.demand){ const a = MATRIX[state.demand][LEVELS.indexOf(state.level)]; return `Con demanda ${state.demand.toLowerCase()} y nivel <b>${state.level}</b> (${a[0]} % de los casos): <b>${a[1].toLowerCase()}</b>.`; }
+    return 'Elige un grupo arriba. En resumen: venta cruzada en las zonas metropolitanas, descuentos y traspasos para los productos caros, y liquidación en las regiones con menos ventas.';
+  }
+  if(id==='primero'){
+    if(state.region){ const lv=REGION_LEVEL[state.region], m=majority(state.region); return `En <b>${state.region}</b> el modelo pronostica nivel <b>${lv.lvl}</b> (${lv.note==='Todas' ? 'en todas las subcategorías' : lv.note}). Su grupo mayoritario es <b>${m.g.name}</b>: ${m.g.action.toLowerCase()}.`; }
+    return '🔴 <b>Sureste</b>: nivel Crítico en todas las subcategorías. Después, <b>Bags, Boots y Sneakers</b> en Noroeste y Sur. Y el grupo de <b>precio alto</b>, que tiene el 37 % del dinero detenido.';
+  }
+  if(id==='confiable') return `El pronóstico acierta con F1 de <b>${MLP.f1}</b> (AUC ${MLP.auc}) y de <b>${MLP.f1Future}</b> en meses que no vio. Cuando falla, solo confunde niveles vecinos (por ejemplo, Alto por Crítico). Ojo: 2025 se parece mucho a 2024.`;
+  if(id==='niveles') return 'Son los meses de inventario del próximo trimestre: <b>Bajo</b> ≤ 5.4 · <b>Medio</b> 5.4–8.8 · <b>Alto</b> 8.8–12.6 · <b>Crítico</b> > 12.6. Los cortes son cuartiles y coinciden con los centros de un K-Means auxiliar.';
+}
+function renderAgent(){
+  const g = state.group!==null ? GROUPS[state.group] : null;
+  let alerts;
+  if(state.region){
+    const lv = REGION_LEVEL[state.region], m = majority(state.region);
+    alerts = [[LEVEL_COLOR[lv.lvl], `${state.region}: nivel ${lv.lvl} pronosticado`, lv.note==='Todas' ? 'En todas las subcategorías' : lv.note],
+              [m.g.color, `Grupo mayoritario: ${m.g.name}`, `Acción: ${m.g.action}`]];
+  } else if(g){
+    alerts = [[g.color, `${g.name}: ${g.n} producto-región`, `${g.cob} días de cobertura · ${g.who}`],
+              [C.gray, `${g.moneyPct.toFixed(1)} % del dinero detenido`, `Acción: ${g.action}`]];
+  } else {
+    alerts = [[C.red, 'Sureste: Crítico todo el trimestre', 'Más de 12.6 meses de inventario pronosticados'],
+              [C.orange, 'Precio alto: 37 % del dinero detenido', 'Solo 169 producto-región · 67 % Footwear'],
+              [C.red, '15 % con demanda baja y nivel Alto', 'Acción: promoción y frenar compras']];
+  }
+  document.getElementById('alerts').innerHTML = alerts.map(([c,t,d])=>`<div class="alert" style="--c:${c}"><b>${t}</b>${d}</div>`).join('');
+  document.getElementById('qs').innerHTML = Object.entries(QUESTIONS).map(([k,q])=>`<button data-q="${k}">${q}</button>`).join('');
+}
+const chat = document.getElementById('chat');
+function ask(id, text){
+  chat.insertAdjacentHTML('beforeend', `<div class="bubble u">${text}</div><div class="bubble b">${answer(id)}</div>`);
+  chat.scrollTop = chat.scrollHeight;
+}
+document.getElementById('qs').addEventListener('click', e=>{ const b=e.target.closest('button'); if(b) ask(b.dataset.q, QUESTIONS[b.dataset.q]); });
+document.getElementById('ask').addEventListener('submit', e=>{
+  e.preventDefault();
+  const raw = document.getElementById('q').value.trim(), v = raw.toLowerCase(); if(!v) return;
+  const id = /confi|precis|exact|f1/.test(v)?'confiable' : /nivel|signific/.test(v)?'niveles' : /primero|dónde|donde|región|region/.test(v)?'primero' : 'hacer';
+  ask(id, raw.replace(/[<>&]/g,''));
+  document.getElementById('q').value='';
+});
+
+// ---------- Render y ajuste ----------
+function render(){
+  chips(document.getElementById('f-group'), GROUPS.map(g=>[g.name.replace('Sobrestock de precio alto','Precio alto').replace('Sobrestock severo','Sobrestock severo'), g.id]), 'group');
+  chips(document.getElementById('f-region'), REGIONS.map(r=>[r,r]), 'region');
+  chips(document.getElementById('f-level'), LEVELS.map(l=>[l,l]), 'level');
+  renderKPIs(); renderGroups(); renderMatrix(); renderRegionTable(); renderExamples(); renderAgent();
+}
+function fit(){
+  const s = Math.min(window.innerWidth/1440, window.innerHeight/900);
+  document.getElementById('board').style.transform = `scale(${s})`;
+}
+window.addEventListener('resize', fit);
+render(); fit();
+chat.innerHTML = '<div class="bubble b">Hola, soy <b>Danu Inventarios</b>. Elige un grupo, una región o una celda de la matriz y te digo qué acción tomar.</div>';
+</script>
+</body>
+</html>
