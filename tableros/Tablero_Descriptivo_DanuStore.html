@@ -101,6 +101,27 @@ svg text{pointer-events:none}
 .ask button{border:0;background:var(--ink);color:#fff;border-radius:8px;padding:7px 12px;font-size:12px}
 
 footer{display:flex;justify-content:space-between;gap:20px;font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:7px}
+
+/* ===== Tema ejecutivo azul y blanco ===== */
+:root{--navy:#0B2545;--blue:#1F5FBF;--blue2:#4A86E8;--sky:#E8F0FB;--ink:#0F1E33;--bg:#F2F5F9;--line:#DCE3EC;--muted:#5B6B80;--soft:#F4F7FB;
+  --green:#2E8B57;--yellow:#D9A21B;--orange:#E07B39;--red:#C0392B;--gray:#A7B1BE;--teal:#1F5FBF}
+html,body{background:#D5DDE8}
+#board{background:var(--bg);padding:0 24px 12px}
+header{background:var(--navy);margin:0 -24px;padding:14px 24px;color:#fff}
+.brand h1{letter-spacing:-.2px}
+.brand p{color:#B9C8DD}
+.mark{background:#fff;color:var(--navy)}
+.tabs{border-color:rgba(255,255,255,.28)}
+.tabs a{color:#DCE6F3}
+.tabs a:hover{background:rgba(255,255,255,.12)}
+.tabs a[aria-current="page"]{background:#fff;color:var(--navy)}
+.filters,.kpi,.panel{background:#fff;border-color:var(--line)}
+.kpi{border-top:3px solid var(--blue)}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy)}
+th{background:var(--navy)}
+.agent{background:#fff}
+.bubble.u,.ask button{background:var(--navy)}
+.info .tip{background:var(--navy)}
 </style>
 </head>
 <body>
@@ -150,7 +171,7 @@ footer{display:flex;justify-content:space-between;gap:20px;font-size:11px;color:
         <h2>Venta real vs. plan por mes</h2>
         <p class="sub">Índice de temporada (mes promedio = 1.00) · Total DanuStore 2024–2025 · Clic en un mes</p>
         <div class="legend">
-          <span><i class="ln" style="--k:var(--orange)"></i>Venta real</span>
+          <span><i class="ln" style="--k:var(--blue)"></i>Venta real</span>
           <span><i class="ln" style="--k:var(--gray)"></i>Plan (units_expected): ≈ 1.00 todo el año</span>
         </div>
         <svg id="ch-month" role="img" aria-label="Índice mensual de venta real y del plan"></svg>
@@ -304,12 +325,12 @@ function renderMonths(){
   let g='';
   [0.8,0.9,1.0,1.1,1.2,1.3].forEach(v=>{ g+=`<line x1="${l}" x2="${r}" y1="${sy(v)}" y2="${sy(v)}" stroke="#EEE"/><text x="${l-6}" y="${sy(v)+4}" font-size="10" text-anchor="end" fill="#5F6368">${v.toFixed(1)}</text>`; });
   g += `<line x1="${l}" x2="${r}" y1="${sy(1)}" y2="${sy(1)}" stroke="var(--gray)" stroke-width="3" stroke-dasharray="7 4"/>`;
-  g += `<polyline points="${SEASON.map((v,i)=>`${sx(i)},${sy(v)}`).join(' ')}" fill="none" stroke="var(--orange)" stroke-width="3"/>`;
+  g += `<polyline points="${SEASON.map((v,i)=>`${sx(i)},${sy(v)}`).join(' ')}" fill="none" stroke="var(--blue)" stroke-width="3"/>`;
   SEASON.forEach((v,i)=>{
     const sel = state.month===i;
     g += `<g class="hit" tabindex="0" role="button" data-month="${i}" aria-label="${MONTHS_FULL[i]}: índice ${v.toFixed(2)}">
       <rect x="${sx(i)-18}" y="${t}" width="36" height="${b-t+16}" fill="transparent"/>
-      <circle cx="${sx(i)}" cy="${sy(v)}" r="${sel?7:4.5}" fill="var(--orange)" stroke="#fff" stroke-width="2"/>
+      <circle cx="${sx(i)}" cy="${sy(v)}" r="${sel?7:4.5}" fill="var(--blue)" stroke="#fff" stroke-width="2"/>
       <text x="${sx(i)}" y="${H-6}" font-size="11" text-anchor="middle" font-weight="${sel?700:400}">${MONTHS[i]}</text>
       ${(sel||i===1||i===10||i===11)?`<text x="${sx(i)}" y="${sy(v)-11}" font-size="11" font-weight="700" text-anchor="middle">${v.toFixed(2)}</text>`:''}
     </g>`;
@@ -330,7 +351,7 @@ function renderCats(){
     const cx = l + (i+0.5)*(r-l)/CATS.length, dim = state.cat && state.cat!==c.name, sel = state.cat===c.name;
     g += `<g class="hit" tabindex="0" role="button" data-cat="${c.name}" aria-label="Filtrar ${c.name}: ${c.cumpl} %" opacity="${dim?0.3:1}">
       <rect class="bg" x="${cx-60}" y="${t-6}" width="120" height="${b-t+28}" fill="${sel?'#F1F2F3':'transparent'}" rx="6"/>
-      <rect x="${cx-bw/2}" y="${sy(c.cumpl)}" width="${bw}" height="${b-sy(c.cumpl)}" fill="var(--orange)" rx="3"/>
+      <rect x="${cx-bw/2}" y="${sy(c.cumpl)}" width="${bw}" height="${b-sy(c.cumpl)}" fill="var(--blue)" rx="3"/>
       <text x="${cx}" y="${sy(c.cumpl)-6}" font-size="13" font-weight="700" text-anchor="middle">${c.cumpl.toFixed(1)} %</text>
       <text x="${cx}" y="${H-6}" font-size="12" text-anchor="middle" font-weight="${sel?700:400}">${c.name}</text>
     </g>`;

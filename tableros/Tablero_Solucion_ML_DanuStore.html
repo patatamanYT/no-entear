@@ -123,6 +123,49 @@ tbody tr.dim{opacity:.35}
 .ask button{border:0;background:var(--ink);color:#fff;border-radius:8px;padding:7px 12px;font-size:12px}
 
 footer{display:flex;justify-content:space-between;gap:20px;white-space:nowrap;font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:7px}
+
+/* Simulador */
+.simctl{display:grid;grid-template-columns:1fr 1.5fr 1fr auto;gap:8px;align-items:end}
+.simctl label{display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:600;color:var(--muted);min-width:0}
+.simctl select{border:1px solid var(--line);border-radius:7px;padding:5px 6px;font-size:12px;background:#fff;color:var(--ink);min-width:0}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:6px 10px;font-size:12px}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff;font-weight:600}
+.seg button:disabled{color:#AAB4C0;cursor:not-allowed}
+.simbody{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;flex:1;min-height:0;margin-top:8px}
+.bars{display:grid;gap:5px;align-content:center}
+.brow{display:grid;grid-template-columns:52px 1fr 42px;align-items:center;gap:6px;font-size:12px}
+.btrack{height:14px;background:#EEF2F7;border-radius:4px;overflow:hidden}
+.bfill{height:100%;background:var(--c);border-radius:4px}
+.bfill.unk{background:repeating-linear-gradient(45deg,#E3E8EF 0 6px,#F3F6FA 6px 12px)}
+.brow b{text-align:right;font-variant-numeric:tabular-nums}
+.result{border-left:1px solid var(--line);padding-left:12px;display:flex;flex-direction:column;justify-content:center;gap:4px;font-size:12px}
+.result .big{font-size:20px;font-weight:700;display:flex;align-items:center;gap:7px}
+.result .big::before{content:'';width:12px;height:12px;border-radius:50%;background:var(--c)}
+.result .muted{color:var(--muted)}
+.simfoot{font-size:11px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.load{border:1px solid var(--line);border-radius:6px;padding:2px 8px;cursor:pointer;color:var(--navy);font-weight:600;white-space:nowrap;font-size:11px}
+.load:hover{background:var(--soft)}
+/* ===== Tema ejecutivo azul y blanco ===== */
+:root{--navy:#0B2545;--blue:#1F5FBF;--blue2:#4A86E8;--sky:#E8F0FB;--ink:#0F1E33;--bg:#F2F5F9;--line:#DCE3EC;--muted:#5B6B80;--soft:#F4F7FB;
+  --green:#2E8B57;--yellow:#D9A21B;--orange:#E07B39;--red:#C0392B;--gray:#A7B1BE;--teal:#1F5FBF}
+html,body{background:#D5DDE8}
+#board{background:var(--bg);padding:0 24px 12px}
+header{background:var(--navy);margin:0 -24px;padding:14px 24px;color:#fff}
+.brand h1{letter-spacing:-.2px}
+.brand p{color:#B9C8DD}
+.mark{background:#fff;color:var(--navy)}
+.tabs{border-color:rgba(255,255,255,.28)}
+.tabs a{color:#DCE6F3}
+.tabs a:hover{background:rgba(255,255,255,.12)}
+.tabs a[aria-current="page"]{background:#fff;color:var(--navy)}
+.filters,.kpi,.panel{background:#fff;border-color:var(--line)}
+.kpi{border-top:3px solid var(--blue)}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy)}
+th{background:var(--navy)}
+.agent{background:#fff}
+.bubble.u,.ask button{background:var(--navy)}
+.info .tip{background:var(--navy)}
 </style>
 </head>
 <body>
@@ -187,10 +230,22 @@ footer{display:flex;justify-content:space-between;gap:20px;white-space:nowrap;fo
       <div class="scroll"><table id="t-region"></table></div>
     </article>
 
-    <article class="panel">
-      <h2>Pronósticos del set de prueba <span class="tag">Red Neuronal</span></h2>
-      <p class="sub">Ejemplos que el modelo no vio al entrenar · pronóstico vs. nivel real</p>
-      <div class="scroll" id="t-examples"></div>
+    <article class="panel" id="sim">
+      <h2>Pronóstico por producto <label class="load">Cargar predicciones (.json)<input type="file" id="s-file" accept=".json,application/json" hidden></label></h2>
+      <p class="sub" id="sim-mode"></p>
+      <div class="simctl">
+        <label>Región<select id="s-region"></select></label>
+        <label class="wide">Producto<select id="s-prod"></select></label>
+        <label>Mes de consulta<select id="s-date"></select></label>
+        <div class="seg" role="group" aria-label="Horizonte del pronóstico">
+          <button type="button" data-h="3">3 meses</button><button type="button" data-h="6">6 meses</button>
+        </div>
+      </div>
+      <div class="simbody">
+        <div class="bars" id="s-bars"></div>
+        <div class="result" id="s-result"></div>
+      </div>
+      <div class="simfoot"><span id="s-note"></span></div>
     </article>
   </section>
 
@@ -244,24 +299,26 @@ const MATRIX = {
   'Alta':  [[13.8,'Mantener o reabastecer'],[8.7,'Ajustar compras'],[6.8,'Revisar el pronóstico'],[3.8,'Redistribuir y revisar el pronóstico']],
 };
 // Ejemplos aleatorios del set de prueba (B.10.1 del notebook)
+// [producto, región, año, mes, nivel pronosticado, confianza %, nivel real, acción recomendada]
 const EXAMPLES = [
-  ['Pants Product 46','Guadalajara','Jul 2025','Medio',94,'Medio'],
-  ['Belts Product 90','Monterrey','Nov 2024','Bajo',83,'Bajo'],
-  ['Shirts Product 41','Noroeste','Dic 2024','Alto',75,'Alto'],
-  ['Dresses Product 57','Sur','Sep 2025','Alto',73,'Alto'],
-  ['Belts Product 94','Guadalajara','May 2025','Medio',93,'Medio'],
-  ['Outerwear Product 24','Sureste','Jun 2024','Crítico',86,'Alto'],
-  ['Sneakers Product 129','Bajío','Nov 2024','Alto',80,'Alto'],
-  ['Boots Product 113','Guadalajara','Jun 2025','Medio',92,'Medio'],
-  ['Sneakers Product 127','Noroeste','Dic 2024','Crítico',67,'Crítico'],
-  ['Shirts Product 43','Sur','Ene 2025','Alto',70,'Alto'],
+  ['Pants Product 46','Guadalajara',2025,7,'Medio',94,'Medio','Monitorear'],
+  ['Belts Product 90','Monterrey',2024,11,'Bajo',83,'Bajo','Mantener stock mínimo'],
+  ['Shirts Product 41','Noroeste',2024,12,'Alto',75,'Alto','Reducir el próximo pedido'],
+  ['Dresses Product 57','Sur',2025,9,'Alto',73,'Alto','Reducir el próximo pedido'],
+  ['Belts Product 94','Guadalajara',2025,5,'Medio',93,'Medio','Monitorear'],
+  ['Outerwear Product 24','Sureste',2024,6,'Crítico',86,'Alto','Liquidar o transferir'],
+  ['Sneakers Product 129','Bajío',2024,11,'Alto',80,'Alto','Revisar el pronóstico'],
+  ['Boots Product 113','Guadalajara',2025,6,'Medio',92,'Medio','Ajustar compras'],
+  ['Sneakers Product 127','Noroeste',2024,12,'Crítico',67,'Crítico','Redistribuir y revisar el pronóstico'],
+  ['Shirts Product 43','Sur',2025,1,'Alto',70,'Alto','Revisar el pronóstico'],
 ];
+const MES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const MLP = {f1:0.818, auc:0.955, acc:0.816, f1Future:0.837, f1Tree:0.812, f1Region:0.732};
 
 const REGIONS = Object.keys(REGION_SHARE);
 const C = {green:'var(--green)', yellow:'var(--yellow)', red:'var(--red)', gray:'var(--gray)', orange:'var(--orange)'};
 // Producto-región de cada región en cada grupo (aprox.: proporción × tamaño del grupo)
-const regionCounts = r => REGION_SHARE[r].map((p,i)=>Math.round(p*GROUPS[i].n));
+const regionCounts = r => { const raw = REGION_SHARE[r].map((p,i)=>p*GROUPS[i].n), t = raw.reduce((a,b)=>a+b,0); return raw.map(v=>Math.round(v/t*130)); };
 const majority = r => { const c = regionCounts(r), t = c.reduce((a,b)=>a+b,0), i = c.indexOf(Math.max(...c)); return {g:GROUPS[i], pct:Math.round(c[i]/t*100)}; };
 
 // ---------- Estado ----------
@@ -370,20 +427,107 @@ function renderRegionTable(){
   const head = state.group!==null ? 'En el grupo elegido' : 'Grupo mayoritario';
   document.getElementById('t-region').innerHTML = `<thead><tr><th>Región</th><th>${head}</th><th>Nivel pronosticado</th></tr></thead><tbody>${rows}</tbody>`;
 }
-document.getElementById('t-region').addEventListener('click', e=>{ const tr=e.target.closest('tr.hit'); if(tr) toggle('region', tr.dataset.region); });
+document.getElementById('t-region').addEventListener('click', e=>{ const tr=e.target.closest('tr.hit'); if(!tr) return; sim.region = tr.dataset.region; sim.prod = null; sim.date = null; toggle('region', tr.dataset.region); });
 document.getElementById('t-region').addEventListener('keydown', e=>{ const tr=e.target.closest('tr.hit'); if(tr && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); toggle('region', tr.dataset.region); } });
 
-// ---------- Ejemplos del set de prueba ----------
-function renderExamples(){
-  const rows = EXAMPLES.filter(([,r,,p])=> (!state.region || r===state.region) && (!state.level || p===state.level));
-  const el = document.getElementById('t-examples');
-  if(!rows.length){ el.innerHTML = `<div class="empty">Sin datos para esta selección.<button id="clear-ex">Restablecer filtros</button></div>`;
-    document.getElementById('clear-ex').onclick = ()=>{ state={group:null,region:null,level:null,demand:null}; render(); }; return; }
-  el.innerHTML = `<table><thead><tr><th>Producto</th><th>Región</th><th>Mes t</th><th>Pronóstico</th><th class="num">Confianza</th><th>Real</th></tr></thead><tbody>${
-    rows.map(([p,r,m,pr,cf,re])=>`<tr><td>${p}</td><td>${r}</td><td>${m}</td>
-      <td><span class="lvl" style="--c:${LEVEL_COLOR[pr]}">${pr}</span></td><td class="num">${cf} %</td>
-      <td>${re} ${pr===re?'✓':'✗'}</td></tr>`).join('')}</tbody></table>`;
+// ---------- Simulador: pronóstico por producto ----------
+// Modo ejemplo: 10 casos reales del set de prueba (solo se conoce el nivel más probable).
+// Modo modelo: archivo JSON exportado del notebook con las probabilidades de cada nivel.
+let PRED = null;                       // {rows: Map, regions:[], h6:boolean}
+const sim = {region:null, prod:null, date:null, h:3};
+const key = (r,p,y,m) => `${r}|${p}|${y}|${m}`;
+const dateLabel = (y,m) => `${MES[m-1]} ${y}`;
+function horizonLabel(y,m,h){
+  const a = new Date(y, m, 1), b = new Date(y, m+h-1, 1);   // meses t+1 … t+h
+  return `${MES[a.getMonth()]} ${a.getFullYear()} – ${MES[b.getMonth()]} ${b.getFullYear()}`;
 }
+function options(){
+  if(PRED){
+    const regions = PRED.regions;
+    if(!regions.includes(sim.region)) sim.region = regions.includes(state.region) ? state.region : regions[0];
+    const prods = [...new Set(PRED.list.filter(r=>r.region===sim.region).map(r=>r.prod))].sort();
+    if(!prods.includes(sim.prod)) sim.prod = prods[0];
+    const dates = PRED.list.filter(r=>r.region===sim.region && r.prod===sim.prod).map(r=>[r.y,r.m]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+    if(!dates.some(([y,m])=>`${y}-${m}`===sim.date)) sim.date = dates.length ? `${dates[dates.length-1][0]}-${dates[dates.length-1][1]}` : null;
+    return {regions, prods, dates};
+  }
+  const regions = [...new Set(EXAMPLES.map(e=>e[1]))].sort();
+  if(!regions.includes(sim.region)) sim.region = regions.includes(state.region) ? state.region : 'Sureste';
+  const rows = EXAMPLES.filter(e=>e[1]===sim.region);
+  const prods = [...new Set(rows.map(e=>e[0]))];
+  if(!prods.includes(sim.prod)) sim.prod = prods[0];
+  const dates = rows.filter(e=>e[0]===sim.prod).map(e=>[e[2],e[3]]);
+  if(!dates.some(([y,m])=>`${y}-${m}`===sim.date)) sim.date = `${dates[0][0]}-${dates[0][1]}`;
+  sim.h = 3;
+  return {regions, prods, dates};
+}
+function fillSelect(id, items, value, label){
+  document.getElementById(id).innerHTML = items.map(v=>`<option value="${v}"${String(v)===String(value)?' selected':''}>${label?label(v):v}</option>`).join('');
+}
+function renderSim(){
+  const o = options();
+  fillSelect('s-region', o.regions, sim.region);
+  fillSelect('s-prod', o.prods, sim.prod);
+  fillSelect('s-date', o.dates.map(([y,m])=>`${y}-${m}`), sim.date, v=>{ const [y,m]=v.split('-').map(Number); return dateLabel(y,m); });
+  document.querySelectorAll('#sim .seg button').forEach(b=>{
+    const h = +b.dataset.h; b.setAttribute('aria-pressed', String(sim.h===h));
+    b.disabled = !PRED && h===6 || (PRED && h===6 && !PRED.h6);
+  });
+  const [y,m] = (sim.date||'0-0').split('-').map(Number);
+  let probs, real, action, mode;
+  if(PRED){
+    const r = PRED.rows.get(key(sim.region, sim.prod, y, m));
+    probs = sim.h===3 ? r.p3 : r.p6; real = sim.h===3 ? r.real3 : r.real6;
+    const top = probs.indexOf(Math.max(...probs));
+    action = MATRIX[r.dem] ? MATRIX[r.dem][top][1] : '—';
+    mode = `Probabilidades del modelo · ${PRED.list.length.toLocaleString('es-MX')} combinaciones cargadas`;
+  } else {
+    const e = EXAMPLES.find(x=>x[1]===sim.region && x[0]===sim.prod && x[2]===y && x[3]===m);
+    probs = LEVELS.map(l=> l===e[4] ? e[5]/100 : null); real = LEVELS.indexOf(e[6]); action = e[7];
+    mode = 'Modo ejemplo · 10 casos reales del set de prueba (solo se conoce el nivel más probable)';
+  }
+  const top = probs.indexOf(Math.max(...probs.map(v=>v??-1)));
+  document.getElementById('sim-mode').textContent = `${mode} · Pronóstico para ${horizonLabel(y,m,sim.h)}`;
+  document.getElementById('s-bars').innerHTML = LEVELS.map((l,i)=>{
+    const v = probs[i];
+    return `<div class="brow"><span>${l}</span><div class="btrack">${v===null
+      ? `<div class="bfill unk" style="width:100%"></div>`
+      : `<div class="bfill" style="--c:${LEVEL_COLOR[l]};width:${Math.max(v*100,1)}%"></div>`}</div><b>${v===null?'—':Math.round(v*100)+' %'}</b></div>`;
+  }).join('');
+  const lv = LEVELS[top];
+  const realTxt = real===null || real<0 ? 'Nivel real: aún no disponible' : `Nivel real: ${LEVELS[real]} ${real===top?'✓':'✗'}`;
+  document.getElementById('s-result').innerHTML = `<span class="muted">Nivel más probable (${LEVEL_RANGE[lv]})</span>
+    <span class="big" style="--c:${LEVEL_COLOR[lv]}">${lv} · ${Math.round(probs[top]*100)} %</span>
+    <span><b>Acción:</b> ${action}</span>
+    <span class="muted">${realTxt}</span>`;
+  document.getElementById('s-note').textContent = PRED ? (sim.h===6 ? 'Modelo a 6 meses: misma configuración de la red, objetivo t+1 a t+6.' : 'Incluye meses de entrenamiento; desempeño medido en la prueba: F1 0.818.')
+                                                       : 'Carga el archivo del notebook para ver las 4 probabilidades de cualquier producto.';
+}
+document.getElementById('sim').addEventListener('change', e=>{
+  if(e.target.id==='s-region'){ sim.region = e.target.value; sim.prod = null; sim.date = null; }
+  if(e.target.id==='s-prod'){ sim.prod = e.target.value; sim.date = null; }
+  if(e.target.id==='s-date'){ sim.date = e.target.value; }
+  renderSim();
+});
+document.getElementById('sim').addEventListener('click', e=>{
+  const b = e.target.closest('.seg button'); if(!b || b.disabled) return;
+  sim.h = +b.dataset.h; renderSim();
+});
+document.getElementById('s-file').addEventListener('change', async e=>{
+  const f = e.target.files[0]; if(!f) return;
+  try{
+    const j = JSON.parse(await f.text());
+    const c = j.columnas, ix = n => c.indexOf(n);
+    const list = j.filas.map(r=>({region:r[ix('region')], prod:r[ix('producto')], y:r[ix('anio')], m:r[ix('mes')], dem:r[ix('demanda')],
+      p3:[0,1,2,3].map(k=>r[ix('p3_'+k)]/1000), p6:ix('p6_0')>=0 && r[ix('p6_0')]!==null ? [0,1,2,3].map(k=>r[ix('p6_'+k)]/1000) : null,
+      real3:r[ix('real3')], real6:ix('real6')>=0 ? r[ix('real6')] : -1}));
+    PRED = {list, rows:new Map(list.map(r=>[key(r.region,r.prod,r.y,r.m), r])), regions:[...new Set(list.map(r=>r.region))].sort(), h6:list.some(r=>r.p6)};
+    if(!PRED.h6) sim.h = 3;
+    sim.prod = null; sim.date = null; renderSim();
+  }catch(err){
+    document.getElementById('s-note').textContent = 'No se pudo leer el archivo. Usa el JSON que genera la celda de exportación del notebook.';
+  }finally{ e.target.value=''; }
+});
 
 // ---------- Agente Danu ----------
 const QUESTIONS = {
@@ -391,6 +535,7 @@ const QUESTIONS = {
   primero:'¿Dónde actúo primero?',
   confiable:'¿Qué tan confiable es el pronóstico?',
   niveles:'¿Qué significa cada nivel?',
+  producto:'¿Qué pasará con este producto?',
 };
 function answer(id){
   const g = state.group!==null ? GROUPS[state.group] : null;
@@ -404,6 +549,10 @@ function answer(id){
     return '🔴 <b>Sureste</b>: nivel Crítico en todas las subcategorías. Después, <b>Bags, Boots y Sneakers</b> en Noroeste y Sur. Y el grupo de <b>precio alto</b>, que tiene el 37 % del dinero detenido.';
   }
   if(id==='confiable') return `El pronóstico acierta con F1 de <b>${MLP.f1}</b> (AUC ${MLP.auc}) y de <b>${MLP.f1Future}</b> en meses que no vio. Cuando falla, solo confunde niveles vecinos (por ejemplo, Alto por Crítico). Ojo: 2025 se parece mucho a 2024.`;
+  if(id==='producto'){
+    const t = document.querySelector('#s-result .big');
+    return `<b>${sim.prod}</b> en ${sim.region}: lo más probable es nivel <b>${t ? t.textContent : '—'}</b> en ${horizonLabel(...sim.date.split('-').map(Number), sim.h)}. ${document.querySelector('#s-result span:nth-of-type(3)').textContent}.`;
+  }
   if(id==='niveles') return 'Son los meses de inventario del próximo trimestre: <b>Bajo</b> ≤ 5.4 · <b>Medio</b> 5.4–8.8 · <b>Alto</b> 8.8–12.6 · <b>Crítico</b> > 12.6. Los cortes son cuartiles y coinciden con los centros de un K-Means auxiliar.';
 }
 function renderAgent(){
@@ -433,7 +582,7 @@ document.getElementById('qs').addEventListener('click', e=>{ const b=e.target.cl
 document.getElementById('ask').addEventListener('submit', e=>{
   e.preventDefault();
   const raw = document.getElementById('q').value.trim(), v = raw.toLowerCase(); if(!v) return;
-  const id = /confi|precis|exact|f1/.test(v)?'confiable' : /nivel|signific/.test(v)?'niveles' : /primero|dónde|donde|región|region/.test(v)?'primero' : 'hacer';
+  const id = /producto|pasar/.test(v)?'producto' : /confi|precis|exact|f1/.test(v)?'confiable' : /nivel|signific/.test(v)?'niveles' : /primero|dónde|donde|región|region/.test(v)?'primero' : 'hacer';
   ask(id, raw.replace(/[<>&]/g,''));
   document.getElementById('q').value='';
 });
@@ -443,7 +592,7 @@ function render(){
   chips(document.getElementById('f-group'), GROUPS.map(g=>[g.name.replace('Sobrestock de precio alto','Precio alto').replace('Sobrestock severo','Sobrestock severo'), g.id]), 'group');
   chips(document.getElementById('f-region'), REGIONS.map(r=>[r,r]), 'region');
   chips(document.getElementById('f-level'), LEVELS.map(l=>[l,l]), 'level');
-  renderKPIs(); renderGroups(); renderMatrix(); renderRegionTable(); renderExamples(); renderAgent();
+  renderKPIs(); renderGroups(); renderMatrix(); renderRegionTable(); renderSim(); renderAgent();
 }
 function fit(){
   const s = Math.min(window.innerWidth/1440, window.innerHeight/900);
