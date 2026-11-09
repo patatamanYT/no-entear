@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tablero Descriptivo DanuStore</title>
+<style>
+:root{
+  --yellow:#F5C636; --teal:#14B3A0; --orange:#F57442; --gray:#B3B3B3; --ink:#252423;
+  --paper:#FFFFFF; --blue:#094780; --green:#7CB86A; --red:#D64550;
+  --line:#E5E5E5; --muted:#5F6368; --soft:#F5F6F7;
+  --radius:14px; --gap:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#E9EBED;font-family:'Segoe UI',Arial,sans-serif;color:var(--ink)}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* Lienzo 1440 × 900 que se escala para caber en una pantalla */
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#board{width:1440px;height:900px;background:var(--paper);padding:20px 24px 14px;display:grid;
+  grid-template-rows:auto auto auto 1fr auto;gap:12px;transform-origin:center center;box-shadow:0 8px 30px #0000001a}
+
+/* 1. Marca, nombre y corte + 2. navegación */
+header{display:flex;align-items:center;justify-content:space-between;gap:24px}
+.brand{display:flex;align-items:center;gap:16px}
+.mark{width:46px;height:46px;border-radius:12px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:700;font-size:20px}
+.brand h1{font-size:26px;margin:0;line-height:1.1}
+.brand p{margin:3px 0 0;font-size:12px;color:var(--muted)}
+.tabs{display:flex;border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px}
+.tabs button{border:0;background:transparent;border-radius:999px;padding:7px 22px;font-size:13px}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:#fff;font-weight:600}
+.tabs button:disabled{color:#9AA0A6;cursor:default}
+
+/* 3. Filtros */
+.filters{display:flex;align-items:center;gap:12px;min-width:0;border:1px solid var(--line);border-radius:var(--radius);padding:9px 14px;flex-wrap:nowrap}
+.fgroup{display:flex;align-items:center;gap:6px}
+.flabel{font-size:12px;font-weight:700;white-space:nowrap}
+.chips{display:flex;gap:3px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 8px;font-size:12px;white-space:nowrap}
+.chip:hover{background:var(--soft)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+select{border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:12px;background:#fff}
+.reset{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 12px;font-size:12px;white-space:nowrap}
+.scope{font-size:13px;color:var(--muted);margin:0;display:flex;justify-content:space-between}
+.scope b{color:var(--ink)}
+
+/* 4. Resumen (KPI) */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap)}
+.kpi{border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;position:relative}
+.kpi .name{font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.kpi .val{font-size:34px;font-weight:700;margin:4px 0 2px;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .val small{font-size:15px;font-weight:600;margin-left:4px}
+.kpi .cmp{font-size:12px;color:var(--muted)}
+.state{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;margin-top:6px}
+.state::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--c)}
+.state{background:color-mix(in srgb,var(--c) 18%,#fff)}
+.info{border:1px solid var(--line);background:#fff;width:20px;height:20px;border-radius:50%;font-size:11px;font-weight:700;color:var(--muted);padding:0;position:relative}
+.info .tip{display:none;position:absolute;right:0;top:24px;width:250px;background:var(--ink);color:#fff;font-weight:400;font-size:11.5px;line-height:1.45;text-align:left;padding:10px 12px;border-radius:8px;z-index:5}
+.info:hover .tip,.info:focus .tip{display:block}
+
+/* Comparaciones y detalle */
+.main{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) 320px;gap:var(--gap);min-height:0}
+.col{display:grid;gap:var(--gap);min-height:0}
+.col2{grid-template-rows:1fr 1fr}
+.panel{border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;min-height:0;display:flex;flex-direction:column}
+.panel h2{font-size:18px;margin:0}
+.panel .sub{font-size:12px;color:var(--muted);margin:3px 0 8px}
+.legend{display:flex;gap:14px;font-size:12px;margin-bottom:4px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;background:var(--k);display:inline-block}
+.legend i.ln{height:3px;border-radius:2px}
+svg{display:block;width:100%;flex:1;min-height:0}
+#ch-region{margin-top:4px}
+svg text{font-family:'Segoe UI',Arial,sans-serif;fill:var(--ink)}
+svg text{pointer-events:none}
+.hit{cursor:pointer}
+.hit:hover .bg{fill:var(--soft)}
+.note{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* Agente */
+.agent{background:#FBFBFC}
+.agent-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-weight:700}
+.agent-head h2{font-size:18px}
+.agent-head p{margin:0;font-size:11px;color:var(--muted)}
+.alerts{display:grid;gap:6px;margin-bottom:10px}
+.alert{border:1px solid var(--line);border-left:4px solid var(--c);background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.4}
+.alert b{display:block;font-size:12px}
+.qs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.qs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 10px;font-size:11.5px}
+.qs button:hover{background:var(--soft)}
+.chat{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:6px;padding-right:2px}
+.bubble{font-size:12.5px;line-height:1.45;padding:8px 11px;border-radius:12px;max-width:92%}
+.bubble.u{align-self:flex-end;background:var(--ink);color:#fff;border-bottom-right-radius:4px}
+.bubble.b{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+.ask{display:flex;gap:6px;margin-top:8px}
+.ask input{flex:1;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12px;background:#fff}
+.ask button{border:0;background:var(--ink);color:#fff;border-radius:8px;padding:7px 12px;font-size:12px}
+
+footer{display:flex;justify-content:space-between;gap:20px;font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:7px}
+</style>
+</head>
+<body>
+<div id="stage">
+<main id="board" aria-label="Tablero descriptivo de inventario DanuStore">
+
+  <header>
+    <div class="brand">
+      <div class="mark" aria-hidden="true">D</div>
+      <div>
+        <h1>Inventario DanuStore · ¿Dónde está el sobreinventario?</h1>
+        <p>Tablero descriptivo · Datos mensuales ene 2024 – dic 2025 · Equipo 6 – Nexxus Consulting</p>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Tableros">
+      <button aria-pressed="true">Descriptivo</button>
+      <button aria-pressed="false" disabled title="Tablero 2 (en diseño)">Solución de ML</button>
+    </nav>
+  </header>
+
+  <section class="filters" aria-label="Filtros">
+    <div class="fgroup"><span class="flabel">Región:</span><div class="chips" id="f-region"></div></div>
+    <div class="fgroup"><span class="flabel">Categoría:</span><div class="chips" id="f-cat"></div></div>
+    <div class="fgroup"><label class="flabel" for="f-month">Mes:</label><select id="f-month"></select></div>
+    <button class="reset" id="reset">⟲ Restablecer</button>
+  </section>
+
+  <p class="scope"><span id="scope"></span><span>Vendido vs. esperado (plan de DanuStore, <code>units_expected</code>)</span></p>
+
+  <section class="kpis" id="kpis" aria-label="Indicadores principales"></section>
+
+  <section class="main">
+    <div class="col">
+      <article class="panel">
+        <h2>Cobertura de inventario por región</h2>
+        <p class="sub">Días que tarda en venderse el stock al ritmo real · Clic en una región para filtrar</p>
+        <div class="legend">
+          <span><i style="--k:var(--green)"></i>Saludable (&lt; 90 días)</span>
+          <span><i style="--k:var(--yellow)"></i>Baja rotación (90–180)</span>
+          <span><i style="--k:var(--red)"></i>Sobrestock (&gt; 180)</span>
+        </div>
+        <svg id="ch-region" role="img" aria-label="Cobertura y cumplimiento por región"></svg>
+      </article>
+    </div>
+    <div class="col col2">
+      <article class="panel">
+        <h2>La venta cambia por mes, el plan no</h2>
+        <p class="sub">Índice de temporada (mes promedio = 1.00) · Total DanuStore 2024–2025 · Clic en un mes</p>
+        <div class="legend">
+          <span><i class="ln" style="--k:var(--orange)"></i>Venta real</span>
+          <span><i class="ln" style="--k:var(--gray)"></i>Plan (units_expected): ≈ 1.00 todo el año</span>
+        </div>
+        <svg id="ch-month" role="img" aria-label="Índice mensual de venta real y del plan"></svg>
+      </article>
+      <article class="panel">
+        <h2>Cumplimiento del plan por categoría</h2>
+        <p class="sub">% de las unidades esperadas que realmente se vendió · Clic en una categoría</p>
+        <svg id="ch-cat" role="img" aria-label="Cumplimiento por categoría"></svg>
+      </article>
+    </div>
+    <aside class="panel agent" aria-label="Agente Danu Inventarios">
+      <div class="agent-head">
+        <div class="avatar" aria-hidden="true">D</div>
+        <div><h2>Danu Inventarios</h2><p>Asistente interno · responde con los datos del tablero</p></div>
+      </div>
+      <div class="alerts" id="alerts"></div>
+      <div class="qs" id="qs"></div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <form class="ask" id="ask">
+        <input id="q" placeholder="Pregunta a Danu (diseño: usa las sugerencias)" aria-label="Pregunta para Danu">
+        <button>Enviar</button>
+      </form>
+    </aside>
+  </section>
+
+  <footer>
+    <span><b>Fuente:</b> base mensual DanuStore (21,840 registros producto × región × mes, solo clientes registrados). Cobertura = mediana mensual de stock ÷ venta diaria real.</span>
+    <span>Diseño del tablero 1 · Los cruces región × categoría y región × mes se conectan en la versión final.</span>
+  </footer>
+</main>
+</div>
+
+<script>
+'use strict';
+// ---------- Datos (base mensual 2024–2025) ----------
+const TOTAL = {name:'DanuStore', sold:4532817, exp:26699265, cumpl:17.0, ratio:5.9, cob:208, cobPlan:34, wape:489, rot:1.8, y24:2263105, y25:2269712};
+const REGIONS = [
+  {name:'CDMX',        sold:1613905, exp:4816879, share:35.6, cumpl:33.5, ratio:3.0,  cob:113},
+  {name:'Monterrey',   sold:1005706, exp:4444635, share:22.2, cumpl:22.6, ratio:4.4,  cob:165},
+  {name:'Guadalajara', sold:719212,  exp:4094143, share:15.9, cumpl:17.6, ratio:5.7,  cob:205},
+  {name:'Bajío',       sold:428871,  exp:3739537, share:9.5,  cumpl:11.5, ratio:8.7,  cob:301},
+  {name:'Noroeste',    sold:300129,  exp:3390806, share:6.6,  cumpl:8.9,  ratio:11.3, cob:374},
+  {name:'Sur',         sold:252017,  exp:3017374, share:5.6,  cumpl:8.4,  ratio:12.0, cob:382},
+  {name:'Sureste',     sold:212977,  exp:3195891, share:4.7,  cumpl:6.7,  ratio:15.0, cob:478},
+];
+const CATS = [
+  {name:'Casual Wear',  sold:1301064, exp:7243201, share:28.7, cumpl:18.0, ratio:5.6, cob:197},
+  {name:'Footwear',     sold:1194283, exp:7762632, share:26.3, cumpl:15.4, ratio:6.5, cob:230},
+  {name:'Fitness Wear', sold:1132457, exp:6306122, share:25.0, cumpl:18.0, ratio:5.6, cob:197},
+  {name:'Accessories',  sold:905013,  exp:5387310, share:20.0, cumpl:16.8, ratio:6.0, cob:209},
+];
+const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const SEASON = [0.94,0.85,0.97,0.91,0.94,1.01,1.04,1.06,0.90,0.94,1.22,1.22];
+
+const C = {green:'var(--green)', yellow:'var(--yellow)', red:'var(--red)', gray:'var(--gray)'};
+const fmt = n => n.toLocaleString('es-MX');
+const fmtM = n => (n/1e6).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})+' M';
+const covState = d => d < 90 ? ['Saludable',C.green] : d <= 180 ? ['Baja rotación',C.yellow] : ['Sobrestock',C.red];
+
+// ---------- Estado de filtros ----------
+let state = {region:null, cat:null, month:null};
+const current = () => state.region ? REGIONS.find(r=>r.name===state.region)
+                   : state.cat ? CATS.find(c=>c.name===state.cat) : null;
+
+// ---------- Filtros ----------
+function chips(el, items, key){
+  el.innerHTML = ['Todas',...items].map(n=>{
+    const val = n==='Todas'?null:n;
+    return `<button class="chip" data-key="${key}" data-val="${n}" aria-pressed="${state[key]===val}">${n}</button>`;
+  }).join('');
+}
+const selMonth = document.getElementById('f-month');
+selMonth.innerHTML = '<option value="">Todos</option>' + MONTHS_FULL.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+document.querySelector('.filters').addEventListener('click', e=>{
+  const b = e.target.closest('.chip'); if(!b) return;
+  const val = b.dataset.val==='Todas' ? null : b.dataset.val;
+  setFilter(b.dataset.key, val);
+});
+selMonth.addEventListener('change', ()=>{ state.month = selMonth.value===''?null:+selMonth.value; render(); });
+document.getElementById('reset').addEventListener('click', ()=>{ state={region:null,cat:null,month:null}; render(); });
+
+function setFilter(key, val){
+  // Región y categoría se ven por separado: elegir una limpia la otra
+  if(key==='region'){ state.region = state.region===val?null:val; if(state.region) state.cat=null; }
+  if(key==='cat'){ state.cat = state.cat===val?null:val; if(state.cat) state.region=null; }
+  render();
+}
+
+// ---------- KPI ----------
+function tip(t){ return `<button class="info" aria-label="Definición">i<span class="tip" role="tooltip">${t}</span></button>`; }
+function stateTag(label,c){ return `<span class="state" style="--c:${c}">${label}</span>`; }
+function renderKPIs(){
+  const s = current(), d = s || TOTAL;
+  const [cl,cc] = covState(d.cob);
+  const cumplState = d.cumpl < 20 ? ['Desfavorable / fuera del objetivo',C.red] : ['Atención / revisar',C.yellow];
+  const vs = s ? `vs. ${TOTAL.cumpl.toFixed(1)} % total DanuStore` : 'Se vende 1 de cada 6 piezas planeadas';
+  const k = [
+    {name:'Cumplimiento del plan', val:`${d.cumpl.toFixed(1)}<small>%</small>`, cmp:vs, st:stateTag(...cumplState),
+     tip:'Unidades vendidas ÷ unidades esperadas (units_expected) × 100. Periodo: ene 2024 – dic 2025.'},
+    {name:'Plan vs. venta real', val:`${d.ratio.toFixed(1)}<small>× lo vendido</small>`, cmp:`Esperado ${fmtM(d.exp)} · vendido ${fmtM(d.sold)}`, st:stateTag('Desfavorable / sobrepronóstico',C.red),
+     tip:'Unidades esperadas ÷ unidades vendidas. Un valor de 1.0× significaría que el plan acierta.'},
+    {name:'Cobertura real de inventario', val:`${fmt(d.cob)}<small>días</small>`, cmp: s ? `Total: ${TOTAL.cob} días · sano: 60–90` : `Planeada: ${TOTAL.cobPlan} días · sano: 60–90`, st:stateTag(cl,cc),
+     tip:'Stock ÷ (venta real del mes ÷ días del mes); mediana mensual. Rangos del equipo: <90 saludable, 90–180 baja rotación, >180 sobrestock.'},
+    {name:'Unidades vendidas', val:`${fmtM(d.sold)}`, cmp: s ? `${(s.share).toFixed(1)} % de la venta total` : `2025: ${fmtM(TOTAL.y25)} · 2024: ${fmtM(TOTAL.y24)} (+0.3 %)`, st:stateTag(s?'Participación':'Venta estable',C.gray),
+     tip:'Suma de units_sold, 2024 + 2025. Solo ventas de clientes registrados.'},
+    s ? {name:'Error del plan (WAPE)', val:'Sin dato', cmp:'Disponible para el total; por segmento en la versión final', st:stateTag('Sin dato / no aplica',C.gray),
+         tip:'Σ|real − esperado| ÷ Σ real. Calculado para el total de DanuStore.'}
+      : {name:'Error del plan (WAPE)', val:`${TOTAL.wape}<small>%</small>`, cmp:`Rotación ${TOTAL.rot} vueltas/año (industria: 4–6)`, st:stateTag('Desfavorable / fuera del objetivo',C.red),
+         tip:'Σ|real − esperado| ÷ Σ real. Mientras más bajo, mejor: 0 % sería un plan perfecto.'},
+  ];
+  document.getElementById('kpis').innerHTML = k.map(x=>`<div class="kpi"><div class="name">${x.name}${tip(x.tip)}</div><div class="val">${x.val}</div><div class="cmp">${x.cmp}</div>${x.st}</div>`).join('');
+  const what = state.region ? `Región: <b>${state.region}</b>` : state.cat ? `Categoría: <b>${state.cat}</b>` : '<b>Todas las regiones y categorías</b>';
+  const mon = state.month!==null ? ` · Mes resaltado: <b>${MONTHS_FULL[state.month]}</b>` : '';
+  document.getElementById('scope').innerHTML = `${what} · Ene 2024 – dic 2025 (acumulado)${mon}`;
+}
+
+// ---------- Gráfica: regiones ----------
+function renderRegions(){
+  const svg = document.getElementById('ch-region'), W=600, H=430;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('preserveAspectRatio','xMidYMin meet');
+  const x0=104, x1=395, max=500, top=30, rowH=(H-top-28)/REGIONS.length;
+  const sx = v => x0 + (v/max)*(x1-x0);
+  let g = `<text x="${x1+92}" y="18" font-size="12" font-weight="700" text-anchor="middle">Cumplim.</text>
+           <text x="${x1+165}" y="18" font-size="12" font-weight="700" text-anchor="middle">% venta</text>`;
+  [0,90,180,300,400,500].forEach(v=>{
+    g += `<line x1="${sx(v)}" x2="${sx(v)}" y1="${top-6}" y2="${H-26}" stroke="${v===90||v===180?'#C9CCCF':'#EEE'}" ${v===90||v===180?'stroke-dasharray="4 4"':''}/>
+          <text x="${sx(v)}" y="${H-10}" font-size="11" text-anchor="middle" fill="#5F6368">${v}</text>`;
+  });
+  REGIONS.forEach((r,i)=>{
+    const y = top + i*rowH, bh = rowH*0.56, [lab,col] = covState(r.cob);
+    const dim = state.region && state.region!==r.name, sel = state.region===r.name;
+    g += `<g class="hit" tabindex="0" role="button" aria-label="Filtrar ${r.name}: ${r.cob} días, ${lab}" data-region="${r.name}" opacity="${dim?0.3:1}">
+      <rect class="bg" x="0" y="${y}" width="${W}" height="${rowH}" fill="${sel?'#F1F2F3':'transparent'}" rx="6"/>
+      <text x="${x0-10}" y="${y+rowH/2+5}" font-size="14" text-anchor="end" font-weight="${sel?700:400}">${r.name}</text>
+      <rect x="${x0}" y="${y+(rowH-bh)/2}" width="${sx(r.cob)-x0}" height="${bh}" fill="${col}" rx="3"/>
+      <text x="${sx(r.cob)+6}" y="${y+rowH/2+5}" font-size="13" font-weight="700">${r.cob} d</text>
+      <text x="${x1+92}" y="${y+rowH/2+5}" font-size="13" text-anchor="middle">${r.cumpl.toFixed(1)} %</text>
+      <text x="${x1+165}" y="${y+rowH/2+5}" font-size="13" text-anchor="middle">${r.share.toFixed(1)} %</text>
+    </g>`;
+  });
+    svg.innerHTML = g;
+}
+
+// ---------- Gráfica: temporada ----------
+function renderMonths(){
+  const svg = document.getElementById('ch-month'), W=520, H=170;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('preserveAspectRatio','xMidYMin meet');
+  const l=34, r=W-12, t=10, b=H-22, lo=0.8, hi=1.3;
+  const sx = i => l + i*(r-l)/11, sy = v => b - (v-lo)/(hi-lo)*(b-t);
+  let g='';
+  [0.8,0.9,1.0,1.1,1.2,1.3].forEach(v=>{ g+=`<line x1="${l}" x2="${r}" y1="${sy(v)}" y2="${sy(v)}" stroke="#EEE"/><text x="${l-6}" y="${sy(v)+4}" font-size="10" text-anchor="end" fill="#5F6368">${v.toFixed(1)}</text>`; });
+  g += `<line x1="${l}" x2="${r}" y1="${sy(1)}" y2="${sy(1)}" stroke="var(--gray)" stroke-width="3" stroke-dasharray="7 4"/>`;
+  g += `<polyline points="${SEASON.map((v,i)=>`${sx(i)},${sy(v)}`).join(' ')}" fill="none" stroke="var(--orange)" stroke-width="3"/>`;
+  SEASON.forEach((v,i)=>{
+    const sel = state.month===i;
+    g += `<g class="hit" tabindex="0" role="button" data-month="${i}" aria-label="${MONTHS_FULL[i]}: índice ${v.toFixed(2)}">
+      <rect x="${sx(i)-18}" y="${t}" width="36" height="${b-t+16}" fill="transparent"/>
+      <circle cx="${sx(i)}" cy="${sy(v)}" r="${sel?7:4.5}" fill="var(--orange)" stroke="#fff" stroke-width="2"/>
+      <text x="${sx(i)}" y="${H-6}" font-size="11" text-anchor="middle" font-weight="${sel?700:400}">${MONTHS[i]}</text>
+      ${(sel||i===1||i===10||i===11)?`<text x="${sx(i)}" y="${sy(v)-11}" font-size="11" font-weight="700" text-anchor="middle">${v.toFixed(2)}</text>`:''}
+    </g>`;
+  });
+    svg.innerHTML = g;
+}
+
+// ---------- Gráfica: categorías ----------
+function renderCats(){
+  const svg = document.getElementById('ch-cat'), W=520, H=170;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('preserveAspectRatio','xMidYMin meet');
+  const l=40, r=W-10, t=14, b=H-22, max=40, bw=58;
+  const sy = v => b - v/max*(b-t);
+  let g='';
+  [0,10,20,30,40].forEach(v=>{ g+=`<line x1="${l}" x2="${r}" y1="${sy(v)}" y2="${sy(v)}" stroke="#EEE"/><text x="${l-6}" y="${sy(v)+4}" font-size="10" text-anchor="end" fill="#5F6368">${v} %</text>`; });
+  g += `<line x1="${l}" x2="${r}" y1="${sy(TOTAL.cumpl)}" y2="${sy(TOTAL.cumpl)}" stroke="var(--ink)" stroke-dasharray="4 3"/><text x="${r}" y="${t-2}" font-size="11" text-anchor="end">- - - Total DanuStore ${TOTAL.cumpl.toFixed(1)} %</text>`;
+  CATS.forEach((c,i)=>{
+    const cx = l + (i+0.5)*(r-l)/CATS.length, dim = state.cat && state.cat!==c.name, sel = state.cat===c.name;
+    g += `<g class="hit" tabindex="0" role="button" data-cat="${c.name}" aria-label="Filtrar ${c.name}: ${c.cumpl} %" opacity="${dim?0.3:1}">
+      <rect class="bg" x="${cx-60}" y="${t-6}" width="120" height="${b-t+28}" fill="${sel?'#F1F2F3':'transparent'}" rx="6"/>
+      <rect x="${cx-bw/2}" y="${sy(c.cumpl)}" width="${bw}" height="${b-sy(c.cumpl)}" fill="var(--orange)" rx="3"/>
+      <text x="${cx}" y="${sy(c.cumpl)-6}" font-size="13" font-weight="700" text-anchor="middle">${c.cumpl.toFixed(1)} %</text>
+      <text x="${cx}" y="${H-6}" font-size="12" text-anchor="middle" font-weight="${sel?700:400}">${c.name}</text>
+    </g>`;
+  });
+  svg.innerHTML = g;
+}
+
+// Interactividad entre gráficas: clic en una barra o punto filtra el tablero
+document.querySelector('.main').addEventListener('click', e=>{
+  const h = e.target.closest('.hit'); if(!h) return;
+  if(h.dataset.region) setFilter('region', h.dataset.region);
+  if(h.dataset.cat) setFilter('cat', h.dataset.cat);
+  if(h.dataset.month){ const m=+h.dataset.month; state.month = state.month===m?null:m; render(); }
+});
+document.querySelector('.main').addEventListener('keydown', e=>{
+  if((e.key==='Enter'||e.key===' ') && e.target.classList.contains('hit')){ e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click',{bubbles:true})); }
+});
+
+// ---------- Agente Danu ----------
+const QUESTIONS = {
+  sobra:'¿Dónde sobra más inventario?',
+  mover:'¿A dónde muevo el inventario?',
+  mes:'¿Qué mes vende más?',
+  plan:'¿Qué tan bueno es el plan actual?'
+};
+function answer(id){
+  const s = current();
+  if(id==='sobra'){
+    if(state.region){ const r=s, [lab]=covState(r.cob); return `🔴 <b>${r.name}</b> tiene <b>${r.cob} días</b> de cobertura (${lab.toLowerCase()}) y vende solo el <b>${r.cumpl.toFixed(1)} %</b> de lo esperado. Lo sano es 60–90 días.`; }
+    if(state.cat){ return `En <b>${s.name}</b> el inventario dura <b>${s.cob} días</b> y se vende el <b>${s.cumpl.toFixed(1)} %</b> de lo esperado. Para ver dónde sobra más, elige una región.`; }
+    return `🔴 <b>Sureste</b> (478 días), <b>Sur</b> (382) y <b>Noroeste</b> (374). Ninguna región llega a 90 días; CDMX es la mejor con 113.`;
+  }
+  if(id==='mover'){
+    const src = state.region && !['CDMX','Monterrey'].includes(state.region) ? state.region : 'Sureste, Sur y Noroeste';
+    return `Propuesta: trasladar de <b>${src}</b> hacia <b>CDMX</b> (113 días) y <b>Monterrey</b> (165), que son las que más rápido venden. La decisión la aprueba el gerente regional.`;
+  }
+  if(id==='mes'){
+    const m = state.month;
+    if(m!==null){ const v=SEASON[m]; return `<b>${MONTHS_FULL[m]}</b> vende ${v>=1?'+':''}${Math.round((v-1)*100)} % frente a un mes promedio (índice ${v.toFixed(2)}). El plan lo trata igual que cualquier otro mes.`; }
+    return `<b>Noviembre y diciembre</b> venden <b>22 % más</b> que un mes promedio y <b>febrero 15 % menos</b>. El plan es casi igual todos los meses.`;
+  }
+  if(id==='plan'){
+    const d = s || TOTAL;
+    return `El plan espera <b>${d.ratio.toFixed(1)} veces</b> lo que se vende${s?` en ${s.name}`:''}: se cumple el <b>${d.cumpl.toFixed(1)} %</b>.${s?'':` Su error (WAPE) es de <b>${TOTAL.wape} %</b>.`} El modelo del Tablero 2 lo corrige.`;
+  }
+}
+function renderAgent(){
+  const s = current();
+  const alerts = state.region ? [
+      [covState(s.cob)[1], `${s.name}: ${s.cob} días de cobertura`, `${covState(s.cob)[0]} · referencia sana 60–90 días`],
+      [C.red, `Plan ${s.ratio.toFixed(1)}× arriba de la venta`, `Se cumple el ${s.cumpl.toFixed(1)} % de lo esperado`],
+    ] : state.cat ? [
+      [covState(s.cob)[1], `${s.name}: ${s.cob} días de cobertura`, `Participación de ${s.share.toFixed(1)} % en la venta`],
+      [C.red, `Cumplimiento de ${s.cumpl.toFixed(1)} %`, `El plan espera ${s.ratio.toFixed(1)}× lo vendido`],
+    ] : [
+      [C.red, 'Sureste: 478 días de cobertura', 'Vende 6.7 % de lo esperado · revisar compras'],
+      [C.yellow, 'Nov–dic: +22 % de venta', 'El plan no anticipa la temporada'],
+      [C.green, 'CDMX: la región que mejor rota', '113 días · destino sugerido de traslados'],
+    ];
+  document.getElementById('alerts').innerHTML = alerts.map(([c,t,d])=>`<div class="alert" style="--c:${c}"><b>${t}</b>${d}</div>`).join('');
+  document.getElementById('qs').innerHTML = Object.entries(QUESTIONS).map(([k,q])=>`<button data-q="${k}">${q}</button>`).join('');
+}
+const chat = document.getElementById('chat');
+function ask(id, text){
+  chat.insertAdjacentHTML('beforeend', `<div class="bubble u">${text}</div><div class="bubble b">${answer(id)}</div>`);
+  chat.scrollTop = chat.scrollHeight;
+}
+document.getElementById('qs').addEventListener('click', e=>{ const b=e.target.closest('button'); if(b) ask(b.dataset.q, QUESTIONS[b.dataset.q]); });
+document.getElementById('ask').addEventListener('submit', e=>{
+  e.preventDefault();
+  const v = document.getElementById('q').value.trim().toLowerCase(); if(!v) return;
+  const id = /mov|trasl|redistr/.test(v)?'mover' : /mes|tempor|nov|dic/.test(v)?'mes' : /plan|pron|error/.test(v)?'plan' : 'sobra';
+  ask(id, document.getElementById('q').value.trim().replace(/[<>&]/g,''));
+  document.getElementById('q').value='';
+});
+
+// ---------- Render y ajuste a pantalla ----------
+function render(){
+  chips(document.getElementById('f-region'), REGIONS.map(r=>r.name), 'region');
+  chips(document.getElementById('f-cat'), CATS.map(c=>c.name), 'cat');
+  selMonth.value = state.month===null ? '' : String(state.month);
+  renderKPIs(); renderRegions(); renderMonths(); renderCats(); renderAgent();
+}
+function fit(){
+  const s = Math.min(window.innerWidth/1440, window.innerHeight/900);
+  document.getElementById('board').style.transform = `scale(${s})`;
+}
+window.addEventListener('resize', fit);
+render(); fit();
+chat.innerHTML = '<div class="bubble b">Hola, soy <b>Danu Inventarios</b>. Elige una región o categoría y pregúntame dónde sobra inventario o a dónde moverlo.</div>';
+</script>
+</body>
+</html>
