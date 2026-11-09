@@ -91,7 +91,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:24px}
 /* Tablas */
 table{border-collapse:collapse;width:100%;font-size:12px}
 th{text-align:left;background:var(--ink);color:#fff;font-weight:600;padding:6px 8px;font-size:11.5px}
-td{padding:3px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:2px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
 td.num{text-align:right;font-variant-numeric:tabular-nums}
 tbody tr.hit{cursor:pointer}
 tbody tr.hit:hover{background:var(--soft)}
@@ -295,16 +295,16 @@ function renderKPIs(){
   const k = [
     g ? {model:'K-Means', name:'Grupo seleccionado', val:`${g.n}<small>de 910</small>`, cmp:`${g.name} · ${g.cob} días de cobertura`,
          st: g.id===0 ? tag('Atención / revisar',C.yellow) : tag('Desfavorable / sobrestock',C.red), tip:'Producto-región asignados a este grupo por K-Means (k = 3, k-means++, n_init = 50).'}
-      : state.region ? {model:'K-Means', name:'Producto-región con sobrestock', val:`≈ ${regionCounts(state.region)[1]+regionCounts(state.region)[2]}<small>de 130</small>`, cmp:`${state.region} · grupos de precio alto y sobrestock severo`, st:tag('Desfavorable / fuera del objetivo',C.red),
+      : state.region ? {model:'K-Means', name:'Producto-región con sobrestock', val:`≈ ${regionCounts(state.region)[1]+regionCounts(state.region)[2]}<small>de 130</small>`, cmp:`${state.region} · precio alto + severo`, st:tag('Desfavorable / fuera del objetivo',C.red),
          tip:'Aproximado: proporción de cada grupo que pertenece a la región × tamaño del grupo. Cada región tiene 130 producto-región.'}
       : {model:'K-Means', name:'Producto-región con sobrestock', val:`${over}<small>de 910</small>`, cmp:`${(over/910*100).toFixed(0)} % están en los grupos de sobrestock`, st:tag('Desfavorable / fuera del objetivo',C.red),
          tip:'Suma de los grupos "Sobrestock de precio alto" (169) y "Sobrestock severo" (419).'},
     {model:'K-Means', name:'Dinero detenido', val: g ? `${g.moneyPct.toFixed(1)}<small>%</small>` : `$${(GROUPS.reduce((a,x)=>a+x.money,0)).toFixed(1)}<small>M</small>`,
      cmp: g ? `$${g.money.toFixed(1)} M del total de $89.6 M` : 'Precio alto concentra el 37 %',
      st: tag('Referencia (precio de venta)',C.gray), tip:'(Stock promedio − venta promedio) × precio de venta. La base no tiene costo, así que es solo una referencia.'},
-    state.level ? {model:'Red Neuronal', name:`Pronosticados en ${state.level}`, val:`${lvlPct.toFixed(1)}<small>%</small>`, cmp:`del set de prueba · ${LEVEL_RANGE[state.level]} de inventario`,
+    state.level ? {model:'Red Neuronal', name:`Pronosticados en ${state.level}`, val:`${lvlPct.toFixed(1)}<small>%</small>`, cmp:`del set de prueba · ${LEVEL_RANGE[state.level]}`,
          st: tag(state.level, LEVEL_COLOR[state.level]), tip:'Suma de la columna del nivel en la matriz de acción.'}
-      : {model:'Red Neuronal', name:'Pronosticados en Alto o Crítico', val:`${highCrit.toFixed(1)}<small>%</small>`, cmp:'del set de prueba · > 8.8 meses de inventario', st:tag('Desfavorable / requiere acción',C.red),
+      : {model:'Red Neuronal', name:'Pronosticados en Alto o Crítico', val:`${highCrit.toFixed(1)}<small>%</small>`, cmp:'del set de prueba · > 8.8 meses', st:tag('Desfavorable / requiere acción',C.red),
          tip:'Suma de las columnas Alto y Crítico de la matriz de acción (partición 70/30).'},
     {model:'Red Neuronal', name:'Exactitud del pronóstico', val:`${MLP.f1.toFixed(3)}<small>F1</small>`, cmp:`AUC ${MLP.auc} · azar = 0.25`, st:tag('Favorable / dentro del objetivo',C.green),
      tip:'F1 macro en la partición 70/30. Le da el mismo peso a los cuatro niveles. Cuando falla, solo confunde niveles vecinos (acierto ±1 nivel = 100 %).'},
