@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Ventas real vs PCP (dummy)</title>
+<style>
+body{margin:0;background:#F2F5F9;font-family:'Segoe UI',Arial,sans-serif;color:#0F1E33;padding:24px}
+.card{width:1040px;background:#fff;border:1px solid #DCE3EC;border-radius:16px;padding:18px 22px 14px;box-shadow:0 6px 24px #0b254514}
+h1{margin:0;font-size:22px;color:#0B2545}
+.sub{margin:2px 0 8px;font-size:13px;color:#5B6B80}
+.legend{display:flex;gap:18px;font-size:12.5px;margin:6px 0 2px}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px}
+.delta{display:grid;grid-template-columns:repeat(12,1fr);text-align:center;font-size:12.5px;font-weight:700;margin:2px 0 0 70px;padding-right:0}
+.delta span.pos{color:#1F5FBF}.delta span.neg{color:#C0392B}
+.dlab{font-size:11px;color:#5B6B80;font-weight:400;display:block}
+.foot{font-size:11px;color:#5B6B80;border-top:1px solid #DCE3EC;margin-top:6px;padding-top:6px;display:flex;justify-content:space-between}
+.tag{background:#FFF4D6;color:#7A5A00;border:1px solid #F0D58A;border-radius:6px;padding:1px 7px;font-weight:600}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:'Segoe UI',Arial,sans-serif}
+</style></head><body>
+<div class="card" id="c">
+  <h1>Ventas Reales vs. PCP por Mes</h1>
+  <p class="sub">Venta real 2025 contra periodo comparable previo (mismo mes de 2024) · unidades</p>
+  <div class="legend">
+    <span><i style="background:#1F5FBF"></i>Venta real 2025</span>
+    <span><i style="background:#A7B1BE"></i>PCP 2024</span>
+  </div>
+  <svg id="chart" viewBox="0 0 1000 300"></svg>
+  <div class="delta" id="delta"></div>
+  <div class="foot"><span><span class="tag">Dummy</span> Cifras de ejemplo, no son datos reales.</span><span>Fila inferior: diferencia real vs. PCP · eje desde 120 k</span></div>
+</div>
+<script>
+const D = {"meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"], "pcp": [168717, 153549, 179044, 163462, 169280, 182753, 183658, 190936, 163262, 172174, 214252, 217010], "real": [163498, 159839, 184298, 157608, 179135, 193074, 188321, 195052, 159303, 165545, 217003, 209622]};
+const W=1000,H=300,L=70,R=980,T=20,B=262;
+const max=Math.ceil(Math.max(...D.real,...D.pcp)/10000)*10000, min=120000;
+const sx=i=>L+(i+0.5)*(R-L)/12, sy=v=>B-(v-min)/(max-min)*(B-T);
+let g='';
+for(let v=min;v<=max;v+=20000){g+=`<line x1="${L}" x2="${R}" y1="${sy(v)}" y2="${sy(v)}" stroke="#EEF2F7"/><text x="${L-8}" y="${sy(v)+4}" font-size="11" text-anchor="end" fill="#5B6B80">${(v/1000).toLocaleString('es-MX')} k</text>`;}
+const line=(arr,c,dash)=>`<polyline points="${arr.map((v,i)=>`${sx(i)},${sy(v)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="3" stroke-linejoin="round" ${dash?'stroke-dasharray="7 5"':''}/>`
+  + arr.map((v,i)=>`<circle cx="${sx(i)}" cy="${sy(v)}" r="4" fill="${c}"/>`).join('');
+g+=line(D.pcp,'#A7B1BE',true);
+g+=line(D.real,'#1F5FBF',false);
+D.meses.forEach((m,i)=>{ g+=`<text x="${sx(i)}" y="${B+18}" font-size="12" text-anchor="middle">${m}</text>`; });
+g+=`<line x1="${L}" x2="${R}" y1="${B}" y2="${B}" stroke="#7F8C9C"/>`;
+document.getElementById('chart').innerHTML=g;
+document.getElementById('delta').innerHTML=D.meses.map((m,i)=>{
+  const p=Math.round((D.real[i]/D.pcp[i]-1)*100), cls=p>=0?'pos':'neg';
+  return `<span class="${cls}">${p>0?'+':''}${p} %</span>`;
+}).join('');
+</script></body></html>
