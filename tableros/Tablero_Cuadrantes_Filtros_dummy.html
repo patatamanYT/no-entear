@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diagnóstico de inventario · con filtros (dummy)</title>
+<style>
+:root{--navy:#0B2545;--blue:#1F5FBF;--ink:#0F1E33;--muted:#5B6B80;--line:#DCE3EC;--bg:#F2F5F9;
+  --green:#2E8B57;--yellow:#D9A21B;--red:#C0392B}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;color:var(--ink);padding:20px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:12px}
+h1{margin:0;font-size:22px;color:var(--navy)}
+.sub{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+.tag{background:#FFF4D6;color:#7A5A00;border:1px solid #F0D58A;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px}
+.filters{display:flex;flex-wrap:wrap;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:14px;align-items:flex-end}
+.filters label{display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:600;color:var(--muted)}
+select{border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:12.5px;background:#fff;color:var(--ink);min-width:150px}
+select:disabled{background:#F4F6F9;color:#9AA5B5}
+.dates{display:flex;gap:6px;align-items:flex-end}
+.reset{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px 10px;min-width:0}
+.card h2{margin:0;font-size:16px;color:var(--navy)}
+.card .sub{margin-bottom:6px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;margin:4px 0}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+.legend i.sq{border-radius:3px}
+.legend i.ln{width:16px;height:0;border-top:2px dashed var(--ink);border-radius:0;vertical-align:middle}
+.legend i.l2{width:16px;height:3px;border-radius:2px;vertical-align:middle}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:'Segoe UI',Arial,sans-serif}
+.empty{font-size:13px;color:var(--muted);padding:40px 10px;text-align:center}
+.read{font-size:11.5px;color:var(--ink);background:#F4F7FB;border-left:3px solid var(--blue);border-radius:5px;padding:6px 9px;margin-top:6px}
+.foot{font-size:11px;color:var(--muted);margin-top:10px}
+#tt{position:fixed;pointer-events:none;background:#fff;border:1px solid var(--line);box-shadow:0 6px 18px #0b25452a;border-radius:8px;padding:7px 9px;font-size:12px;line-height:1.5;display:none;z-index:5}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}}
+</style></head><body>
+
+<header>
+  <div>
+    <h1>Diagnóstico de Inventario</h1>
+    <p class="sub">Venta, cobertura y comparación contra el año anterior · Ene 2024 – dic 2025</p>
+  </div>
+  <span class="tag">Datos de ejemplo</span>
+</header>
+
+<section class="filters" aria-label="Filtros">
+  <label>Región<select id="f-region"></select></label>
+  <label>Categoría<select id="f-cat"></select></label>
+  <label>Subcategoría<select id="f-sub"></select></label>
+  <label>Producto<select id="f-prod"></select></label>
+  <div class="dates">
+    <label>Desde<select id="f-from"></select></label>
+    <label>Hasta<select id="f-to"></select></label>
+  </div>
+  <button class="reset" id="reset">Restablecer</button>
+</section>
+
+<div class="grid">
+  <article class="card"><h2>Mapa de cuadrantes por región</h2>
+    <p class="sub">Días de cobertura (eje X) contra unidades vendidas (eje Y), ambos frente al promedio de las regiones seleccionadas</p>
+    <div class="legend">
+      <span><i style="background:var(--green)"></i>Saludable (&lt; 90 días)</span>
+      <span><i style="background:var(--yellow)"></i>Baja rotación (90–180)</span>
+      <span><i style="background:var(--red)"></i>Sobrestock (&gt; 180)</span>
+    </div>
+    <svg id="map" viewBox="0 0 560 420"></svg>
+    <p class="read" id="map-read"></p>
+  </article>
+
+  <article class="card"><h2>Ventas reales vs. PCP por mes</h2>
+    <p class="sub">Venta real 2025 contra el mismo mes de 2024 (periodo comparable previo), en unidades</p>
+    <div class="legend">
+      <span><i class="l2" style="background:var(--blue)"></i>Venta real 2025</span>
+      <span><i class="ln"></i>PCP 2024</span>
+    </div>
+    <svg id="line" viewBox="0 0 560 420"></svg>
+    <p class="read" id="line-read"></p>
+  </article>
+
+  <article class="card"><h2>Días de cobertura por región</h2>
+    <p class="sub">Cuánto tardaría en venderse el inventario al ritmo de venta</p>
+    <div class="legend">
+      <span><i class="sq" style="background:var(--green)"></i>Saludable</span>
+      <span><i class="sq" style="background:var(--yellow)"></i>Baja rotación</span>
+      <span><i class="sq" style="background:var(--red)"></i>Sobrestock</span>
+      <span><i class="ln"></i>Promedio</span>
+    </div>
+    <svg id="cob" viewBox="0 0 560 300"></svg>
+  </article>
+
+  <article class="card"><h2>Unidades vendidas por región</h2>
+    <p class="sub">Venta acumulada en el rango seleccionado y diferencia contra el promedio</p>
+    <div class="legend">
+      <span><i class="sq" style="background:var(--blue)"></i>Arriba del promedio</span>
+      <span><i class="sq" style="background:#A7B1BE"></i>Abajo del promedio</span>
+      <span><i class="ln"></i>Promedio</span>
+    </div>
+    <svg id="sales" viewBox="0 0 560 300"></svg>
+  </article>
+</div>
+<p class="foot">Los filtros de región, categoría, subcategoría, producto y fechas recalculan los cuatro visuales. Con el CSV mensual real, los datos de ejemplo se reemplazan sin cambiar la estructura.</p>
+<div id="tt"></div>
+
+<script>
+// ================= Datos de ejemplo (determinísticos) =================
+let seed = 42; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const MES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MESL = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const REG = [ // nombre, cobertura objetivo (días), peso de venta, ratio esperado/vendido
+  ['CDMX',113,35.6,3.0],['Monterrey',165,22.2,4.4],['Guadalajara',205,15.9,5.7],['Bajío',301,9.5,8.7],
+  ['Noroeste',374,6.6,11.3],['Sur',382,5.6,12.0],['Sureste',478,4.7,15.0]];
+const CATS = {
+  'Casual Wear':['Shirts','Tops','Pants','Bottoms'], 'Footwear':['Sneakers','Boots','Sandals'],
+  'Fitness Wear':['Dresses','Outerwear'], 'Accessories':['Bags','Belts','Hats','Jewelry']};
+const PRICE = {Shirts:45,Tops:40,Pants:70,Bottoms:60,Sneakers:130,Boots:155,Sandals:70,Dresses:95,Outerwear:140,Bags:110,Belts:40,Hats:35,Jewelry:65};
+const SEAS = [0.94,0.85,0.97,0.91,0.94,1.01,1.04,1.06,0.90,0.94,1.22,1.22];
+const PRODS = [];
+Object.entries(CATS).forEach(([cat,subs])=>subs.forEach(sub=>{
+  for(let k=1;k<=3;k++) PRODS.push({name:`${sub} ${k}`, cat, sub, price:PRICE[sub]*(0.9+0.2*rnd())});
+}));
+const MONTHS = []; for(let y=2024;y<=2025;y++) for(let m=0;m<12;m++) MONTHS.push({y,m,i:MONTHS.length,days:new Date(y,m+1,0).getDate()});
+// filas: producto × región × mes
+const ROWS = [];
+PRODS.forEach(p=>REG.forEach(([r,cob,share,ratio])=>{
+  const base = (share/100)*400*(0.6+0.8*rnd());               // ventas base del producto en la región
+  MONTHS.forEach(mo=>{
+    const g25 = mo.y===2025 ? (0.95+0.1*rnd()) : 1;
+    const sold = Math.max(1, Math.round(base*SEAS[mo.m]*g25*(0.92+0.16*rnd())));
+    const exp = Math.round(sold*ratio*(0.95+0.1*rnd()));
+    const stock = Math.round(sold/mo.days*cob*(0.9+0.2*rnd()));
+    ROWS.push({p:p.name, cat:p.cat, sub:p.sub, r, y:mo.y, m:mo.m, days:mo.days, sold, exp, stock, price:p.price});
+  });
+}));
+
+// ================= Estado de filtros =================
+const $ = id => document.getElementById(id);
+const st = {region:'Todas', cat:'Todas', sub:'Todas', prod:'Todas', from:0, to:23};
+function fillSelect(el, items, value){
+  el.innerHTML = items.map(([v,l])=>`<option value="${v}"${String(v)===String(value)?' selected':''}>${l}</option>`).join('');
+}
+function options(){
+  const regs=[['Todas','Todas las regiones'],...REG.map(r=>[r[0],r[0]])];
+  const cats=[['Todas','Todas'],...Object.keys(CATS).map(c=>[c,c])];
+  const subs=[['Todas','Todas']].concat((st.cat==='Todas'?Object.values(CATS).flat():CATS[st.cat]).map(s=>[s,s]));
+  const prods=[['Todas','Todas']].concat(PRODS.filter(p=>(st.cat==='Todas'||p.cat===st.cat)&&(st.sub==='Todas'||p.sub===st.sub)).map(p=>[p.name,p.name]));
+  const months=MONTHS.map(mo=>[mo.i, `${MES[mo.m]} ${mo.y}`]);
+  return {regs,cats,subs,prods,months};
+}
+function renderFilters(){
+  // si cambia la categoría, la subcategoría y el producto deben seguir siendo válidos
+  const o0 = options();
+  if(!o0.subs.some(([v])=>v===st.sub)) st.sub='Todas';
+  const o = options();
+  if(!o.prods.some(([v])=>v===st.prod)) st.prod='Todas';
+  const o2 = options();
+  fillSelect($('f-region'), o2.regs, st.region);
+  fillSelect($('f-cat'), o2.cats, st.cat);
+  fillSelect($('f-sub'), o2.subs, st.sub);
+  fillSelect($('f-prod'), o2.prods, st.prod);
+  fillSelect($('f-from'), o2.months, st.from);
+  fillSelect($('f-to'), o2.months.filter(([i])=>i>=st.from), st.to);
+  $('f-sub').disabled = st.cat==='Todas' ? false : false;
+}
+$('f-region').onchange=e=>{st.region=e.target.value;render();};
+$('f-cat').onchange=e=>{st.cat=e.target.value;st.sub='Todas';st.prod='Todas';render();};
+$('f-sub').onchange=e=>{st.sub=e.target.value;st.prod='Todas';render();};
+$('f-prod').onchange=e=>{st.prod=e.target.value;render();};
+$('f-from').onchange=e=>{st.from=+e.target.value; if(st.to<st.from) st.to=st.from; render();};
+$('f-to').onchange=e=>{st.to=+e.target.value; render();};
+$('reset').onclick=()=>{Object.assign(st,{region:'Todas',cat:'Todas',sub:'Todas',prod:'Todas',from:0,to:23}); render();};
+
+// ================= Cálculos =================
+function selected(){
+  return ROWS.filter(r =>
+    (st.region==='Todas'||r.r===st.region) &&
+    (st.cat==='Todas'||r.cat===st.cat) &&
+    (st.sub==='Todas'||r.sub===st.sub) &&
+    (st.prod==='Todas'||r.p===st.prod));
+}
+const inRange = r => { const i = (r.y-2024)*12 + r.m; return i>=st.from && i<=st.to; };
+const sem = c => c<90 ? 'var(--green)' : c<=180 ? 'var(--yellow)' : 'var(--red)';
+const sgn = v => (v>0?'+':'')+Math.round(v)+' %';
+const fmt = n => Math.round(n).toLocaleString('es-MX');
+const EMPTY = (svg,msg)=>{ svg.innerHTML=`<text x="280" y="150" text-anchor="middle" font-size="13" fill="#5B6B80">${msg}</text>`; };
+
+function regionStats(){
+  const rows = selected().filter(inRange);
+  const byR = {};
+  rows.forEach(r=>{
+    const o = byR[r.r] || (byR[r.r]={sold:0, stock:0, days:0, months:new Set(), exp:0});
+    o.sold+=r.sold; o.exp+=r.exp; o.stock+=r.stock;
+    o.months.add(r.y*12+r.m);
+  });
+  return REG.map(([name])=>{
+    const o = byR[name]; if(!o) return null;
+    const nMonths = o.months.size;
+    const avgStock = o.stock / nMonths;                    // inventario promedio mensual
+    const soldPerDay = o.sold / (rowsDays(name, rows));    // venta diaria
+    return {r:name, sold:o.sold, cob: avgStock/soldPerDay};
+  }).filter(Boolean);
+}
+function rowsDays(name, rows){
+  const set = new Set(); let d=0;
+  rows.forEach(r=>{ if(r.r===name){ const k=r.y*12+r.m; if(!set.has(k)){ set.add(k); d+=r.days; } } });
+  return d;
+}
+
+// ================= 1. Mapa de cuadrantes =================
+function drawMap(stats){
+  const svg=$('map'), W=560,H=420,L=56,R=W-14,T=12,B=H-38;
+  if(!stats.length){ EMPTY(svg,'Sin datos para esta selección'); $('map-read').textContent=''; return; }
+  if(stats.length<2){ EMPTY(svg,'Con una sola región no hay promedio que comparar. Elige "Todas las regiones".'); $('map-read').textContent=''; return; }
+  const avgC = stats.reduce((a,s)=>a+s.cob,0)/stats.length;
+  const avgS = stats.reduce((a,s)=>a+s.sold,0)/stats.length;
+  stats.forEach(s=>{ s.dx=(s.cob/avgC-1)*100; s.dy=(s.sold/avgS-1)*100; });
+  const xs=stats.map(s=>s.dx), ys=stats.map(s=>s.dy);
+  const X0=Math.min(-60,Math.floor(Math.min(...xs)/25)*25-25), X1=Math.max(60,Math.ceil(Math.max(...xs)/25)*25+25);
+  const Y0=Math.min(-60,Math.floor(Math.min(...ys)/25)*25-25), Y1=Math.max(60,Math.ceil(Math.max(...ys)/25)*25+25);
+  const sx=v=>L+(v-X0)/(X1-X0)*(R-L), sy=v=>B-(v-Y0)/(Y1-Y0)*(B-T);
+  const qx=sx(0), qy=sy(0);
+  let g=`<rect x="${L}" y="${T}" width="${qx-L}" height="${qy-T}" fill="#EAF6EF"/>
+    <rect x="${qx}" y="${T}" width="${R-qx}" height="${qy-T}" fill="#EAF1FB"/>
+    <rect x="${L}" y="${qy}" width="${qx-L}" height="${B-qy}" fill="#FFF8E8"/>
+    <rect x="${qx}" y="${qy}" width="${R-qx}" height="${B-qy}" fill="#FBEAEA"/>`;
+  const step=(X1-X0)>200?50:25;
+  for(let v=Math.ceil(X0/step)*step;v<=X1;v+=step) g+=`<text x="${sx(v)}" y="${B+15}" font-size="10.5" text-anchor="middle" fill="#5B6B80">${v>0?'+':''}${v}%</text>`;
+  for(let v=Math.ceil(Y0/step)*step;v<=Y1;v+=step) g+=`<text x="${L-6}" y="${sy(v)+4}" font-size="10.5" text-anchor="end" fill="#5B6B80">${v>0?'+':''}${v}%</text>`;
+  g+=`<line x1="${qx}" x2="${qx}" y1="${T}" y2="${B}" stroke="#7F8C9C" stroke-dasharray="5 5"/><line x1="${L}" x2="${R}" y1="${qy}" y2="${qy}" stroke="#7F8C9C" stroke-dasharray="5 5"/>`;
+  const Q=(x,y,t,c,a)=>`<text x="${x}" y="${y}" font-size="13" font-weight="700" font-style="italic" fill="${c}" text-anchor="${a}" stroke="#fff" stroke-width="3" paint-order="stroke">${t}</text>`;
+  g+=Q(L+8,T+18,'Óptimo','#2E8B57','start')+Q(R-8,T+18,'Alta actividad','#1F5FBF','end')+Q(L+8,B-10,'Baja actividad','#B7791F','start')+Q(R-8,B-10,'Crítico','#C0392B','end');
+  stats.forEach(s=>{
+    const cx=sx(s.dx), cy=sy(s.dy), rr=11;
+    g+=`<circle class="dot" data-r="${s.r}" cx="${cx}" cy="${cy}" r="${rr}" fill="${sem(s.cob)}" fill-opacity=".9" stroke="#fff" stroke-width="2" style="cursor:pointer"/>`;
+    const left = cx > R-110;
+    g+=`<text x="${left?cx-rr-5:cx+rr+5}" y="${cy+4}" font-size="11" font-weight="700" text-anchor="${left?'end':'start'}" stroke="#fff" stroke-width="3" paint-order="stroke">${s.r} · ${Math.round(s.cob)} d</text>`;
+  });
+  g+=`<text x="${(L+R)/2}" y="${H-4}" font-size="11.5" text-anchor="middle">Días de cobertura vs. promedio (${Math.round(avgC)} días)</text>`;
+  g+=`<text transform="translate(12 ${(T+B)/2}) rotate(-90)" font-size="11.5" text-anchor="middle">Unidades vendidas vs. promedio</text>`;
+  svg.innerHTML=g;
+  const crit = stats.filter(s=>s.dx>0&&s.dy<0).map(s=>s.r);
+  $('map-read').innerHTML = `<b>Lectura:</b> ${crit.length?`en Crítico: ${crit.join(', ')}.`:'ninguna región está en Crítico con esta selección.'} Las líneas punteadas son los promedios de las regiones seleccionadas.`;
+  svg.querySelectorAll('.dot').forEach(c=>c.addEventListener('mousemove',e=>showTip(e, stats.find(s=>s.r===c.dataset.r))));
+  svg.querySelectorAll('.dot').forEach(c=>c.addEventListener('mouseleave',hideTip));
+}
+
+// ================= 2. Ventas reales vs PCP =================
+function drawLine(rows){
+  const svg=$('line'), W=560,H=420,L=56,R=W-14,T=14,B=H-38;
+  // calendario: meses del rango; real = 2025, PCP = mismo mes de 2024
+  const cal = Array.from({length:12},(_,m)=>m);
+  const real = cal.map(m=>{ const k=2025*12+m; return inRange({y:2025,m}) ? sumMonth(rows,2025,m) : null; });
+  const pcp  = cal.map(m=>{ return sumMonth(rows,2024,m); });
+  const has = real.some(v=>v!==null);
+  if(!has){ EMPTY(svg,'El rango no incluye 2025: no hay venta real que comparar'); $('line-read').textContent=''; return; }
+  const vals=[...real.filter(v=>v!==null),...pcp];
+  const rawMin=Math.min(...vals), rawMax=Math.max(...vals), span=rawMax-rawMin;
+  const step=Math.pow(10,Math.floor(Math.log10(span/4)))*2;
+  const min=Math.floor((rawMin-span*0.15)/step)*step, max=Math.ceil((rawMax+span*0.1)/step)*step;
+  const sx=i=>L+(i+0.5)*(R-L)/12, sy=v=>B-(v-min)/(max-min)*(B-T);
+  let g='';
+  for(let v=min;v<=max;v+=step) g+=`<line x1="${L}" x2="${R}" y1="${sy(v)}" y2="${sy(v)}" stroke="#EEF2F7"/><text x="${L-6}" y="${sy(v)+4}" font-size="10.5" text-anchor="end" fill="#5B6B80">${fmt(v)}</text>`;
+  const poly=(arr,c,dash)=>{ const pts=arr.map((v,i)=>v===null?null:[sx(i),sy(v)]).filter(Boolean);
+    return `<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="${c}" stroke-width="2.6" ${dash?'stroke-dasharray="6 5"':''}/>`
+      + pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${c}"/>`).join(''); };
+  g+=poly(pcp,'#A7B1BE',true)+poly(real,'#1F5FBF',false);
+  cal.forEach(m=>{ g+=`<text x="${sx(m)}" y="${B+15}" font-size="10.5" text-anchor="middle">${MES[m]}</text>`; });
+  g+=`<line x1="${L}" x2="${R}" y1="${B}" y2="${B}" stroke="#7F8C9C"/>`;
+  svg.innerHTML=g;
+  // fila de deltas
+  const deltas = real.map((v,i)=> v===null||!pcp[i] ? null : Math.round((v/pcp[i]-1)*100));
+  const neg = deltas.filter(d=>d!==null&&d<0).length, pos = deltas.filter(d=>d!==null&&d>=0).length;
+  $('line-read').innerHTML = `<b>Lectura:</b> la venta real está arriba del PCP en ${pos} meses y abajo en ${neg}. Diferencia por mes: ${deltas.map((d,i)=>d===null?'':`${MES[i]} ${d>0?'+':''}${d}%`).filter(Boolean).join(' · ')}.`;
+  svg.querySelectorAll('circle').forEach(()=>{});
+}
+function sumMonth(rows,y,m){
+  let s=0, any=false; rows.forEach(r=>{ if(r.y===y&&r.m===m){ s+=r.sold; any=true; } });
+  return any ? s : null;
+}
+
+// ================= 3 y 4. Barras por región =================
+function drawBars(stats, svgId, key, unit, avgLabel, colorFn, fmtLabel){
+  const svg=$(svgId), W=560,H=300,L=92,R=W-96,T=8,B=H-22;
+  if(!stats.length){ EMPTY(svg,'Sin datos para esta selección'); return; }
+  const sorted=[...stats].sort((a,b)=>a[key]-b[key]);
+  const max=Math.max(...sorted.map(s=>s[key]))*1.12;
+  const avg=sorted.reduce((a,s)=>a+s[key],0)/sorted.length;
+  const sx=v=>L+v/max*(R-L), h=(B-T)/sorted.length;
+  let g='';
+  sorted.forEach((s,i)=>{
+    const y=T+i*h, bh=h*.6, c=colorFn(s,avg);
+    g+=`<text x="${L-8}" y="${y+h/2+4}" font-size="12" text-anchor="end">${s.r}</text>`;
+    g+=`<rect x="${L}" y="${y+(h-bh)/2}" width="${Math.max(2,sx(s[key])-L)}" height="${bh}" rx="3" fill="${c}"/>`;
+    g+=`<text x="${sx(s[key])+6}" y="${y+h/2+4}" font-size="11.5" font-weight="700">${fmtLabel(s[key])}</text>`;
+    const d=(s[key]/avg-1)*100;
+    g+=`<text x="${W-6}" y="${y+h/2+4}" font-size="11" text-anchor="end" fill="#5B6B80">${sgn(d)}</text>`;
+  });
+  g+=`<line x1="${sx(avg)}" x2="${sx(avg)}" y1="${T-2}" y2="${B}" stroke="#0F1E33" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+  g+=`<text x="${sx(avg)}" y="${H-4}" font-size="10.5" text-anchor="middle" fill="#0F1E33">promedio ${avgLabel(avg)}</text>`;
+  svg.innerHTML=g;
+}
+
+// ================= Render =================
+function render(){
+  renderFilters();
+  const rows = selected();
+  const stats = regionStats();
+  drawMap(stats);
+  drawLine(rows);
+  drawBars(stats,'cob','cob','días', v=>Math.round(v)+' días', s=>sem(s.cob), v=>Math.round(v)+' d');
+  drawBars(stats,'sales','sold','unidades', v=>fmt(v), (s,avg)=>s.sold>=avg?'#1F5FBF':'#A7B1BE', v=>fmt(v));
+}
+const tt=$('tt');
+function showTip(e,s){ if(!s) return; tt.innerHTML=`<b>${s.r}</b><br>Cobertura: ${Math.round(s.cob)} días (${sgn(s.dx)})<br>Vendido: ${fmt(s.sold)} (${sgn(s.dy)})`;
+  tt.style.display='block'; tt.style.left=(e.clientX+14)+'px'; tt.style.top=(e.clientY+14)+'px'; }
+function hideTip(){ tt.style.display='none'; }
+render();
+</script>
+</body></html>
