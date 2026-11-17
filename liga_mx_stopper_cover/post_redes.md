@@ -1,6 +1,6 @@
 # Post · ¿Choque o Cobertura? Centrales de la Liga MX
 
-Adjuntar: `stopper_vs_cover_apertura2026.png` (dispersión) y `radar_joaquim_vs_pereira.png` (radares).
+Adjuntar: `stopper_vs_cover_apertura2026.png` (dispersión), `radar_joaquim_vs_federico_pereira_choque.png` y `radar_joaquim_vs_federico_pereira_cobertura.png` (radares).
 
 ---
 

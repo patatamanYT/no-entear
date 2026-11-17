@@ -86,13 +86,13 @@ Salidas:
 
 ```bash
 python radar_centrales.py stopper_vs_cover_apertura2026_scores.csv \
-  --players "Joaquim" "Federico Pereira" --tag "Apertura 2026" \
-  --source "FotMob, J1–J16, recopilado por IA, no verificado" --out radar_joaquim_vs_pereira.png
+  --players "Joaquim" "Federico Pereira" --tag "Apertura 26"
+# -> radar_joaquim_vs_federico_pereira_choque.png y ..._cobertura.png
 ```
 
-- Hace dos radares lado a lado (Choque y Cobertura) con 2 o 3 jugadores. Usa los percentiles por métrica (`pct_*`) del CSV de puntajes.
-- Solo aparecen como ejes las métricas que realmente se usaron. Con los datos actuales, Choque tiene 4 ejes y Cobertura 3, porque faltan entradas ganadas y errores; con las 9 métricas serían 5 y 4.
-- La leyenda lleva el escudo del club si está en `escudos/`.
+- Genera dos imágenes, una por rol, con el estilo de la referencia: fondo blanco, rejilla de anillos grises, morado y azul semitransparentes, una franja vacía entre dos líneas y la leyenda (punto, nombre en letra delgada y etiqueta gris). Compara 2 o 3 jugadores con los percentiles por métrica (`pct_*`) del CSV de puntajes.
+- Solo aparecen como ejes las métricas que realmente se usaron. Con los datos actuales, Choque tiene 4 ejes (rombo) y Cobertura 3 (triángulo); con las 9 métricas serían 5 y 4.
+- Opcional: `--crests` agrega el escudo en la leyenda, `--note` agrega una nota al pie y `--out-prefix` cambia el nombre de los archivos.
 - El texto para redes y el comentario con la fórmula están en `post_redes.md`.
 
 ## Columnas del CSV
