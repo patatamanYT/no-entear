@@ -16,6 +16,8 @@ reporta en consola, en la nota al pie de la grafica y en el CSV de salida.
 """
 import argparse
 import sys
+import unicodedata
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -185,6 +187,41 @@ TEAM_STYLE = {
     "UANL": ("#fdb913", "#002d62", "TIG"), "UNAM": ("#0b2a4a", "#c9a227", "PUM"),
 }
 
+CREST_EXTS = (".png", ".webp", ".jpg", ".jpeg")
+
+
+def crest_slug(team):
+    """'Atlético San Luis' -> 'atletico_san_luis' (nombre de archivo del escudo)."""
+    t = unicodedata.normalize("NFKD", str(team)).encode("ascii", "ignore").decode()
+    return "_".join(t.lower().replace(".", " ").split())
+
+
+def load_crests(teams, crest_dir, px=96):
+    """Carga escudos de crest_dir/<slug>.(png|webp|jpg). Devuelve {equipo: array RGBA}."""
+    if not crest_dir or not Path(crest_dir).is_dir():
+        return {}
+    from PIL import Image
+    import numpy as np
+    out, missing = {}, []
+    for team in sorted(set(teams)):
+        f = next((Path(crest_dir) / (crest_slug(team) + e) for e in CREST_EXTS
+                  if (Path(crest_dir) / (crest_slug(team) + e)).exists()), None)
+        if f is None:
+            missing.append(f"{team} -> {crest_slug(team)}.png")
+            continue
+        im = Image.open(f).convert("RGBA")
+        bbox = im.getbbox()  # recorta margen transparente
+        if bbox:
+            im = im.crop(bbox)
+        im.thumbnail((px, px), Image.LANCZOS)
+        canvas = Image.new("RGBA", (px, px), (0, 0, 0, 0))  # centrado en lienzo cuadrado
+        canvas.paste(im, ((px - im.width) // 2, (px - im.height) // 2), im)
+        out[team] = np.asarray(canvas)
+    if missing:
+        print(f"[aviso] sin escudo en '{crest_dir}' (se usa circulo de color): "
+              + "; ".join(missing))
+    return out
+
 
 def _text_color(hex_color):
     r, g, b = (int(hex_color[i:i + 2], 16) for i in (1, 3, 5))
@@ -236,9 +273,18 @@ def draw_chart(df, a, note_lines, L):
             color="white", family=SANS, zorder=6,
             bbox=dict(boxstyle="round,pad=0.45,rounding_size=0.85", fc=color, ec="none")))
 
-    # Marcadores: circulo con colores del club y su abreviatura
+    # Marcadores: escudo del club si existe en --crests-dir; si no, circulo
+    # con colores del club y su abreviatura
+    from matplotlib.offsetbox import AnnotationBbox, OffsetImage
     teams = df["team"] if "team" in df.columns else pd.Series("", index=df.index)
+    crests = load_crests(teams, a.crests_dir)
     for r, team in zip(df.itertuples(), teams):
+        if team in crests:
+            ax.scatter(r.stopper, r.cover, s=330, color="white", edgecolor=EDGE,
+                       linewidth=0.8, zorder=3)  # disco blanco detras del escudo
+            ax.add_artist(AnnotationBbox(OffsetImage(crests[team], zoom=0.17),
+                                         (r.stopper, r.cover), frameon=False, zorder=4))
+            continue
         fill, ring, abbr = TEAM_STYLE.get(team, ("#9ca3af", "#ffffff", str(team)[:3].upper()))
         ax.scatter(r.stopper, r.cover, s=210, color=fill, edgecolor=ring, linewidth=1.8,
                    zorder=4)
@@ -323,6 +369,9 @@ def main():
     ap.add_argument("--header", default=None,
                     help="linea pequena arriba del titulo")
     ap.add_argument("--subtitle", default=None)
+    ap.add_argument("--crests-dir", default="escudos",
+                    help="carpeta con escudos <equipo>.png (p. ej. cruz_azul.png); "
+                         "los equipos sin archivo usan circulo de color")
     ap.add_argument("--brand", default="",
                     help="texto de marca opcional arriba a la izquierda (p. ej. tu usuario)")
     ap.add_argument("--source", default="",
