@@ -49,3 +49,10 @@ Efecto en el análisis (`--min-minutes 450`):
 - **Sin verificar:** solo minutes (1024), que no sale en las capturas.
 - **Otros datos de FotMob para Joaquim:** duels won % 60.9 y aerial duels won % 66.7.
 - **FotMob tiene otros datos que el CSV no trae:** tackles totales (15), blocked shots (9), fouls committed (10) y defensive contributions (104).
+
+## Columnas extra (segunda pasada de la IA, 17 nov 2026)
+
+- **Columnas nuevas:** `tackles`, `blocked_shots`, `fouls_committed`, `duels_won_pct`, `aerials_won_pct`, `minutes_fotmob` y `fuente_extra`, sacadas de FotMob a J16.
+- **Revisión automática:** las columnas originales quedaron idénticas en las 76 filas. Joaquim coincide con la captura (15 / 9 / 10 / 60.9 / 66.7). Ningún `tackles` es menor que `tackles_won`, y los porcentajes están entre 0 y 100. Cobertura entre los centrales con 450' o más: 87–91%.
+- **Celdas vacías:** 19 jugadores tienen al menos una celda nueva vacía. Entre los 48 evaluados, a Luis Romo y Bruno Méndez les faltan las 5, a Santiago Ramos le faltan 4 y a Gonzalo Piovi le falta `blocked_shots`. En el radar, su eje sale en el centro y el script avisa.
+- **Minutos distintos:** Piña (620 → 710), F. Sánchez (1350 → 1440), J. Pérez (414 → 459) y Alfaro (236 → 234). Las columnas extra de Piña, Sánchez y Pérez son de J16, mientras que sus columnas originales son de J15. Por eso el radar divide las columnas extra entre `minutes_fotmob`.

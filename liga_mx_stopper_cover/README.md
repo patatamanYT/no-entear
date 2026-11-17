@@ -91,7 +91,11 @@ python radar_centrales.py stopper_vs_cover_apertura2026_scores.csv \
 ```
 
 - Genera dos imágenes, una por rol, con el estilo de la referencia: fondo blanco, rejilla de anillos grises, morado y azul semitransparentes, una franja vacía entre dos líneas y la leyenda (punto, nombre en letra delgada y etiqueta gris). Compara 2 o 3 jugadores con los percentiles por métrica (`pct_*`) del CSV de puntajes.
-- Solo aparecen como ejes las métricas que realmente se usaron. Con los datos actuales, Choque tiene 4 ejes (rombo) y Cobertura 3 (triángulo); con las 9 métricas serían 5 y 4.
+- **Ejes propios del radar**, como en la referencia (en `RADAR` dentro del script):
+  - **Choque (6 ejes):** entradas (tackles totales), intercepciones, despejes, duelos aéreos, éxito en duelos (`duels_won_pct`) y bloqueos (`blocked_shots`).
+  - **Cobertura (4 ejes con los datos actuales):** evita regates, retención de balón, recuperaciones y evita faltas (`fouls_committed` invertida). "Evita errores" se agrega solo cuando haya datos.
+- **Cálculo:** cada eje es el percentil dentro del grupo de centrales evaluados (las filas del CSV de puntajes, hoy 48). Los conteos van por 90'. En tackles, bloqueos y faltas se usa `minutes_fotmob` cuando existe, porque esas columnas pueden ir a otra jornada (por ejemplo, Daniel Piña). Un eje con datos para menos de `--min-coverage` del grupo (80%) se omite.
+- **Radar y gráfica no usan las mismas métricas:** tackles totales, bloqueos, faltas y % de duelos solo están en el radar. El puntaje de la dispersión sigue con la fórmula original.
 - Opcional: `--crests` agrega el escudo en la leyenda, `--note` agrega una nota al pie y `--out-prefix` cambia el nombre de los archivos.
 - El texto para redes y el comentario con la fórmula están en `post_redes.md`.
 
