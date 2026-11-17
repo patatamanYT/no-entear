@@ -4,9 +4,25 @@ Gráfica de dispersión de centrales: eje X = percentil **Stopper** y eje Y = pe
 
 ## Estado
 
-- **Fuente de datos: pendiente.** Todavía no se ha procesado ningún dato real. El script espera un CSV que tú proporcionas (exportado de Sofascore, de un proveedor con licencia, etc.). No hace scraping.
-- **Fecha de extracción: pendiente.** Se registra aquí y en la gráfica (`--source`) cuando llegue el CSV.
-- Contexto de fuentes (nov 2026): FBref perdió los datos avanzados de Opta el 20 ene 2026. Sofascore no se ha podido verificar desde esta sesión porque la red lo bloquea.
+- **Fuente de datos: Sportmonks Football API v3** (prueba de 14 días). La comparación con las demás fuentes está en `comparacion_fuentes.md`.
+- **Fecha de extracción: pendiente** de la primera descarga real. `descargar_datos.py` la registra en `<out>_fuente.json`.
+
+## Descarga (Sportmonks)
+
+```bash
+export SPORTMONKS_API_TOKEN=...          # nunca en el código ni en git
+python descargar_datos.py --plan         # ~4 peticiones: muestra liga, temporada, fases y partidos
+python descargar_datos.py --out centrales_apertura2026.csv
+```
+
+- **Fase regular:** se elige la fase de la temporada cuyo nombre contiene `--stage-name` (default `Apertura`) y no contiene palabras de liguilla o repechaje (`--stage-exclude`). Si hay ambigüedad, el script se detiene y pide `--stage-id`. Solo cuenta partidos terminados.
+- **Peticiones:** una por partido terminado más unas 4 de metadatos, con pausa `--sleep` (1 s) y reintentos ante 429. Las respuestas se guardan en `.cache_sportmonks/` (ignorada por git), así que repetir la corrida no gasta peticiones.
+- **Mapeo a tipos de Sportmonks** (estadísticas por partido en `lineups.details`): tackles_won = TACKLES_WON (27267), aerials_won = AERIALS_WON (107), clearances = CLEARANCES (101), interceptions = INTERCEPTIONS (100), duels_won = DUELS_WON (106), dribbled_past = DRIBBLED_PAST (110), recoveries = BALL_RECOVERY (27271), minutes = MINUTES_PLAYED (119).
+- **pass_completion_pct** = Σ ACCURATE_PASSES (116) / Σ PASSES (80) × 100. Si faltan los conteos, usa el promedio de ACCURATE_PASSES_PERCENTAGE (1584) ponderado por minutos.
+- **errors** = ERROR_LEAD_TO_SHOT (48997) + ERROR_LEAD_TO_GOAL (571). Supuesto: son conteos separados, sin doble conteo. El CSV guarda ambas columnas por si quieres usar solo una.
+- **Posición:** la posición detallada en la que jugó más minutos. "Centre Back" se convierte en `CB`. El CSV también trae `cb_minutes` y `position_detail_main`.
+- **Jugadores que cambiaron de equipo:** se suman todas sus filas por `player_id`; `team` queda como "Equipo1 / Equipo2", ordenado por minutos.
+- Si un tipo no aparece en ningún partido, la columna queda vacía (NaN) y `stopper_vs_cover.py` la omite y lo anota en la gráfica.
 
 ## Uso
 

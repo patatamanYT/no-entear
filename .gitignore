@@ -25,3 +25,6 @@ frontend/.eslintcache
 *.swp
 .idea/
 .vscode/
+
+# Liga MX stopper/cover: cache de la API y datos descargados
+liga_mx_stopper_cover/.cache_sportmonks/
