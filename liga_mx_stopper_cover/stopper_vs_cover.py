@@ -26,19 +26,25 @@ import pandas as pd
 #   tipo "count": se divide entre minutos/90
 #   tipo "rate":  ya es porcentaje/tasa, se usa tal cual
 #   invertir=True: menos es mejor
+# El mismo orden se usa como ejes del radar (radar_centrales.py).
 STOPPER = [
-    ("tackles_won", "count", False),
-    ("aerials_won", "count", False),
-    ("clearances", "count", False),
+    ("tackles", "count", False),          # entradas totales
     ("interceptions", "count", False),
-    ("duels_won", "count", False),
+    ("clearances", "count", False),
+    ("aerials_won", "count", False),
+    ("duels_won_pct", "rate", False),     # exito en duelos
+    ("blocked_shots", "count", False),    # bloqueos
 ]
 COVER = [
-    ("dribbled_past", "count", True),
+    ("dribbled_past", "count", True),        # evita regates
     ("pass_completion_pct", "rate", False),  # retencion del balon
     ("recoveries", "count", False),
-    ("errors", "count", True),
+    ("fouls_committed", "count", True),      # evita faltas
+    ("errors", "count", True),               # evita errores
 ]
+# Conteos que pueden venir de otra fecha de corte: por 90' usan minutes_fotmob
+# si esa columna existe y tiene valor (si no, minutes).
+ALT_MINUTES = {"tackles", "blocked_shots", "fouls_committed"}
 ID_COLS = ["player", "team", "position", "minutes"]
 OPTIONAL_COLS = ["phase"]
 
@@ -95,7 +101,10 @@ def role_score(df: pd.DataFrame, metrics, weights, role, min_coverage=0.0):
         if why:
             omitted.append((col, why))
             continue
-        v = df[col] / (df["minutes"] / 90) if kind == "count" else df[col]
+        mins = df["minutes"]
+        if col in ALT_MINUTES and "minutes_fotmob" in df.columns:
+            mins = df["minutes_fotmob"].fillna(df["minutes"])
+        v = df[col] / (mins / 90) if kind == "count" else df[col]
         p = pct_rank(v)
         p = 100 - p if invert else p
         df[f"pct_{col}"] = p
@@ -126,10 +135,12 @@ TEXTS = {
         "method": "Percentil dentro del grupo · conteos por 90', tasas tal cual · "
                   "{n} centrales, mín. {m}'",
         "excluded": " · {k} excluidos por datos incompletos", "source": "Fuente",
-        "metrics": {"tackles_won": "entradas ganadas", "aerials_won": "duelos aéreos ganados",
-                    "clearances": "despejes", "interceptions": "intercepciones",
-                    "duels_won": "duelos ganados", "dribbled_past": "veces regateado",
-                    "pass_completion_pct": "% de pase", "recoveries": "recuperaciones",
+        "metrics": {"tackles": "entradas", "tackles_won": "entradas ganadas",
+                    "aerials_won": "duelos aéreos ganados", "clearances": "despejes",
+                    "interceptions": "intercepciones", "duels_won": "duelos ganados",
+                    "duels_won_pct": "% duelos ganados", "blocked_shots": "bloqueos",
+                    "dribbled_past": "veces regateado", "pass_completion_pct": "% de pase",
+                    "recoveries": "recuperaciones", "fouls_committed": "faltas",
                     "errors": "errores"},
     },
     "en": {
@@ -256,7 +267,7 @@ def draw_chart(df, a, note_lines, L):
     zones = [  # (x0, x1, y0, y1, color, texto, x_pildora, y_pildora)
         (T, 100, T, 100, ZONE_COLORS["stops"], L["zones"][0], None, 100),
         (0, 100 - T, T, 100, ZONE_COLORS["cover"], L["zones"][1], "right", 100),
-        (T, 100, 0, 100 - T, ZONE_COLORS["stopper"], L["zones"][2], None, 100 - T),
+        (T, 100, 0, 100 - T, ZONE_COLORS["stopper"], L["zones"][2], "right", 100 - T),
     ]
     pills = []
     P = 3  # margen hacia afuera para que los puntos en 0 o 100 queden dentro
@@ -267,7 +278,7 @@ def draw_chart(df, a, note_lines, L):
         ax.add_patch(FancyBboxPatch(
             (x0, y0), x1 - x0, y1 - y0, boxstyle="round,pad=0,rounding_size=3.5",
             mutation_aspect=aspect, fc=color + "1a", ec=color, lw=2, zorder=0))
-        x = x1 - (x1 - x0) * 0.2 if px == "right" else (x0 + x1) / 2
+        x = x1 - (x1 - x0) * (0.2 if x0 < 50 else 0.27) if px == "right" else (x0 + x1) / 2
         pills.append(ax.text(
             x, py, label, ha="center", va="center", fontsize=8.5, fontweight="bold",
             color="white", family=SANS, zorder=6,

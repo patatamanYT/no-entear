@@ -28,27 +28,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from stopper_vs_cover import load_crests
+from stopper_vs_cover import ALT_MINUTES, COVER, STOPPER, load_crests
 
-# Ejes de cada radar: (columna, tipo, invertir, etiqueta)
-RADAR = {
-    "choque": [
-        ("tackles", "count", False, "Entradas"),
-        ("interceptions", "count", False, "Intercepciones"),
-        ("clearances", "count", False, "Despejes"),
-        ("aerials_won", "count", False, "Duelos\naéreos"),
-        ("duels_won_pct", "rate", False, "Éxito en\nduelos"),
-        ("blocked_shots", "count", False, "Bloqueos"),
-    ],
-    "cobertura": [
-        ("dribbled_past", "count", True, "Evita\nregates"),
-        ("pass_completion_pct", "rate", False, "Retención\nde balón"),
-        ("recoveries", "count", False, "Recuperaciones"),
-        ("fouls_committed", "count", True, "Evita\nfaltas"),
-        ("errors", "count", True, "Evita\nerrores"),
-    ],
+# Ejes del radar = metricas de la formula (STOPPER / COVER), con etiqueta corta
+AXIS_LABELS = {
+    "tackles": "Entradas", "tackles_won": "Entradas\nganadas", "interceptions": "Intercepciones",
+    "clearances": "Despejes", "aerials_won": "Duelos\naéreos", "duels_won": "Duelos\nganados",
+    "duels_won_pct": "Éxito en\nduelos", "blocked_shots": "Bloqueos",
+    "dribbled_past": "Evita\nregates", "pass_completion_pct": "Retención\nde balón",
+    "recoveries": "Recuperaciones", "fouls_committed": "Evita\nfaltas", "errors": "Evita\nerrores",
 }
-EXTRA_MIN = {"tackles", "blocked_shots", "fouls_committed"}  # usan minutes_fotmob si existe
+RADAR = {
+    "choque": [(c, k, i, AXIS_LABELS.get(c, c)) for c, k, i in STOPPER],
+    "cobertura": [(c, k, i, AXIS_LABELS.get(c, c)) for c, k, i in COVER],
+}
+EXTRA_MIN = ALT_MINUTES
 
 
 def radar_percentiles(df, metrics, min_coverage):

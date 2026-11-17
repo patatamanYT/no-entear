@@ -18,15 +18,19 @@ Comando usado:
 python stopper_vs_cover.py centrales_apertura2026_j16.csv --phase-col phase \
   --header "Liga MX Apertura 2026 · Centrales" \
   --subtitle "Percentil en cada rol · fase regular, jornadas 1–16" \
-  --source "FotMob (+ FootyMetrics para entradas), J1–J16, consultado 16–17 nov 2026; recopilado por un asistente de IA, no verificado" \
+  --source "FotMob, J1–J16, consultado 16–17 nov 2026; recopilado por un asistente de IA y verificado a mano en 1 jugador" \
   --out stopper_vs_cover_apertura2026.png
 ```
 
 Resultado:
-- **Métricas usadas:** Stopper = aerials_won, clearances, interceptions, duels_won. Cover = dribbled_past (invertida), pass_completion_pct, recoveries.
-- **Omitidas:** `errors` (FotMob no la publica; 0% de cobertura) y `tackles_won` (50% de cobertura, por debajo del mínimo de 80% de `--min-coverage`).
-- **Muestra:** 76 centrales en el CSV; 55 con 450' o más; 48 evaluados. Se excluyeron 7 por huecos (`--max-missing 0`): Eduardo Tercero, Gilberto Sepúlveda, Carlos Salcedo, Diego Reyes, Felipe Sánchez, Efraín Orona y Jackson Porozo.
-- **Sensibilidad:** con `--max-missing 2` entran Tercero, F. Sánchez y Porozo, y los percentiles de los demás cambian como máximo unos 5.6 puntos.
+- **Fórmula (v2, 17 nov 2026; incluye las columnas extra de FotMob):**
+  - **Choque:** tackles (entradas totales), interceptions, clearances, aerials_won, duels_won_pct y blocked_shots.
+  - **Cobertura:** dribbled_past (invertida), pass_completion_pct, recoveries y fouls_committed (invertida).
+  - Respecto a v1: entradas ganadas (`tackles_won`, 50% de cobertura) pasa a tackles totales, y duelos ganados (conteo) pasa a % de duelos ganados. Se agregan bloqueos y faltas.
+- **Omitidas:** `errors`, porque FotMob no la publica (0% de cobertura).
+- **Por 90' con otros minutos:** tackles, bloqueos y faltas se dividen entre `minutes_fotmob` cuando existe, porque son de J16 en jugadores cuyas otras columnas llegan a J15.
+- **Muestra:** 76 centrales en el CSV; 55 con 450' o más; 43 evaluados. Se excluyeron 12 por huecos (`--max-missing 0`): Santiago Ramos, Eduardo Tercero, Gonzalo Piovi, Gilberto Sepúlveda, Luis Romo, Carlos Salcedo, Diego Reyes, Carlos Villanueva, Felipe Sánchez, Efraín Orona, Jackson Porozo y Bruno Méndez.
+- **Sensibilidad:** con `--max-missing 2` entran Tercero, Orona, F. Sánchez, Piovi y Porozo, y los percentiles de los demás cambian como máximo 8.7 puntos en Choque y 6.1 en Cobertura.
 
 **Alternativa preparada:** `descargar_datos.py` (Sportmonks, las 9 métricas). Necesita la variable `SPORTMONKS_API_TOKEN`.
 
@@ -86,8 +90,8 @@ Salidas:
 
 ```bash
 python radar_centrales.py stopper_vs_cover_apertura2026_scores.csv \
-  --players "Joaquim" "Federico Pereira" --tag "Apertura 26"
-# -> radar_joaquim_vs_federico_pereira_choque.png y ..._cobertura.png
+  --players "Joaquim" "Eduardo Bauermann" --tag "Apertura 26"
+# -> radar_joaquim_vs_eduardo_bauermann_choque.png y ..._cobertura.png
 ```
 
 - Genera dos imágenes, una por rol, con el estilo de la referencia: fondo blanco, rejilla de anillos grises, morado y azul semitransparentes, una franja vacía entre dos líneas y la leyenda (punto, nombre en letra delgada y etiqueta gris). Compara 2 o 3 jugadores con los percentiles por métrica (`pct_*`) del CSV de puntajes.
@@ -95,7 +99,7 @@ python radar_centrales.py stopper_vs_cover_apertura2026_scores.csv \
   - **Choque (6 ejes):** entradas (tackles totales), intercepciones, despejes, duelos aéreos, éxito en duelos (`duels_won_pct`) y bloqueos (`blocked_shots`).
   - **Cobertura (4 ejes con los datos actuales):** evita regates, retención de balón, recuperaciones y evita faltas (`fouls_committed` invertida). "Evita errores" se agrega solo cuando haya datos.
 - **Cálculo:** cada eje es el percentil dentro del grupo de centrales evaluados (las filas del CSV de puntajes, hoy 48). Los conteos van por 90'. En tackles, bloqueos y faltas se usa `minutes_fotmob` cuando existe, porque esas columnas pueden ir a otra jornada (por ejemplo, Daniel Piña). Un eje con datos para menos de `--min-coverage` del grupo (80%) se omite.
-- **Radar y gráfica no usan las mismas métricas:** tackles totales, bloqueos, faltas y % de duelos solo están en el radar. El puntaje de la dispersión sigue con la fórmula original.
+- **Radar y gráfica usan las mismas métricas:** los ejes son las de `STOPPER` / `COVER` de `stopper_vs_cover.py`, así que lo que muestra el radar es lo que entra en el puntaje.
 - Opcional: `--crests` agrega el escudo en la leyenda, `--note` agrega una nota al pie y `--out-prefix` cambia el nombre de los archivos.
 - El texto para redes y el comentario con la fórmula están en `post_redes.md`.
 
