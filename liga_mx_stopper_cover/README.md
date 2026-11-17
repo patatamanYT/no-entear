@@ -82,6 +82,19 @@ Salidas:
 - Tipografías: Inter y JetBrains Mono, con DejaVu como respaldo si no están instaladas.
 - PNG a 200 dpi (2400 × 2280 px).
 
+## Radares de comparación
+
+```bash
+python radar_centrales.py stopper_vs_cover_apertura2026_scores.csv \
+  --players "Joaquim" "Federico Pereira" --tag "Apertura 2026" \
+  --source "FotMob, J1–J16, recopilado por IA, no verificado" --out radar_joaquim_vs_pereira.png
+```
+
+- Hace dos radares lado a lado (Choque y Cobertura) con 2 o 3 jugadores. Usa los percentiles por métrica (`pct_*`) del CSV de puntajes.
+- Solo aparecen como ejes las métricas que realmente se usaron. Con los datos actuales, Choque tiene 4 ejes y Cobertura 3, porque faltan entradas ganadas y errores; con las 9 métricas serían 5 y 4.
+- La leyenda lleva el escudo del club si está en `escudos/`.
+- El texto para redes y el comentario con la fórmula están en `post_redes.md`.
+
 ## Columnas del CSV
 
 | Columna | Tipo | Rol | Notas |
