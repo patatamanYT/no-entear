@@ -4,8 +4,30 @@ Gráfica de dispersión de centrales: eje X = percentil **Stopper** y eje Y = pe
 
 ## Estado
 
-- **Fuente de datos: Sportmonks Football API v3** (prueba de 14 días). La comparación con las demás fuentes está en `comparacion_fuentes.md`.
-- **Fecha de extracción: pendiente** de la primera descarga real. `descargar_datos.py` la registra en `<out>_fuente.json`.
+**Corrida actual (17 nov 2026): datos de FotMob recopilados por un asistente de IA (Grok o Muse) con `prompt_para_llenar.md`.**
+
+- **Fuente:** FotMob, páginas de jugador de la Liga MX 2026/2027. `tackles_won` sale de FootyMetrics, solo donde su total de tackles coincidía con el de FotMob. Eduardo Tercero tiene métricas de playmakerstats/thefishy; queda excluido por tener huecos.
+- **Periodo:** Apertura 2026, fase regular, jornadas 1–16, partidos hasta el 14 nov 2026. Daniel Piña, Felipe Sánchez y Jonathan Pérez solo llegan a J15.
+- **Fecha de consulta:** 16–17 nov 2026.
+- **Sin verificar:** no se comparó ningún número contra la fuente. La red de esta sesión no tiene acceso a FotMob, y su scraping está descartado por términos de uso. Revisa a mano a 3 o 4 jugadores antes de publicar.
+- **Datos fuera de git:** el CSV, el PNG y los puntajes no se suben al repositorio (ver `.gitignore`) para no redistribuir datos de FotMob.
+
+Comando usado:
+
+```bash
+python stopper_vs_cover.py centrales_apertura2026_j16.csv --phase-col phase \
+  --title "Stopper CB vs Cover CB · Liga MX Apertura 2026 (fase regular, J1–J16)" \
+  --source "FotMob (+ FootyMetrics p/ tackles), J1–J16, consultado 16–17 nov 2026; recopilado por un asistente de IA, no verificado contra la fuente" \
+  --out stopper_vs_cover_apertura2026.png
+```
+
+Resultado:
+- **Métricas usadas:** Stopper = aerials_won, clearances, interceptions, duels_won. Cover = dribbled_past (invertida), pass_completion_pct, recoveries.
+- **Omitidas:** `errors` (FotMob no la publica; 0% de cobertura) y `tackles_won` (50% de cobertura, por debajo del mínimo de 80% de `--min-coverage`).
+- **Muestra:** 76 centrales en el CSV; 55 con 450' o más; 48 evaluados. Se excluyeron 7 por huecos (`--max-missing 0`): Eduardo Tercero, Gilberto Sepúlveda, Carlos Salcedo, Diego Reyes, Felipe Sánchez, Efraín Orona y Jackson Porozo.
+- **Sensibilidad:** con `--max-missing 2` entran Tercero, F. Sánchez y Porozo, y los percentiles de los demás cambian como máximo unos 5.6 puntos.
+
+**Alternativa preparada:** `descargar_datos.py` (Sportmonks, las 9 métricas). Necesita la variable `SPORTMONKS_API_TOKEN`.
 
 ## Descarga (Sportmonks)
 
@@ -83,8 +105,8 @@ Los conteos son **totales acumulados**, no por 90: el script los convierte.
 
 ## Supuestos y limitaciones
 
-- **Métricas faltantes:** si una columna no existe o está vacía, se omite. Se avisa en consola y aparece como "omitidas" en la nota al pie, y el rol se calcula con las que queden. Peso 0 también omite la métrica.
-- **Valores faltantes por jugador:** si a un jugador le falta una métrica, su puntaje se calcula con las que sí tiene (los pesos se renormalizan).
+- **Métricas faltantes:** si una columna no existe, está vacía o su cobertura en el grupo es menor que `--min-coverage` (default 0.8), se omite. Se avisa en consola y aparece como "omitidas" en la nota al pie, y el rol se calcula con las que queden. Peso 0 también omite la métrica.
+- **Valores faltantes por jugador:** con `--max-missing 0` (default), se excluye a quien tenga algún hueco en las métricas usadas, y se lista en consola. Con `--max-missing N`, se promedia con las métricas que sí tenga (los pesos se renormalizan).
 - **Jugadores repetidos** (por ejemplo, un cambio de equipo a mitad de torneo): el script avisa pero no suma. Hay que consolidar las filas antes.
 - **Percentiles relativos al grupo:** cambian si cambia el mínimo de minutos o el conjunto de centrales.
 - **Métricas no ajustadas por posesión:** los equipos que defienden más acumulan más tackles y despejes.

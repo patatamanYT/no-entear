@@ -67,7 +67,21 @@ def parse_weights(text):
     return weights
 
 
-def role_score(df: pd.DataFrame, metrics, weights, role):
+def omit_reason(df, col, w, min_coverage):
+    """Motivo para omitir una metrica, o None si se usa."""
+    if col not in df.columns:
+        return "columna ausente"
+    cov = df[col].notna().mean()
+    if cov == 0:
+        return "columna vacia"
+    if cov < min_coverage:
+        return f"cobertura {cov:.0%} < {min_coverage:.0%}"
+    if w == 0:
+        return "peso 0"
+    return None
+
+
+def role_score(df: pd.DataFrame, metrics, weights, role, min_coverage=0.0):
     """Devuelve (percentil final del rol, metricas usadas, metricas omitidas).
 
     Tambien agrega a df una columna pct_<metrica> por cada metrica usada.
@@ -75,14 +89,9 @@ def role_score(df: pd.DataFrame, metrics, weights, role):
     pcts, ws, used, omitted = [], [], [], []
     for col, kind, invert in metrics:
         w = weights.get(col, 1.0)
-        if col not in df.columns:
-            omitted.append((col, "columna ausente"))
-            continue
-        if df[col].isna().all():
-            omitted.append((col, "columna vacia"))
-            continue
-        if w == 0:
-            omitted.append((col, "peso 0"))
+        why = omit_reason(df, col, w, min_coverage)
+        if why:
+            omitted.append((col, why))
             continue
         v = df[col] / (df["minutes"] / 90) if kind == "count" else df[col]
         p = pct_rank(v)
@@ -144,6 +153,11 @@ def main():
     ap.add_argument("--out", default="stopper_vs_cover.png")
     ap.add_argument("--scores-out", default=None,
                     help="CSV de puntajes (default: <out>_scores.csv)")
+    ap.add_argument("--min-coverage", type=float, default=0.8,
+                    help="fraccion minima (0-1) de centrales con dato para usar una metrica")
+    ap.add_argument("--max-missing", type=int, default=0,
+                    help="huecos permitidos por jugador en las metricas usadas; "
+                         "con mas, el jugador se excluye (con 1+ se promedia lo que tenga)")
     ap.add_argument("--write-template", metavar="RUTA",
                     help="solo escribe una plantilla CSV vacia y termina")
     a = ap.parse_args()
@@ -179,24 +193,40 @@ def main():
         print("[aviso] jugadores repetidos (¿cambio de equipo? suma sus filas antes): "
               + ", ".join(sorted(df.loc[dup, "player"].unique())))
 
-    df["stopper"], s_used, s_omit = role_score(df, STOPPER, weights, "Stopper")
-    df["cover"], c_used, c_omit = role_score(df, COVER, weights, "Cover")
+    # Metricas utilizables (cobertura medida en el grupo filtrado) y
+    # exclusion de jugadores con huecos en ellas, antes de los percentiles.
+    usable = [c for c, _, _ in STOPPER + COVER
+              if not omit_reason(df, c, weights.get(c, 1.0), a.min_coverage)]
+    n_missing = df[usable].isna().sum(axis=1)
+    excl = df[n_missing > a.max_missing]
+    if len(excl):
+        print(f"[aviso] se excluyen {len(excl)} centrales con mas de {a.max_missing} "
+              f"hueco(s) en las metricas usadas:")
+        for r in excl.itertuples():
+            gaps = [c for c in usable if pd.isna(getattr(r, c))]
+            print(f"    {r.player} ({getattr(r, 'team', '')}, {r.minutes}'): falta {', '.join(gaps)}")
+        df = df[n_missing <= a.max_missing].copy()
+        print(f"Centrales evaluados: {len(df)}")
+    n_excl = len(excl)
+
+    df["stopper"], s_used, s_omit = role_score(df, STOPPER, weights, "Stopper", a.min_coverage)
+    df["cover"], c_used, c_omit = role_score(df, COVER, weights, "Cover", a.min_coverage)
 
     # --- grafica ---
     fig, ax = plt.subplots(figsize=(9, 8.6))
     T = a.threshold
-    # Los textos de zona van en una franja fuera del area de datos (y>100
-    # o y<0) para que nunca se encimen con los nombres de los jugadores.
-    zones = [  # (x0, x1, y0, y1, color, texto, y_txt, va)
-        (T, 100, T, 100, "#7c3aed", "Covers and stops", 101.5, "bottom"),
-        (0, 100 - T, T, 100, "#16a34a", "Cover, weak stopper", 101.5, "bottom"),
-        (T, 100, 0, 100 - T, "#ea580c", "Stopper, weak cover", -1.5, "top"),
+    # Las zonas se nombran en una leyenda arriba del area de datos, para
+    # que ningun nombre de jugador pueda taparlas.
+    zones = [  # (x0, x1, y0, y1, color, texto)
+        (T, 100, T, 100, "#7c3aed", "Covers and stops"),
+        (0, 100 - T, T, 100, "#16a34a", "Cover, weak stopper"),
+        (T, 100, 0, 100 - T, "#ea580c", "Stopper, weak cover"),
     ]
-    for x0, x1, y0, y1, color, label, ty, va in zones:
+    for x0, x1, y0, y1, color, label in zones:
         ax.add_patch(plt.Rectangle((x0, y0), x1 - x0, y1 - y0, color=color,
-                                   alpha=0.10, lw=0, zorder=0))
-        ax.text((x0 + x1) / 2, ty, label, ha="center", va=va, fontsize=10,
-                fontweight="bold", color=color, zorder=4)
+                                   alpha=0.15, lw=0, zorder=0, label=label))
+    ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=3, frameon=False,
+              fontsize=9, handlelength=1.2, columnspacing=1.5)
     ax.axhline(50, ls="--", c="gray", lw=1)
     ax.axvline(50, ls="--", c="gray", lw=1)
     ax.scatter(df["stopper"], df["cover"], s=40, color="#1f2937", zorder=3)
@@ -205,18 +235,22 @@ def main():
              for r in df.itertuples()]
     try:
         from adjustText import adjust_text
-        adjust_text(texts, ax=ax)
+        # x/y: los puntos a esquivar; objects: los textos de zona (fijos)
+        adjust_text(texts, x=df["stopper"].values, y=df["cover"].values, ax=ax,
+                    arrowprops=dict(arrowstyle="-", color="#9ca3af", lw=0.5))
     except ImportError:
         print("[aviso] adjustText no instalado; las etiquetas pueden encimarse")
 
-    ax.set(xlim=(-3, 103), ylim=(-7, 107),
-           yticks=range(0, 101, 20),
+    ax.set(xlim=(-3, 103), ylim=(-3, 103),
            xlabel="STOPPER CB (percentil) →", ylabel="COVER CB (percentil) →",
-           title=a.title)
+           )
+    ax.set_title(a.title, pad=24)
     note = (f"Stopper: {describe(s_used, s_omit)}\n"
             f"Cover: {describe(c_used, c_omit)}\n"
             f"Conteos por 90'; tasas tal cual. Percentiles dentro del grupo "
-            f"(n={len(df)}, mín. {a.min_minutes}'). Recuadros: ≥{T:g} / ≤{100 - T:g}.")
+            f"(n={len(df)}, mín. {a.min_minutes}'"
+            + (f"; {n_excl} excluidos por datos incompletos" if n_excl else "")
+            + f"). Recuadros: ≥{T:g} / ≤{100 - T:g}.")
     if a.source:
         note += f"\nFuente: {a.source}"
     fig.text(0.01, 0.01, note, fontsize=7, color="#4b5563", ha="left", va="bottom")

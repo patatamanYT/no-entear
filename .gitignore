@@ -28,3 +28,6 @@ frontend/.eslintcache
 
 # Liga MX stopper/cover: cache de la API y datos descargados
 liga_mx_stopper_cover/.cache_sportmonks/
+liga_mx_stopper_cover/centrales_*.csv
+liga_mx_stopper_cover/stopper_vs_cover_*.png
+liga_mx_stopper_cover/stopper_vs_cover_*_scores.csv
