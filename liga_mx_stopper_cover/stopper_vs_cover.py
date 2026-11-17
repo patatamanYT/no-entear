@@ -196,7 +196,7 @@ def crest_slug(team):
     return "_".join(t.lower().replace(".", " ").split())
 
 
-def load_crests(teams, crest_dir, px=96):
+def load_crests(teams, crest_dir, px=160):
     """Carga escudos de crest_dir/<slug>.(png|webp|jpg). Devuelve {equipo: array RGBA}."""
     if not crest_dir or not Path(crest_dir).is_dir():
         return {}
@@ -280,9 +280,9 @@ def draw_chart(df, a, note_lines, L):
     crests = load_crests(teams, a.crests_dir)
     for r, team in zip(df.itertuples(), teams):
         if team in crests:
-            ax.scatter(r.stopper, r.cover, s=330, color="white", edgecolor=EDGE,
+            ax.scatter(r.stopper, r.cover, s=470, color="white", edgecolor=EDGE,
                        linewidth=0.8, zorder=3)  # disco blanco detras del escudo
-            ax.add_artist(AnnotationBbox(OffsetImage(crests[team], zoom=0.17),
+            ax.add_artist(AnnotationBbox(OffsetImage(crests[team], zoom=0.125),
                                          (r.stopper, r.cover), frameon=False, zorder=4))
             continue
         fill, ring, abbr = TEAM_STYLE.get(team, ("#9ca3af", "#ffffff", str(team)[:3].upper()))
