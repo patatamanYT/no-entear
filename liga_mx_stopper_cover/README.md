@@ -103,6 +103,22 @@ python radar_centrales.py stopper_vs_cover_apertura2026_scores.csv \
 - Opcional: `--crests` agrega el escudo en la leyenda, `--note` agrega una nota al pie y `--out-prefix` cambia el nombre de los archivos.
 - El texto para redes y el comentario con la fórmula están en `post_redes.md`.
 
+## ¿Se complementan los centrales de cada equipo?
+
+```bash
+# 1) puntajes aceptando hasta 2 huecos (para no dejar titulares sin perfil)
+python stopper_vs_cover.py centrales_apertura2026_j16.csv --phase-col phase --max-missing 2 --top 0 --out parejas_base.png
+# 2) (una vez) estimar línea de 2 o de 3 y corregir formaciones.csv a mano
+python parejas_centrales.py centrales_apertura2026_j16.csv parejas_base_scores.csv --write-formations
+# 3) tarjetas por equipo
+python parejas_centrales.py centrales_apertura2026_j16.csv parejas_base_scores.csv --out parejas_centrales.png
+```
+
+- **Titulares:** los centrales con más minutos de cada equipo, 2 o 3 según `formaciones.csv`. Ese archivo es una estimación y debe revisarse: se marcó línea de 3 si el tercer central tiene 720' o más (Atlante, Cruz Azul, Guadalajara, Necaxa y Toluca). En la tarjeta, la línea estimada lleva *.
+- **Perfil de cada central** (Ch = percentil Choque, Cb = percentil Cobertura): Ambos (Ch y Cb ≥ 60), Choque (Ch ≥ 55 y al menos 15 sobre Cb), Cobertura (al revés), Equilibrado (ambos ≥ 40), Bajo y Sin datos.
+- **Veredicto:** Completa (hay un "Ambos"), Se complementan (hay un Choque y un Cobertura), Dos de choque, Dos de cobertura, Sin complemento y Datos incompletos (falta el puntaje de un titular y lo conocido no alcanza para decidir).
+- **Otros percentiles que la dispersión:** los puntajes salen de la corrida con `--max-missing 2` (48 centrales), así que difieren unos puntos de la gráfica principal (`--max-missing 0`, 43). Se hizo así para no perder titulares como Porozo, Felipe Sánchez, Tercero y Piovi.
+
 ## Columnas del CSV
 
 | Columna | Tipo | Rol | Notas |
