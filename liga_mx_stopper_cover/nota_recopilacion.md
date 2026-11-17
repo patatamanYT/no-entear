@@ -29,3 +29,18 @@ Efecto en el análisis (`--min-minutes 450`):
 - **Piña y F. Sánchez solo llegan a J15.** Como los minutos corresponden al mismo periodo, los valores por 90 son consistentes. F. Sánchez además queda excluido por huecos.
 - **Amaury García (657 min) sí entra en el grupo** (Stopper 29, Cover 75), aunque quizá sea mediocampista. Para excluirlo, cambia su `position` en el CSV.
 - **Schlegel (630 min) entra con números finales**, porque salió del club el 11 de septiembre.
+
+## Verificación manual contra FotMob
+
+**Joaquim (Tigres)**, captura de la app de FotMob enviada por el usuario el 17 nov 2026, estadísticas de la temporada:
+
+| Métrica | CSV | FotMob | Resultado |
+|---|---|---|---|
+| clearances | 65 | 65 | coincide |
+| interceptions | 15 | 15 | coincide |
+| dribbled_past | 7 | 7 | coincide |
+| recoveries | 26 | 26 | coincide |
+| tackles_won | 10 | — (FotMob: 15 tackles **totales**) | coherente: ganadas ≤ totales |
+
+- **Sin verificar:** minutes (1024), aerials_won (38), duels_won (67) y pass_completion_pct (79.8). No salen en la parte visible de la captura.
+- **FotMob tiene otros datos que el CSV no trae:** tackles totales (15), blocked shots (9), fouls committed (10) y defensive contributions (104).
