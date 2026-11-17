@@ -132,7 +132,8 @@ def draw(teams, a):
     fig.text(x0, 1 - 1.8 / H, a.subtitle, fontsize=14, color="#6b665c", family=SANS, va="center")
     # leyenda de perfiles
     x = x0
-    for name in ("Choque", "Cobertura", "Ambos", "Equilibrado", "Bajo", "Sin datos"):
+    shown = {p["profile"] for t in teams for p in t["players"]}  # solo perfiles que aparecen
+    for name in [n for n in ("Choque", "Cobertura", "Ambos", "Equilibrado", "Bajo", "Sin datos") if n in shown]:
         fig.patches.append(FancyBboxPatch((x, 1 - 2.22 / H - 0.006), 0.009, 0.012,
                                           boxstyle="round,pad=0,rounding_size=0.004",
                                           transform=fig.transFigure, fc=PROFILE_COLORS[name], ec="none"))
