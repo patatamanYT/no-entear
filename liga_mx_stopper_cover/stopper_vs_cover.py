@@ -243,10 +243,10 @@ def draw_chart(df, a, note_lines, L):
     from matplotlib.patches import FancyBboxPatch
 
     T = a.threshold
-    fig = plt.figure(figsize=(12, 11.4), facecolor=BG)
+    fig = plt.figure(figsize=(13, 12.6), facecolor=BG)
     ax = fig.add_axes([0.095, 0.2, 0.865, 0.6])
     ax.set_facecolor(PANEL)
-    ax.set(xlim=(-6, 106), ylim=(-6, 108))
+    ax.set(xlim=(-6, 106), ylim=(-10, 108))
     for sp in ax.spines.values():
         sp.set_visible(False)
 
@@ -267,18 +267,20 @@ def draw_chart(df, a, note_lines, L):
     zones = [  # (x0, x1, y0, y1, color, texto, x_pildora, y_pildora)
         (T, 100, T, 100, ZONE_COLORS["stops"], L["zones"][0], None, 100),
         (0, 100 - T, T, 100, ZONE_COLORS["cover"], L["zones"][1], "right", 100),
-        (T, 100, 0, 100 - T, ZONE_COLORS["stopper"], L["zones"][2], "right", 100 - T),
+        (T, 100, 0, 100 - T, ZONE_COLORS["stopper"], L["zones"][2], "below", 100 - T),
     ]
     pills = []
     P = 3  # margen hacia afuera para que los puntos en 0 o 100 queden dentro
     for x0, x1, y0, y1, color, label, px, py in zones:
         x0, x1 = (x0 - P if x0 == 0 else x0), (x1 + P if x1 == 100 else x1)
         y0, y1 = (y0 - P if y0 == 0 else y0), (y1 + P if y1 == 100 else y1)
-        py = y1  # todas las pildoras en el borde superior de su caja
+        # pildoras en el borde superior de su caja; la de abajo-derecha va debajo
+        # de la caja (fuera del area de datos) porque esa esquina es la mas llena
+        py = y0 - 3.2 if px == "below" else y1
         ax.add_patch(FancyBboxPatch(
             (x0, y0), x1 - x0, y1 - y0, boxstyle="round,pad=0,rounding_size=3.5",
             mutation_aspect=aspect, fc=color + "1a", ec=color, lw=2, zorder=0))
-        x = x1 - (x1 - x0) * (0.2 if x0 < 50 else 0.27) if px == "right" else (x0 + x1) / 2
+        x = x1 - (x1 - x0) * 0.2 if px == "right" else (x0 + x1) / 2
         pills.append(ax.text(
             x, py, label, ha="center", va="center", fontsize=8.5, fontweight="bold",
             color="white", family=SANS, zorder=6,
@@ -289,18 +291,19 @@ def draw_chart(df, a, note_lines, L):
     from matplotlib.offsetbox import AnnotationBbox, OffsetImage
     teams = df["team"] if "team" in df.columns else pd.Series("", index=df.index)
     crests = load_crests(teams, a.crests_dir)
+    discs = []  # marcadores: obstaculos que las etiquetas deben esquivar
     for r, team in zip(df.itertuples(), teams):
         if team in crests:
-            ax.scatter(r.stopper, r.cover, s=470, color="white", edgecolor=EDGE,
-                       linewidth=0.8, zorder=3)  # disco blanco detras del escudo
+            discs.append(ax.scatter(r.stopper, r.cover, s=470, color="white", edgecolor=EDGE,
+                                    linewidth=0.8, zorder=3))  # disco blanco detras del escudo
             ax.add_artist(AnnotationBbox(OffsetImage(crests[team], zoom=0.125),
                                          (r.stopper, r.cover), frameon=False, zorder=4))
             continue
         fill, ring, abbr = TEAM_STYLE.get(team, ("#9ca3af", "#ffffff", str(team)[:3].upper()))
         ax.scatter(r.stopper, r.cover, s=210, color=fill, edgecolor=ring, linewidth=1.8,
                    zorder=4)
-        ax.scatter(r.stopper, r.cover, s=280, facecolor="none", edgecolor="white",
-                   linewidth=1.2, zorder=3)  # halo blanco
+        discs.append(ax.scatter(r.stopper, r.cover, s=280, facecolor="none", edgecolor="white",
+                                linewidth=1.2, zorder=3))  # halo blanco
         ax.text(r.stopper, r.cover, abbr, ha="center", va="center", fontsize=4.6,
                 fontweight="bold", color=_text_color(fill), family=SANS, zorder=5)
 
@@ -309,9 +312,14 @@ def draw_chart(df, a, note_lines, L):
              for r in df.itertuples()]
     try:
         from adjustText import adjust_text
-        adjust_text(texts, x=df["stopper"].values, y=df["cover"].values, objects=pills,
-                    ax=ax, expand=(1.1, 1.5), force_text=(0.3, 0.6),
-                    force_static=(0.4, 0.8), time_lim=8,
+        # adjustText mide solo el texto, no el globo de color: se agrega un texto
+        # invisible mas grande en la misma posicion como obstaculo del globo
+        ghosts = [ax.text(*t.get_position(), t.get_text(), ha="center", va="center",
+                          fontsize=12.5, fontweight="bold", alpha=0) for t in pills]
+        obstacles = ghosts
+        adjust_text(texts, x=df["stopper"].values, y=df["cover"].values, objects=obstacles,
+                    ax=ax, expand=(1.08, 1.4), force_text=(0.35, 0.7),
+                    force_static=(0.5, 0.9), time_lim=15,
                     arrowprops=dict(arrowstyle="-", color="#a8a29e", lw=0.6))
     except ImportError:
         print("[aviso] adjustText no instalado; las etiquetas pueden encimarse")
