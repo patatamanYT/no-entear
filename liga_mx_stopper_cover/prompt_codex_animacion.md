@@ -54,7 +54,7 @@ Cada tarjeta entra con un desvanecido y un desplazamiento hacia arriba. Abajo, l
 - Al llegar cada escudo, su nombre aparece con un desvanecido.
 - **El cuadro final debe verse como `referencia/1_choque_vs_cobertura.png`.**
 
-**4. Recorrido por las zonas (≈9 s).** Sobre la dispersión, resalta una zona a la vez: la zona activa al 100% y el resto atenuado al 25%. Muestra un texto corto arriba:
+**4. Recorrido por las zonas (≈8 s).** Sobre la dispersión, resalta una zona a la vez: la zona activa al 100% y el resto atenuado al 25%. Muestra un texto corto arriba:
 - **Choca y cubre:** los jugadores con `zona = choca_y_cubre`. Los escudos de esa zona hacen un pequeño "pulso".
 - **Cubre, poco choque:** "Necesitan un central de choque al lado".
 - **Choca, poca cobertura:** "Necesitan un central de cobertura al lado".
