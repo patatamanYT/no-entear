@@ -131,6 +131,144 @@ def write_template(path):
     print(f"Plantilla guardada: {path}")
 
 
+# --- Estilo de la grafica -------------------------------------------------
+BG, PANEL, EDGE = "#f3f0e8", "#fbfaf6", "#e6e1d6"
+INK, MUTED, GRID = "#1a1a1a", "#8b857a", "#bdb6a8"
+ZONE_COLORS = {"stops": "#7c3aed", "cover": "#16a34a", "stopper": "#ea580c"}
+SANS = ["Inter", "DejaVu Sans"]
+MONO = ["JetBrains Mono", "DejaVu Sans Mono"]
+
+# Colores aproximados de cada club (relleno, aro) y abreviatura del marcador.
+# Equipos que no esten aqui se dibujan en gris con las 3 primeras letras.
+TEAM_STYLE = {
+    "América": ("#f6c500", "#0b2a5b", "AME"), "Atlante": ("#0b3a8c", "#d0021b", "ATE"),
+    "Atlas": ("#c8102e", "#111111", "ATS"), "Atlético San Luis": ("#d71920", "#13294b", "ASL"),
+    "Cruz Azul": ("#0047ab", "#ffffff", "CAZ"), "FC Juárez": ("#d71f26", "#39b54a", "JUA"),
+    "Guadalajara": ("#cd1f2d", "#1b3c8f", "GDL"), "León": ("#00703c", "#ffffff", "LEO"),
+    "Monterrey": ("#1b2a5a", "#ffffff", "MTY"), "Necaxa": ("#e4002b", "#ffffff", "NEC"),
+    "Pachuca": ("#003c71", "#ffffff", "PAC"), "Puebla": ("#ffffff", "#1d3f8f", "PUE"),
+    "Querétaro": ("#0b4ea2", "#111111", "QRO"), "Santos Laguna": ("#00843d", "#ffffff", "SAN"),
+    "Tijuana": ("#c8102e", "#111111", "TIJ"), "Toluca": ("#d0021b", "#ffffff", "TOL"),
+    "UANL": ("#fdb913", "#002d62", "TIG"), "UNAM": ("#0b2a4a", "#c9a227", "PUM"),
+}
+
+
+def _text_color(hex_color):
+    r, g, b = (int(hex_color[i:i + 2], 16) for i in (1, 3, 5))
+    return INK if (0.299 * r + 0.587 * g + 0.114 * b) > 160 else "white"
+
+
+def draw_chart(df, a, note_lines):
+    from matplotlib.patches import FancyBboxPatch
+
+    T = a.threshold
+    fig = plt.figure(figsize=(12, 11.4), facecolor=BG)
+    ax = fig.add_axes([0.095, 0.2, 0.865, 0.6])
+    ax.set_facecolor(PANEL)
+    ax.set(xlim=(-6, 106), ylim=(-6, 108))
+    for sp in ax.spines.values():
+        sp.set_visible(False)
+
+    # Panel redondeado detras del area de datos
+    pos = ax.get_position()
+    fig.patches.append(FancyBboxPatch(
+        (pos.x0, pos.y0), pos.width, pos.height, transform=fig.transFigure,
+        boxstyle="round,pad=0.006,rounding_size=0.018", fc=PANEL, ec=EDGE, lw=1.5,
+        zorder=-1))
+
+    # Corrige la relacion de aspecto para que las esquinas salgan redondas
+    fw, fh = fig.get_size_inches()
+    aspect = (pos.width * fw) / (pos.height * fh)
+
+    ax.axhline(50, ls=(0, (4, 4)), c=GRID, lw=1, zorder=1)
+    ax.axvline(50, ls=(0, (4, 4)), c=GRID, lw=1, zorder=1)
+
+    zones = [  # (x0, x1, y0, y1, color, texto, x_pildora, y_pildora)
+        (T, 100, T, 100, ZONE_COLORS["stops"], "COVERS AND STOPS", None, 100),
+        (0, 100 - T, T, 100, ZONE_COLORS["cover"], "COVER, WEAK STOPPER", "right", 100),
+        (T, 100, 0, 100 - T, ZONE_COLORS["stopper"], "STOPPER, WEAK COVER", None, 100 - T),
+    ]
+    pills = []
+    P = 3  # margen hacia afuera para que los puntos en 0 o 100 queden dentro
+    for x0, x1, y0, y1, color, label, px, py in zones:
+        x0, x1 = (x0 - P if x0 == 0 else x0), (x1 + P if x1 == 100 else x1)
+        y0, y1 = (y0 - P if y0 == 0 else y0), (y1 + P if y1 == 100 else y1)
+        py = y1  # todas las pildoras en el borde superior de su caja
+        ax.add_patch(FancyBboxPatch(
+            (x0, y0), x1 - x0, y1 - y0, boxstyle="round,pad=0,rounding_size=3.5",
+            mutation_aspect=aspect, fc=color + "1a", ec=color, lw=2, zorder=0))
+        x = x1 - (x1 - x0) * 0.2 if px == "right" else (x0 + x1) / 2
+        pills.append(ax.text(
+            x, py, label, ha="center", va="center", fontsize=8.5, fontweight="bold",
+            color="white", family=SANS, zorder=6,
+            bbox=dict(boxstyle="round,pad=0.45,rounding_size=0.85", fc=color, ec="none")))
+
+    # Marcadores: circulo con colores del club y su abreviatura
+    teams = df["team"] if "team" in df.columns else pd.Series("", index=df.index)
+    for r, team in zip(df.itertuples(), teams):
+        fill, ring, abbr = TEAM_STYLE.get(team, ("#9ca3af", "#ffffff", str(team)[:3].upper()))
+        ax.scatter(r.stopper, r.cover, s=210, color=fill, edgecolor=ring, linewidth=1.8,
+                   zorder=4)
+        ax.scatter(r.stopper, r.cover, s=280, facecolor="none", edgecolor="white",
+                   linewidth=1.2, zorder=3)  # halo blanco
+        ax.text(r.stopper, r.cover, abbr, ha="center", va="center", fontsize=4.6,
+                fontweight="bold", color=_text_color(fill), family=SANS, zorder=5)
+
+    texts = [ax.text(r.stopper + 2.0, r.cover, r.player, fontsize=9.5, fontweight="bold",
+                     color=INK, family=SANS, va="center", zorder=5)
+             for r in df.itertuples()]
+    try:
+        from adjustText import adjust_text
+        adjust_text(texts, x=df["stopper"].values, y=df["cover"].values, objects=pills,
+                    ax=ax, expand=(1.1, 1.5), force_text=(0.3, 0.6),
+                    force_static=(0.4, 0.8), time_lim=8,
+                    arrowprops=dict(arrowstyle="-", color="#a8a29e", lw=0.6))
+    except ImportError:
+        print("[aviso] adjustText no instalado; las etiquetas pueden encimarse")
+
+    ax.set_xticks(range(0, 101, 20))
+    ax.set_yticks(range(0, 101, 20))
+    ax.tick_params(length=0, labelsize=11, labelcolor=MUTED, pad=10)
+    for t in ax.get_xticklabels() + ax.get_yticklabels():
+        t.set_family(SANS)
+    ax.set_xlabel("STOPPER CB  →", fontsize=12, fontweight="bold", color=INK,
+                  family=SANS, labelpad=8)
+    ax.set_ylabel("COVER CB  →", fontsize=12, fontweight="bold", color=INK,
+                  family=SANS, labelpad=14)
+
+    # Encabezado: linea superior, titulo con "vs" en gris y subtitulo
+    x = 0.045
+    if a.brand:
+        b = fig.text(x, 0.955, a.brand, fontsize=15, fontweight="bold", color=INK,
+                     family=SANS, va="center")
+        fig.canvas.draw()
+        x = b.get_window_extent().transformed(fig.transFigure.inverted()).x1 + 0.012
+        fig.text(x, 0.955, "|", fontsize=14, color=EDGE, va="center")
+        x += 0.018
+    fig.text(x, 0.955, a.header.upper(), fontsize=10, color=MUTED, family=MONO,
+             va="center")
+
+    left, sep, right = a.title.partition(" vs ")
+    parts = [(left, INK)] + ([(" vs ", "#a39e93"), (right, INK)] if sep else [])
+    x = 0.045
+    fig.canvas.draw()
+    inv = fig.transFigure.inverted()
+    for txt, color in parts:
+        t = fig.text(x, 0.895, txt, fontsize=36, fontweight="heavy", color=color,
+                     family=SANS, va="center")
+        fig.canvas.draw()
+        x = t.get_window_extent().transformed(inv).x1
+    fig.text(0.045, 0.845, a.subtitle, fontsize=14, color="#6b665c", family=SANS,
+             va="center")
+
+    fig.text(0.045, 0.02, "\n".join(note_lines), fontsize=7.6, color=MUTED, family=MONO,
+             va="bottom", linespacing=1.6)
+    fig.patch.set_edgecolor(EDGE)
+    fig.patch.set_linewidth(2)
+    fig.savefig(a.out, dpi=200, facecolor=BG)
+    plt.close(fig)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -145,7 +283,13 @@ def main():
                     help="pesos por metrica, p. ej. tackles_won=2,errors=0.5")
     ap.add_argument("--threshold", type=float, default=70,
                     help="umbral (0-100) de los recuadros resaltados")
-    ap.add_argument("--title", default="Stopper CB vs Cover CB · Liga MX (fase regular)")
+    ap.add_argument("--title", default="Stopper CB vs Cover CB",
+                    help='titulo grande; lo que va despues de " vs " se pinta igual y el "vs" en gris')
+    ap.add_argument("--header", default="Liga MX · Centrales",
+                    help="linea pequena arriba del titulo")
+    ap.add_argument("--subtitle", default="Percentil en cada rol · fase regular")
+    ap.add_argument("--brand", default="",
+                    help="texto de marca opcional arriba a la izquierda (p. ej. tu usuario)")
     ap.add_argument("--source", default="",
                     help="texto de fuente/fecha para la nota al pie")
     ap.add_argument("--top", type=int, default=10,
@@ -213,49 +357,14 @@ def main():
     df["cover"], c_used, c_omit = role_score(df, COVER, weights, "Cover", a.min_coverage)
 
     # --- grafica ---
-    fig, ax = plt.subplots(figsize=(9, 8.6))
-    T = a.threshold
-    # Las zonas se nombran en una leyenda arriba del area de datos, para
-    # que ningun nombre de jugador pueda taparlas.
-    zones = [  # (x0, x1, y0, y1, color, texto)
-        (T, 100, T, 100, "#7c3aed", "Covers and stops"),
-        (0, 100 - T, T, 100, "#16a34a", "Cover, weak stopper"),
-        (T, 100, 0, 100 - T, "#ea580c", "Stopper, weak cover"),
-    ]
-    for x0, x1, y0, y1, color, label in zones:
-        ax.add_patch(plt.Rectangle((x0, y0), x1 - x0, y1 - y0, color=color,
-                                   alpha=0.15, lw=0, zorder=0, label=label))
-    ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=3, frameon=False,
-              fontsize=9, handlelength=1.2, columnspacing=1.5)
-    ax.axhline(50, ls="--", c="gray", lw=1)
-    ax.axvline(50, ls="--", c="gray", lw=1)
-    ax.scatter(df["stopper"], df["cover"], s=40, color="#1f2937", zorder=3)
-
-    texts = [ax.text(r.stopper + 1, r.cover + 1, r.player, fontsize=8, zorder=5)
-             for r in df.itertuples()]
-    try:
-        from adjustText import adjust_text
-        # x/y: los puntos a esquivar; objects: los textos de zona (fijos)
-        adjust_text(texts, x=df["stopper"].values, y=df["cover"].values, ax=ax,
-                    arrowprops=dict(arrowstyle="-", color="#9ca3af", lw=0.5))
-    except ImportError:
-        print("[aviso] adjustText no instalado; las etiquetas pueden encimarse")
-
-    ax.set(xlim=(-3, 103), ylim=(-3, 103),
-           xlabel="STOPPER CB (percentil) →", ylabel="COVER CB (percentil) →",
-           )
-    ax.set_title(a.title, pad=24)
-    note = (f"Stopper: {describe(s_used, s_omit)}\n"
-            f"Cover: {describe(c_used, c_omit)}\n"
-            f"Conteos por 90'; tasas tal cual. Percentiles dentro del grupo "
-            f"(n={len(df)}, mín. {a.min_minutes}'"
-            + (f"; {n_excl} excluidos por datos incompletos" if n_excl else "")
-            + f"). Recuadros: ≥{T:g} / ≤{100 - T:g}.")
+    note = [f"Stopper: {describe(s_used, s_omit)}",
+            f"Cover: {describe(c_used, c_omit)}",
+            f"Rank % = percentil dentro del grupo · conteos por 90', tasas tal cual · "
+            f"{len(df)} centrales, mín. {a.min_minutes}'"
+            + (f" · {n_excl} excluidos por datos incompletos" if n_excl else "")]
     if a.source:
-        note += f"\nFuente: {a.source}"
-    fig.text(0.01, 0.01, note, fontsize=7, color="#4b5563", ha="left", va="bottom")
-    fig.tight_layout(rect=(0, 0.04 + 0.018 * note.count("\n"), 1, 1))
-    fig.savefig(a.out, dpi=150)
+        note.append(f"Fuente: {a.source}")
+    draw_chart(df, a, note)
     print(f"Guardado: {a.out}")
 
     # --- CSV de puntajes ---

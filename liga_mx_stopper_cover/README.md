@@ -16,8 +16,9 @@ Comando usado:
 
 ```bash
 python stopper_vs_cover.py centrales_apertura2026_j16.csv --phase-col phase \
-  --title "Stopper CB vs Cover CB · Liga MX Apertura 2026 (fase regular, J1–J16)" \
-  --source "FotMob (+ FootyMetrics p/ tackles), J1–J16, consultado 16–17 nov 2026; recopilado por un asistente de IA, no verificado contra la fuente" \
+  --header "Liga MX Apertura 2026 · Centrales" \
+  --subtitle "Percentil en cada rol · fase regular, jornadas 1–16" \
+  --source "FotMob (+ FootyMetrics p/ tackles), J1–J16, consultado 16–17 nov 2026; recopilado por un asistente de IA, no verificado" \
   --out stopper_vs_cover_apertura2026.png
 ```
 
@@ -69,6 +70,14 @@ Salidas:
 - `<out>.png`: la gráfica. La nota al pie lista las métricas usadas, sus pesos, las métricas omitidas, n, el mínimo de minutos y la fuente.
 - `<out>_scores.csv`: una fila por central, ordenada por Cover. Incluye `stopper`, `cover`, el percentil de cada métrica (`pct_*`) y los datos originales.
 - En consola: el top N de cada rol (`--top`, default 10) y avisos de métricas omitidas o jugadores repetidos.
+
+## Diseño de la gráfica
+
+- Fondo crema, panel redondeado, título grande con "vs" en gris (`--title`), línea superior en monoespaciada (`--header`), subtítulo (`--subtitle`) y marca opcional arriba a la izquierda (`--brand`).
+- Zonas con caja redondeada y etiqueta en píldora. Los lados que tocan 0 o 100 se extienden 3 unidades hacia afuera, para que los puntos del borde queden dentro. El lado del umbral (`--threshold`) es exacto.
+- Marcadores: círculo con colores aproximados del club y abreviatura (AME, CAZ, TOL…), definidos en `TEAM_STYLE`. Un equipo que no esté ahí sale en gris con sus 3 primeras letras.
+- Tipografías: Inter y JetBrains Mono, con DejaVu como respaldo si no están instaladas.
+- PNG a 200 dpi (2400 × 2280 px).
 
 ## Columnas del CSV
 
