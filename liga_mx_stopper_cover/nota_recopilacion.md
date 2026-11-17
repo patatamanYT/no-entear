@@ -66,3 +66,15 @@ Efecto en el análisis (`--min-minutes 450`):
   - Salcedo y Reyes: les faltan 4 métricas cada uno. Sus datos nuevos son de **FootyMetrics**, no de FotMob, y los porcentajes de Reyes se calcularon a partir de totales (416/490 y 53/80). Con `--max-missing 1` quedan fuera del análisis.
 - **Eduardo Tercero:** `dribbled_past` 12 y `recoveries` 62 se suman a métricas que venían de playmakerstats/thefishy. Su fila mezcla fuentes.
 - **Formaciones:** `formaciones.csv` es el archivo de Grok, con fuente y nota por equipo. Corrigió 4 de las 7 estimaciones por minutos: Toluca es línea de 2, y Atlas, San Luis y Santos son línea de 3. Luis Romo jugó de central en sus 12 partidos.
+
+## Diego Reyes y Carlos Salcedo, capturas de FotMob (usuario, 17 nov 2026)
+
+- Se reemplazaron los valores de FootyMetrics por los de FotMob y se llenaron sus huecos. `fuente_extra` lo indica.
+- **Diferencias FootyMetrics → FotMob:**
+  - Reyes: tackles 20 → 19, interceptions 19 → 17, duels_won_pct 66.3 → 63.4 (el de FootyMetrics era calculado) y pass_completion_pct 84.9 → 85.0.
+  - Salcedo: clearances 37 → 36.
+- **Valores nuevos de FotMob:**
+  - Reyes: blocked_shots 15, recoveries 42, dribbled_past 4, aerials_won 26, duels_won 52 y aerials_won_pct 55.3.
+  - Salcedo: blocked_shots 3, recoveries 39, dribbled_past 5, aerials_won 13, duels_won 30 y aerials_won_pct 46.4.
+- **Sin verificar:** minutes (Reyes 1327 y Salcedo 781), que no salen en las capturas.
+- **Jugadores verificados a mano contra FotMob:** Joaquim, Diego Reyes y Carlos Salcedo.

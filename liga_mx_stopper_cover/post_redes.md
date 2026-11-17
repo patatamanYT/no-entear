@@ -18,14 +18,14 @@ Fórmula en los comentarios 👇
 
 🔵 Nico Carrera y Eduardo Tercero (Atlante), 🔴 Juan José Purata y Adonis Frías (Atlas), 🔴 Kaiky Naves (Necaxa) y 🟡 Joaquim (Tigres) chocan, pero no cubren. Necesitan un central de cobertura al lado.
 
-👥 ¿Y en pareja? Juárez (Sepúlveda + Murillo) y Necaxa (Oliveros y Peña + Naves) combinan los dos perfiles. Atlante y Atlas tienen solo centrales de choque, y América solo de cobertura.
+👥 ¿Y en pareja? Juárez (Sepúlveda + Murillo) y Necaxa (Oliveros y Peña + Naves) combinan los dos perfiles. Atlante y Atlas tienen solo centrales de choque; América y Santos, solo de cobertura.
 
 ---
 
 ## Comentario con la fórmula
 
 📐 Cómo se calcula:
-1. Centrales con 450 minutos o más en la fase regular del Apertura 2026 (J1–J16) y con, como mucho, 1 métrica faltante: 53 jugadores.
+1. Centrales con 450 minutos o más en la fase regular del Apertura 2026 (J1–J16) y con, como mucho, 1 métrica faltante: 55 jugadores.
 2. Las métricas de conteo se pasan a por 90 minutos; los porcentajes se usan tal cual.
 3. Percentil de cada métrica dentro del grupo. "Veces regateado" y "faltas cometidas" van invertidas (menos es mejor).
 4. Puntaje del rol = promedio de sus percentiles, con el mismo peso para todas. Ese puntaje se vuelve a convertir en percentil (0–100), que es lo que se ve en cada eje.
