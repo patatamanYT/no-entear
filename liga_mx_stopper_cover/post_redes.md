@@ -33,4 +33,4 @@ Fórmula en los comentarios 👇
    • Cobertura: veces regateado (invertida), % de pase, recuperaciones y faltas cometidas (invertida).
 5. Zonas: 70 o más en un eje y 30 o menos en el otro (o 70 o más en ambos).
 
-Datos: FotMob, consultados el 16–17 de noviembre de 2026. Los errores quedaron fuera porque FotMob no los publica.
+Datos: FotMob, consultados el 16–17 de noviembre de 2026 (5 jugadores verificados a mano). Los errores quedaron fuera porque FotMob no los publica.

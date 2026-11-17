@@ -85,3 +85,10 @@ Efecto en el análisis (`--min-minutes 450`):
 - **Valores de FotMob:** 996' (14 partidos, 10 de titular), tackles 8, interceptions 7, blocked_shots 5, fouls 4, recoveries 29, dribbled_past 4, clearances 46, duels_won 26, duels_won_pct 63.4, aerials_won 13, aerials_won_pct 72.2 y pass_completion_pct 87.3.
 - **Ojo:** son totales de toda su temporada, incluidos los partidos que jugó de lateral.
 - **Jugadores verificados a mano:** Joaquim, Diego Reyes, Carlos Salcedo y Aldo Cruz (este último cargado directamente desde FotMob).
+
+## Jackson Porozo, capturas de FotMob (usuario, 17 nov 2026)
+
+- **Coinciden con el CSV las 11 métricas visibles:** duels_won 75, duels_won_pct 73.5, aerials_won 45, aerials_won_pct 73.8, tackles 20, interceptions 21, blocked_shots 10, fouls_committed 8, recoveries 28, clearances 100 y pass_completion_pct 92.4.
+- **"Dribbled past" no aparece** en su sección Defending; en otros jugadores sí sale, aunque valga poco (por ejemplo, Reyes 4). Es probable que FotMob oculte filas con valor 0, porque "Penalties conceded" tampoco sale en jugadores con 0. Pero no está confirmado, así que `dribbled_past` sigue vacío.
+- **Si fuera 0:** su Cobertura pasaría de 87.5 a 96.4, y la de los demás cambiaría como máximo 3.6 puntos.
+- **Jugadores verificados a mano:** Joaquim, Diego Reyes, Carlos Salcedo, Aldo Cruz y Jackson Porozo.
