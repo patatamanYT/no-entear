@@ -74,6 +74,25 @@ def verdict(profiles):
     return "Sin complemento"
 
 
+MARGIN = 3  # puntos de percentil para marcar un veredicto "en el limite"
+
+
+def alt_profiles(s, c, m=MARGIN):
+    """Perfiles posibles si Ch y Cb se mueven hasta +-m puntos."""
+    if pd.isna(s) or pd.isna(c):
+        return {"Sin datos"}
+    return {profile(min(100, max(0, s + ds)), min(100, max(0, c + dc)))
+            for ds in (-m, 0, m) for dc in (-m, 0, m)}
+
+
+def borderline(players):
+    """True si alguna combinacion de perfiles alternativos cambia el veredicto."""
+    from itertools import product
+    base = verdict([p["profile"] for p in players])
+    return any(verdict(list(combo)) != base
+               for combo in product(*[sorted(alt_profiles(p["stopper"], p["cover"])) for p in players]))
+
+
 def build(data, scores, formations, back3_min):
     sc = scores.set_index("player")[["stopper", "cover"]]
     out = []
@@ -93,14 +112,15 @@ def build(data, scores, formations, back3_min):
             players.append({"player": name, "minutes": int(mins.get(name, 0)), "stopper": s,
                             "cover": c, "profile": profile(s, c), "in_data": name in mins})
         out.append({"team": team, "n": n, "origin": origin, "players": players,
-                    "verdict": verdict([p["profile"] for p in players])})
+                    "verdict": verdict([p["profile"] for p in players]),
+                    "borderline": borderline(players)})
     order = {v: i for i, (v, _) in enumerate(VERDICTS)}
     return sorted(out, key=lambda t: (order[t["verdict"]], t["team"]))
 
 
 def draw(teams, a):
     cols, rows = 6, -(-len(teams) // 6)
-    fig = plt.figure(figsize=(18, 3.75 + 3.25 * rows), facecolor=BG)
+    fig = plt.figure(figsize=(18, 4.0 + 3.25 * rows), facecolor=BG)
     H = fig.get_size_inches()[1]
     top = 1 - 2.6 / H                      # inicio de la rejilla (figura)
     ch, gap = 3.0 / H, 0.25 / H            # alto de tarjeta y separacion
@@ -134,7 +154,7 @@ def draw(teams, a):
                                           (cx + 0.022, hy), xycoords="figure fraction", frameon=False))
         fig.text(cx + 0.042, hy + 0.06 / H, DISPLAY.get(t["team"], t["team"]), fontsize=12.5, fontweight="bold", color=INK,
                  family=SANS, va="center")
-        fig.text(cx + 0.042, hy - 0.2 / H, f"Línea de {t['n']}" + ("*" if "estimado" in str(t["origin"]) else ""),
+        fig.text(cx + 0.042, hy - 0.2 / H, f"Línea de {t['n']}" + (" (est.)" if "estimado" in str(t["origin"]) else ""),
                  fontsize=9, color=MUTED, family=SANS, va="center")
         for j, p in enumerate(t["players"]):
             py = hy - (0.72 + 0.44 * j) / H
@@ -148,13 +168,14 @@ def draw(teams, a):
                    if p["profile"] != "Sin datos"
                    else ("Sin datos" if p["in_data"] else "Sin datos (no está en el CSV)"))
             fig.text(cx + 0.024, py - 0.13 / H, sub, fontsize=8.5, color=MUTED, family=SANS, va="center")
-        fig.text(cx + cw / 2, cy + 0.22 / H, t["verdict"].upper(), fontsize=9.5, fontweight="bold",
+        fig.text(cx + cw / 2, cy + 0.22 / H, t["verdict"].upper() + (" *" if t["borderline"] else ""), fontsize=9.5, fontweight="bold",
                  color="white", family=SANS, ha="center", va="center",
                  bbox=dict(boxstyle="round,pad=0.4,rounding_size=0.8", fc=vcolor, ec="none"))
 
     note = [
-        "Línea y titulares: alineaciones J1–J16 (FotMob/FBref y otras), en formaciones.csv. "
-        "* = estimado por minutos.",
+        "Línea y titulares: alineaciones J1–J16 (FotMob/FBref y otras), en formaciones.csv; "
+        "(est.) = estimado por minutos.",
+        f"* Veredicto en el límite: cambia si algún titular se mueve ±{MARGIN} puntos en Choque o Cobertura.",
         "Perfil: Ambos = Ch y Cb ≥ 60 · Choque = Ch ≥ 55 y 15+ sobre Cb · Cobertura = Cb ≥ 55 y 15+ sobre Ch · "
         "Ch/Cb = percentil Choque/Cobertura.",
     ]
@@ -202,11 +223,12 @@ def main():
         return
 
     for t in teams:
-        print(f"{t['verdict']:18s} {t['team']:18s} (línea de {t['n']}, {t['origin']}): "
+        print(f"{t['verdict'] + (' *' if t['borderline'] else ''):20s} {t['team']:18s} (línea de {t['n']}, {t['origin']}): "
               + " | ".join(f"{p['player']} [{p['profile']}"
                            + (f" {p['stopper']:.0f}/{p['cover']:.0f}]" if p["profile"] != "Sin datos" else "]")
                            for p in t["players"]))
     pd.DataFrame([{"team": t["team"], "linea": t["n"], "origen": t["origin"], "veredicto": t["verdict"],
+                   "en_el_limite": t["borderline"],
                    **{f"central_{j + 1}": f"{p['player']} ({p['profile']})" for j, p in enumerate(t["players"])}}
                   for t in teams]).to_csv(a.out.rsplit(".", 1)[0] + ".csv", index=False)
     draw(teams, a)

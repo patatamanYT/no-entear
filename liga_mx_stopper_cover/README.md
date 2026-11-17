@@ -30,8 +30,8 @@ Resultado:
   - Respecto a v1: entradas ganadas (`tackles_won`, 50% de cobertura) pasa a tackles totales, y duelos ganados (conteo) pasa a % de duelos ganados. Se agregan bloqueos y faltas.
 - **Omitidas:** `errors`, porque FotMob no la publica (0% de cobertura).
 - **Por 90' con otros minutos:** tackles, bloqueos y faltas se dividen entre `minutes_fotmob` cuando existe, porque son de J16 en jugadores cuyas otras columnas llegan a J15.
-- **Muestra (17 nov 2026, con las capturas de FotMob de Reyes y Salcedo):** 76 centrales en el CSV y 55 con 450' o más, todos evaluados con `--max-missing 1`. Solo Jackson Porozo tiene 1 hueco (`dribbled_past`, que FotMob no publica para él), y su Cobertura se promedia con 3 métricas.
-- **Casos en el límite** de "Ambos" (Ch y Cb ≥ 60) en la gráfica de parejas: Pereira (100 / 60), Nathan Silva (62 / 82) y Felipe Sánchez (59 / 98). Un punto de diferencia cambia el veredicto de Toluca, Pumas o Santos.
+- **Muestra (17 nov 2026, con las capturas de FotMob de Reyes, Salcedo y Aldo Cruz):** 77 centrales en el CSV y 56 con 450' o más, todos evaluados con `--max-missing 1`. Aldo Cruz (San Luis, 996') es lateral de posición pero fue tercer central titular en J8–J16; sus totales incluyen los partidos de lateral. Solo Jackson Porozo tiene 1 hueco (`dribbled_past`, que FotMob no publica para él), y su Cobertura se promedia con 3 métricas.
+- **Veredictos en el límite:** la gráfica de parejas marca con * los equipos cuyo veredicto cambiaría si algún titular se moviera ±3 puntos (`MARGIN`). Hoy son Santos, Cruz Azul, Toluca, León, Tigres y Pumas.
 
 **Alternativa preparada:** `descargar_datos.py` (Sportmonks, las 9 métricas). Necesita la variable `SPORTMONKS_API_TOKEN`.
 
@@ -118,7 +118,7 @@ python parejas_centrales.py centrales_apertura2026_j16.csv stopper_vs_cover_aper
 - **Puntajes:** usa el mismo CSV de puntajes que la dispersión (`--max-missing 1`), así que los números coinciden con la gráfica principal.
 - **Perfil de cada central** (Ch = percentil Choque, Cb = percentil Cobertura): Ambos (Ch y Cb ≥ 60), Choque (Ch ≥ 55 y al menos 15 sobre Cb), Cobertura (al revés), Equilibrado (ambos ≥ 40), Bajo y Sin datos.
 - **Veredicto:** Completa (hay un "Ambos"), Se complementan (hay un Choque y un Cobertura), Solo choque, Solo cobertura, Sin complemento y Datos incompletos (falta el puntaje de un titular y lo conocido no alcanza para decidir).
-- **Titulares sin puntaje:** solo Aldo Cruz (San Luis), que no está en el CSV porque es lateral de posición.
+- **Titulares sin puntaje:** ninguno.
 - Sin `formaciones.csv`, el script estima la línea por minutos (`--write-formations` guarda esa estimación).
 
 ## Columnas del CSV

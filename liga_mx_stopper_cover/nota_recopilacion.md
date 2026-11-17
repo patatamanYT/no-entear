@@ -78,3 +78,10 @@ Efecto en el análisis (`--min-minutes 450`):
   - Salcedo: blocked_shots 3, recoveries 39, dribbled_past 5, aerials_won 13, duels_won 30 y aerials_won_pct 46.4.
 - **Sin verificar:** minutes (Reyes 1327 y Salcedo 781), que no salen en las capturas.
 - **Jugadores verificados a mano contra FotMob:** Joaquim, Diego Reyes y Carlos Salcedo.
+
+## Aldo Cruz (San Luis), capturas de FotMob (usuario, 17 nov 2026)
+
+- **Fila nueva:** Aldo Cruz no estaba en el CSV porque es lateral izquierdo de posición, pero fue tercer central titular de San Luis en J8–J16.
+- **Valores de FotMob:** 996' (14 partidos, 10 de titular), tackles 8, interceptions 7, blocked_shots 5, fouls 4, recoveries 29, dribbled_past 4, clearances 46, duels_won 26, duels_won_pct 63.4, aerials_won 13, aerials_won_pct 72.2 y pass_completion_pct 87.3.
+- **Ojo:** son totales de toda su temporada, incluidos los partidos que jugó de lateral.
+- **Jugadores verificados a mano:** Joaquim, Diego Reyes, Carlos Salcedo y Aldo Cruz (este último cargado directamente desde FotMob).
