@@ -41,6 +41,11 @@ Efecto en el análisis (`--min-minutes 450`):
 | dribbled_past | 7 | 7 | coincide |
 | recoveries | 26 | 26 | coincide |
 | tackles_won | 10 | — (FotMob: 15 tackles **totales**) | coherente: ganadas ≤ totales |
+| aerials_won | 38 | 38 | coincide |
+| duels_won | 67 | 67 | coincide |
+| pass_completion_pct | 79.8 | 79.8 % | coincide |
 
-- **Sin verificar:** minutes (1024), aerials_won (38), duels_won (67) y pass_completion_pct (79.8). No salen en la parte visible de la captura.
+- **Resultado:** las 7 métricas que se usan en el análisis coinciden con FotMob (2 capturas más, 17 nov 2026).
+- **Sin verificar:** solo minutes (1024), que no sale en las capturas.
+- **Otros datos de FotMob para Joaquim:** duels won % 60.9 y aerial duels won % 66.7.
 - **FotMob tiene otros datos que el CSV no trae:** tackles totales (15), blocked shots (9), fouls committed (10) y defensive contributions (104).
