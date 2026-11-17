@@ -18,7 +18,7 @@ Comando usado:
 python stopper_vs_cover.py centrales_apertura2026_j16.csv --phase-col phase \
   --header "Liga MX Apertura 2026 · Centrales" \
   --subtitle "Percentil en cada rol · fase regular, jornadas 1–16" \
-  --source "FotMob (+ FootyMetrics p/ tackles), J1–J16, consultado 16–17 nov 2026; recopilado por un asistente de IA, no verificado" \
+  --source "FotMob (+ FootyMetrics para entradas), J1–J16, consultado 16–17 nov 2026; recopilado por un asistente de IA, no verificado" \
   --out stopper_vs_cover_apertura2026.png
 ```
 
@@ -73,6 +73,7 @@ Salidas:
 
 ## Diseño de la gráfica
 
+- **Idioma:** en español por defecto (`--lang es`): título "Choque vs Cobertura", ejes CHOQUE / COBERTURA, zonas "CHOCA Y CUBRE", "CUBRE, POCO CHOQUE" y "CHOCA, POCA COBERTURA", y las métricas del pie con nombre en español. Con `--lang en` se usan los textos en inglés ("Stopper CB vs Cover CB"). `--title`, `--header` y `--subtitle` reemplazan los textos por defecto.
 - Fondo crema, panel redondeado, título grande con "vs" en gris (`--title`), línea superior en monoespaciada (`--header`), subtítulo (`--subtitle`) y marca opcional arriba a la izquierda (`--brand`).
 - Zonas con caja redondeada y etiqueta en píldora. Los lados que tocan 0 o 100 se extienden 3 unidades hacia afuera, para que los puntos del borde queden dentro. El lado del umbral (`--threshold`) es exacto.
 - Marcadores: círculo con colores aproximados del club y abreviatura (AME, CAZ, TOL…), definidos en `TEAM_STYLE`. Un equipo que no esté ahí sale en gris con sus 3 primeras letras.

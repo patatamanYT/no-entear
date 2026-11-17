@@ -112,16 +112,49 @@ def role_score(df: pd.DataFrame, metrics, weights, role, min_coverage=0.0):
     return pct_rank(raw), used, omitted  # percentil final dentro del grupo
 
 
-def describe(used, omitted):
+# Textos visibles de la grafica por idioma (--lang)
+TEXTS = {
+    "es": {
+        "title": "Choque vs Cobertura",
+        "header": "Liga MX · Centrales",
+        "subtitle": "Percentil en cada rol · fase regular",
+        "zones": ("CHOCA Y CUBRE", "CUBRE, POCO CHOQUE", "CHOCA, POCA COBERTURA"),
+        "xlabel": "CHOQUE  →", "ylabel": "COBERTURA  →",
+        "role_s": "Choque", "role_c": "Cobertura", "inv": "inv.", "omitted": "omitidas",
+        "method": "Percentil dentro del grupo · conteos por 90', tasas tal cual · "
+                  "{n} centrales, mín. {m}'",
+        "excluded": " · {k} excluidos por datos incompletos", "source": "Fuente",
+        "metrics": {"tackles_won": "entradas ganadas", "aerials_won": "duelos aéreos ganados",
+                    "clearances": "despejes", "interceptions": "intercepciones",
+                    "duels_won": "duelos ganados", "dribbled_past": "veces regateado",
+                    "pass_completion_pct": "% de pase", "recoveries": "recuperaciones",
+                    "errors": "errores"},
+    },
+    "en": {
+        "title": "Stopper CB vs Cover CB",
+        "header": "Liga MX · Centre-backs",
+        "subtitle": "Percentile in each role · regular season",
+        "zones": ("COVERS AND STOPS", "COVER, WEAK STOPPER", "STOPPER, WEAK COVER"),
+        "xlabel": "STOPPER CB  →", "ylabel": "COVER CB  →",
+        "role_s": "Stopper", "role_c": "Cover", "inv": "inv.", "omitted": "omitted",
+        "method": "Percentile within the group · counts per 90, rates as is · "
+                  "{n} centre-backs, min. {m}'",
+        "excluded": " · {k} excluded for incomplete data", "source": "Source",
+        "metrics": {},
+    },
+}
+
+
+def describe(used, omitted, L=TEXTS["es"]):
     parts = []
     for col, w, inv in used:
-        s = col + (" (inv.)" if inv else "")
+        s = L["metrics"].get(col, col) + (f" ({L['inv']})" if inv else "")
         if w != 1:
             s += f" x{w:g}"
         parts.append(s)
     txt = ", ".join(parts)
     if omitted:
-        txt += " | omitidas: " + ", ".join(c for c, _ in omitted)
+        txt += f" | {L['omitted']}: " + ", ".join(L["metrics"].get(c, c) for c, _ in omitted)
     return txt
 
 
@@ -158,7 +191,7 @@ def _text_color(hex_color):
     return INK if (0.299 * r + 0.587 * g + 0.114 * b) > 160 else "white"
 
 
-def draw_chart(df, a, note_lines):
+def draw_chart(df, a, note_lines, L):
     from matplotlib.patches import FancyBboxPatch
 
     T = a.threshold
@@ -184,9 +217,9 @@ def draw_chart(df, a, note_lines):
     ax.axvline(50, ls=(0, (4, 4)), c=GRID, lw=1, zorder=1)
 
     zones = [  # (x0, x1, y0, y1, color, texto, x_pildora, y_pildora)
-        (T, 100, T, 100, ZONE_COLORS["stops"], "COVERS AND STOPS", None, 100),
-        (0, 100 - T, T, 100, ZONE_COLORS["cover"], "COVER, WEAK STOPPER", "right", 100),
-        (T, 100, 0, 100 - T, ZONE_COLORS["stopper"], "STOPPER, WEAK COVER", None, 100 - T),
+        (T, 100, T, 100, ZONE_COLORS["stops"], L["zones"][0], None, 100),
+        (0, 100 - T, T, 100, ZONE_COLORS["cover"], L["zones"][1], "right", 100),
+        (T, 100, 0, 100 - T, ZONE_COLORS["stopper"], L["zones"][2], None, 100 - T),
     ]
     pills = []
     P = 3  # margen hacia afuera para que los puntos en 0 o 100 queden dentro
@@ -231,9 +264,9 @@ def draw_chart(df, a, note_lines):
     ax.tick_params(length=0, labelsize=11, labelcolor=MUTED, pad=10)
     for t in ax.get_xticklabels() + ax.get_yticklabels():
         t.set_family(SANS)
-    ax.set_xlabel("STOPPER CB  →", fontsize=12, fontweight="bold", color=INK,
+    ax.set_xlabel(L["xlabel"], fontsize=12, fontweight="bold", color=INK,
                   family=SANS, labelpad=8)
-    ax.set_ylabel("COVER CB  →", fontsize=12, fontweight="bold", color=INK,
+    ax.set_ylabel(L["ylabel"], fontsize=12, fontweight="bold", color=INK,
                   family=SANS, labelpad=14)
 
     # Encabezado: linea superior, titulo con "vs" en gris y subtitulo
@@ -283,11 +316,13 @@ def main():
                     help="pesos por metrica, p. ej. tackles_won=2,errors=0.5")
     ap.add_argument("--threshold", type=float, default=70,
                     help="umbral (0-100) de los recuadros resaltados")
-    ap.add_argument("--title", default="Stopper CB vs Cover CB",
+    ap.add_argument("--lang", choices=sorted(TEXTS), default="es",
+                    help="idioma de los textos de la grafica (default: es)")
+    ap.add_argument("--title", default=None,
                     help='titulo grande; lo que va despues de " vs " se pinta igual y el "vs" en gris')
-    ap.add_argument("--header", default="Liga MX · Centrales",
+    ap.add_argument("--header", default=None,
                     help="linea pequena arriba del titulo")
-    ap.add_argument("--subtitle", default="Percentil en cada rol · fase regular")
+    ap.add_argument("--subtitle", default=None)
     ap.add_argument("--brand", default="",
                     help="texto de marca opcional arriba a la izquierda (p. ej. tu usuario)")
     ap.add_argument("--source", default="",
@@ -357,14 +392,17 @@ def main():
     df["cover"], c_used, c_omit = role_score(df, COVER, weights, "Cover", a.min_coverage)
 
     # --- grafica ---
-    note = [f"Stopper: {describe(s_used, s_omit)}",
-            f"Cover: {describe(c_used, c_omit)}",
-            f"Rank % = percentil dentro del grupo · conteos por 90', tasas tal cual · "
-            f"{len(df)} centrales, mín. {a.min_minutes}'"
-            + (f" · {n_excl} excluidos por datos incompletos" if n_excl else "")]
+    L = TEXTS[a.lang]
+    a.title = a.title or L["title"]
+    a.header = a.header or L["header"]
+    a.subtitle = a.subtitle or L["subtitle"]
+    note = [f"{L['role_s']}: {describe(s_used, s_omit, L)}",
+            f"{L['role_c']}: {describe(c_used, c_omit, L)}",
+            L["method"].format(n=len(df), m=a.min_minutes)
+            + (L["excluded"].format(k=n_excl) if n_excl else "")]
     if a.source:
-        note.append(f"Fuente: {a.source}")
-    draw_chart(df, a, note)
+        note.append(f"{L['source']}: {a.source}")
+    draw_chart(df, a, note, L)
     print(f"Guardado: {a.out}")
 
     # --- CSV de puntajes ---
