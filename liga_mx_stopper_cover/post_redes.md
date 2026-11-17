@@ -1,6 +1,6 @@
 # Post · ¿Choque o Cobertura? Centrales de la Liga MX
 
-Adjuntar: `stopper_vs_cover_apertura2026.png` (dispersión), `radar_joaquim_vs_eduardo_bauermann_choque.png` y `radar_joaquim_vs_eduardo_bauermann_cobertura.png` (radares).
+Adjuntar: `stopper_vs_cover_apertura2026.png` (dispersión), `parejas_centrales.png` (equipos), `radar_joaquim_vs_eduardo_bauermann_choque.png` y `radar_joaquim_vs_eduardo_bauermann_cobertura.png` (radares).
 
 ---
 
@@ -12,18 +12,20 @@ Adjuntar: `stopper_vs_cover_apertura2026.png` (dispersión), `radar_joaquim_vs_e
 
 Fórmula en los comentarios 👇
 
-🔵 Eduardo Bauermann (Pachuca) hace las dos cosas. Víctor Guzmán (Monterrey) y Federico Pereira (Toluca) se acercan.
+🔴 Jackson Porozo (Tijuana) y 🔵 Eduardo Bauermann (Pachuca) hacen las dos cosas.
 
-🔵 Willer Ditta (Cruz Azul), 🔴 Alexis Peña (Necaxa) y 🟡 Rafael Guerrero (Tigres) cubren, pero no chocan. Necesitan un central de choque al lado.
+🔵 Willer Ditta (Cruz Azul), 🔴 Alexis Peña (Necaxa), 🟡 Rafael Guerrero (Tigres) y 🟢 Gilberto Sepúlveda (Juárez) cubren, pero no chocan. Necesitan un central de choque al lado.
 
-🔵 Nico Carrera (Atlante), 🔴 Rodrigo Schlegel y Juan José Purata (Atlas), 🔴 Kaiky Naves (Necaxa) y 🟡 Joaquim (Tigres) chocan, pero no cubren. Necesitan un central de cobertura al lado.
+🔵 Nico Carrera y Eduardo Tercero (Atlante), 🔴 Juan José Purata y Adonis Frías (Atlas), 🔴 Kaiky Naves (Necaxa) y 🟡 Joaquim (Tigres) chocan, pero no cubren. Necesitan un central de cobertura al lado.
+
+👥 ¿Y en pareja? Juárez (Sepúlveda + Murillo) y Necaxa (Oliveros y Peña + Naves) combinan los dos perfiles. Atlante y Atlas tienen solo centrales de choque, y América solo de cobertura.
 
 ---
 
 ## Comentario con la fórmula
 
 📐 Cómo se calcula:
-1. Centrales con 450 minutos o más en la fase regular del Apertura 2026 (J1–J16) y con todas las métricas disponibles: 43 jugadores.
+1. Centrales con 450 minutos o más en la fase regular del Apertura 2026 (J1–J16) y con, como mucho, 1 métrica faltante: 53 jugadores.
 2. Las métricas de conteo se pasan a por 90 minutos; los porcentajes se usan tal cual.
 3. Percentil de cada métrica dentro del grupo. "Veces regateado" y "faltas cometidas" van invertidas (menos es mejor).
 4. Puntaje del rol = promedio de sus percentiles, con el mismo peso para todas. Ese puntaje se vuelve a convertir en percentil (0–100), que es lo que se ve en cada eje.

@@ -4,11 +4,13 @@ Uso:
     python parejas_centrales.py centrales_apertura2026_j16.csv parejas_scores.csv \
         --out parejas_centrales.png
 
-- Titulares: los centrales con mas minutos de cada equipo (datos CSV).
-- Cuantos: 2 o 3 segun formaciones.csv (team,centrales,origen). Si un equipo
-  no esta ahi, se estima: 3 si su tercer central tiene >= --back3-min minutos
-  (default 720 = la mitad de 1440), si no 2. Con --write-formations se guarda
-  la estimacion en formaciones.csv para corregirla a mano.
+- Titulares y cuantos (2 o 3): de formaciones.csv (team,centrales,origen,
+  titulares,nota). `titulares` son nombres separados por " / ", escritos como
+  en la columna player. Si un equipo no tiene titulares ahi, se usan los
+  centrales con mas minutos; si no esta en el archivo, se estima la linea:
+  3 si su tercer central tiene >= --back3-min minutos (default 720), si no 2.
+  Con --write-formations se guarda esa estimacion para corregirla a mano.
+  Un titular que no esta en el CSV de datos sale como "Sin datos".
 - Perfil de cada central con su puntaje (scores CSV de stopper_vs_cover.py):
     Ambos       choque >= 60 y cobertura >= 60
     Choque      choque >= 55 y choque - cobertura >= 15
@@ -19,8 +21,8 @@ Uso:
 - Veredicto de la linea:
     Completa            hay un central "Ambos"
     Se complementan     hay al menos un "Choque" y un "Cobertura"
-    Dos de choque       2+ "Choque" y ningun "Cobertura"
-    Dos de cobertura    2+ "Cobertura" y ningun "Choque"
+    Solo choque         2+ "Choque" y ningun "Cobertura"
+    Solo cobertura      2+ "Cobertura" y ningun "Choque"
     Datos incompletos   falta el puntaje de un titular y lo conocido no decide
     Sin complemento     lo demas
 """
@@ -40,7 +42,7 @@ PROFILE_COLORS = {"Ambos": "#7c3aed", "Choque": "#ea580c", "Cobertura": "#16a34a
                   "Equilibrado": "#64748b", "Bajo": "#b6b0a4", "Sin datos": "#d6d1c6"}
 VERDICTS = [  # orden de la grafica, color
     ("Completa", "#7c3aed"), ("Se complementan", "#16a34a"),
-    ("Dos de choque", "#ea580c"), ("Dos de cobertura", "#0d9488"),
+    ("Solo choque", "#ea580c"), ("Solo cobertura", "#0d9488"),
     ("Sin complemento", "#64748b"), ("Datos incompletos", "#a8a29e"),
 ]
 
@@ -66,9 +68,9 @@ def verdict(profiles):
     if len(known) < len(profiles):
         return "Datos incompletos"
     if known.count("Choque") >= 2 and "Cobertura" not in known:
-        return "Dos de choque"
+        return "Solo choque"
     if known.count("Cobertura") >= 2 and "Choque" not in known:
-        return "Dos de cobertura"
+        return "Solo cobertura"
     return "Sin complemento"
 
 
@@ -76,17 +78,20 @@ def build(data, scores, formations, back3_min):
     sc = scores.set_index("player")[["stopper", "cover"]]
     out = []
     for team, g in data.sort_values("minutes", ascending=False).groupby("team"):
+        named = []
         if team in formations:
-            n, origin = formations[team]
+            n, origin, named = formations[team]
         else:
             n = 3 if (g["minutes"] >= back3_min).sum() >= 3 else 2
             origin = f"estimado (3er central >= {back3_min}')" if n == 3 else "estimado"
+        names = named or list(g.head(n)["player"])
+        mins = dict(zip(g["player"], g["minutes"]))
         players = []
-        for r in g.head(n).itertuples():
-            s, c = (sc.at[r.player, "stopper"], sc.at[r.player, "cover"]) \
-                if r.player in sc.index else (float("nan"), float("nan"))
-            players.append({"player": r.player, "minutes": int(r.minutes), "stopper": s,
-                            "cover": c, "profile": profile(s, c)})
+        for name in names:
+            s, c = (sc.at[name, "stopper"], sc.at[name, "cover"]) \
+                if name in sc.index else (float("nan"), float("nan"))
+            players.append({"player": name, "minutes": int(mins.get(name, 0)), "stopper": s,
+                            "cover": c, "profile": profile(s, c), "in_data": name in mins})
         out.append({"team": team, "n": n, "origin": origin, "players": players,
                     "verdict": verdict([p["profile"] for p in players])})
     order = {v: i for i, (v, _) in enumerate(VERDICTS)}
@@ -129,7 +134,7 @@ def draw(teams, a):
                                           (cx + 0.022, hy), xycoords="figure fraction", frameon=False))
         fig.text(cx + 0.042, hy + 0.06 / H, DISPLAY.get(t["team"], t["team"]), fontsize=12.5, fontweight="bold", color=INK,
                  family=SANS, va="center")
-        fig.text(cx + 0.042, hy - 0.2 / H, f"Línea de {t['n']}" + ("*" if "estimado" in t["origin"] and t["n"] == 3 else ""),
+        fig.text(cx + 0.042, hy - 0.2 / H, f"Línea de {t['n']}" + ("*" if "estimado" in str(t["origin"]) else ""),
                  fontsize=9, color=MUTED, family=SANS, va="center")
         for j, p in enumerate(t["players"]):
             py = hy - (0.72 + 0.44 * j) / H
@@ -140,15 +145,16 @@ def draw(teams, a):
             fig.text(cx + 0.024, py + 0.07 / H, name, fontsize=10.5, color=INK, family=SANS,
                      fontweight="semibold", va="center")
             sub = (f"{p['profile']} · Ch {p['stopper']:.0f} · Cb {p['cover']:.0f}"
-                   if p["profile"] != "Sin datos" else "Sin datos")
+                   if p["profile"] != "Sin datos"
+                   else ("Sin datos" if p["in_data"] else "Sin datos (no está en el CSV)"))
             fig.text(cx + 0.024, py - 0.13 / H, sub, fontsize=8.5, color=MUTED, family=SANS, va="center")
         fig.text(cx + cw / 2, cy + 0.22 / H, t["verdict"].upper(), fontsize=9.5, fontweight="bold",
                  color="white", family=SANS, ha="center", va="center",
                  bbox=dict(boxstyle="round,pad=0.4,rounding_size=0.8", fc=vcolor, ec="none"))
 
     note = [
-        "Titulares = centrales con más minutos de cada equipo. * Línea de 3 estimada (3er central con 720' o más); "
-        "se corrige en formaciones.csv.",
+        "Línea y titulares: alineaciones J1–J16 (FotMob/FBref y otras), en formaciones.csv. "
+        "* = estimado por minutos.",
         "Perfil: Ambos = Ch y Cb ≥ 60 · Choque = Ch ≥ 55 y 15+ sobre Cb · Cobertura = Cb ≥ 55 y 15+ sobre Ch · "
         "Ch/Cb = percentil Choque/Cobertura.",
     ]
@@ -183,7 +189,10 @@ def main():
     formations = {}
     if Path(a.formations).exists() and not a.write_formations:
         f = pd.read_csv(a.formations)
-        formations = {r.team: (int(r.centrales), r.origen) for r in f.itertuples()}
+        tit = f["titulares"] if "titulares" in f.columns else pd.Series("", index=f.index)
+        formations = {r.team: (int(r.centrales), r.origen,
+                               [x.strip() for x in str(t).split("/") if x.strip()] if pd.notna(t) else [])
+                      for r, t in zip(f.itertuples(), tit)}
     teams = build(data, pd.read_csv(a.scores), formations, a.back3_min)
 
     if a.write_formations:

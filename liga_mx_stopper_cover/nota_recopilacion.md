@@ -56,3 +56,13 @@ Efecto en el análisis (`--min-minutes 450`):
 - **Revisión automática:** las columnas originales quedaron idénticas en las 76 filas. Joaquim coincide con la captura (15 / 9 / 10 / 60.9 / 66.7). Ningún `tackles` es menor que `tackles_won`, y los porcentajes están entre 0 y 100. Cobertura entre los centrales con 450' o más: 87–91%.
 - **Celdas vacías:** 19 jugadores tienen al menos una celda nueva vacía. Entre los 48 evaluados, a Luis Romo y Bruno Méndez les faltan las 5, a Santiago Ramos le faltan 4 y a Gonzalo Piovi le falta `blocked_shots`. En el radar, su eje sale en el centro y el script avisa.
 - **Minutos distintos:** Piña (620 → 710), F. Sánchez (1350 → 1440), J. Pérez (414 → 459) y Alfaro (236 → 234). Las columnas extra de Piña, Sánchez y Pérez son de J16, mientras que sus columnas originales son de J15. Por eso el radar divide las columnas extra entre `minutes_fotmob`.
+
+## Tercera pasada (Grok, 17 nov 2026): huecos y formaciones
+
+- **Revisión automática:** 42 celdas llenadas, todas antes vacías, y ningún valor existente modificado. Porcentajes entre 0 y 100.
+- **Ya completos para la fórmula:** Sepúlveda, Romo, Bruno Méndez, Villanueva, Santiago Ramos, Felipe Sánchez, Orona, Tercero y Piovi.
+- **Siguen incompletos:**
+  - Porozo: falta `dribbled_past`, que FotMob no publica para él.
+  - Salcedo y Reyes: les faltan 4 métricas cada uno. Sus datos nuevos son de **FootyMetrics**, no de FotMob, y los porcentajes de Reyes se calcularon a partir de totales (416/490 y 53/80). Con `--max-missing 1` quedan fuera del análisis.
+- **Eduardo Tercero:** `dribbled_past` 12 y `recoveries` 62 se suman a métricas que venían de playmakerstats/thefishy. Su fila mezcla fuentes.
+- **Formaciones:** `formaciones.csv` es el archivo de Grok, con fuente y nota por equipo. Corrigió 4 de las 7 estimaciones por minutos: Toluca es línea de 2, y Atlas, San Luis y Santos son línea de 3. Luis Romo jugó de central en sus 12 partidos.

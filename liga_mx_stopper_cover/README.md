@@ -18,6 +18,7 @@ Comando usado:
 python stopper_vs_cover.py centrales_apertura2026_j16.csv --phase-col phase \
   --header "Liga MX Apertura 2026 · Centrales" \
   --subtitle "Percentil en cada rol · fase regular, jornadas 1–16" \
+  --max-missing 1 \
   --source "FotMob, J1–J16, consultado 16–17 nov 2026; recopilado por un asistente de IA y verificado a mano en 1 jugador" \
   --out stopper_vs_cover_apertura2026.png
 ```
@@ -29,8 +30,8 @@ Resultado:
   - Respecto a v1: entradas ganadas (`tackles_won`, 50% de cobertura) pasa a tackles totales, y duelos ganados (conteo) pasa a % de duelos ganados. Se agregan bloqueos y faltas.
 - **Omitidas:** `errors`, porque FotMob no la publica (0% de cobertura).
 - **Por 90' con otros minutos:** tackles, bloqueos y faltas se dividen entre `minutes_fotmob` cuando existe, porque son de J16 en jugadores cuyas otras columnas llegan a J15.
-- **Muestra:** 76 centrales en el CSV; 55 con 450' o más; 43 evaluados. Se excluyeron 12 por huecos (`--max-missing 0`): Santiago Ramos, Eduardo Tercero, Gonzalo Piovi, Gilberto Sepúlveda, Luis Romo, Carlos Salcedo, Diego Reyes, Carlos Villanueva, Felipe Sánchez, Efraín Orona, Jackson Porozo y Bruno Méndez.
-- **Sensibilidad:** con `--max-missing 2` entran Tercero, Orona, F. Sánchez, Piovi y Porozo, y los percentiles de los demás cambian como máximo 8.7 puntos en Choque y 6.1 en Cobertura.
+- **Muestra (tercera pasada de datos, 17 nov 2026):** 76 centrales en el CSV; 55 con 450' o más; 53 evaluados con `--max-missing 1`. Quedan fuera Carlos Salcedo y Diego Reyes, a los que les faltan 4 métricas y cuyos datos son de FootyMetrics. Jackson Porozo entra con 1 hueco (`dribbled_past`), y su Cobertura se promedia con 3 métricas.
+- **Sensibilidad:** sin Porozo (`--max-missing 0`, 52 centrales), los percentiles de los demás cambian como máximo 3.4 puntos.
 
 **Alternativa preparada:** `descargar_datos.py` (Sportmonks, las 9 métricas). Necesita la variable `SPORTMONKS_API_TOKEN`.
 
@@ -106,18 +107,19 @@ python radar_centrales.py stopper_vs_cover_apertura2026_scores.csv \
 ## ¿Se complementan los centrales de cada equipo?
 
 ```bash
-# 1) puntajes aceptando hasta 2 huecos (para no dejar titulares sin perfil)
-python stopper_vs_cover.py centrales_apertura2026_j16.csv --phase-col phase --max-missing 2 --top 0 --out parejas_base.png
-# 2) (una vez) estimar línea de 2 o de 3 y corregir formaciones.csv a mano
-python parejas_centrales.py centrales_apertura2026_j16.csv parejas_base_scores.csv --write-formations
-# 3) tarjetas por equipo
-python parejas_centrales.py centrales_apertura2026_j16.csv parejas_base_scores.csv --out parejas_centrales.png
+python parejas_centrales.py centrales_apertura2026_j16.csv stopper_vs_cover_apertura2026_scores.csv \
+  --out parejas_centrales.png
 ```
 
-- **Titulares:** los centrales con más minutos de cada equipo, 2 o 3 según `formaciones.csv`. Ese archivo es una estimación y debe revisarse: se marcó línea de 3 si el tercer central tiene 720' o más (Atlante, Cruz Azul, Guadalajara, Necaxa y Toluca). En la tarjeta, la línea estimada lleva *.
+- **Titulares y línea de 2 o de 3:** salen de `formaciones.csv`. Grok lo investigó con las alineaciones J1–J16 de FotMob, FBref y otras fuentes, y en `origen` y `nota` explica el conteo de partidos de cada equipo y los casos dudosos.
+  - Línea de 3: Atlante, Atlas, San Luis, Cruz Azul, Chivas, Necaxa y Santos.
+  - Línea de 2: los otros 11.
+  - Mayorías ajustadas (9-7): Atlas y Necaxa.
+- **Puntajes:** usa el mismo CSV de puntajes que la dispersión (`--max-missing 1`), así que los números coinciden con la gráfica principal.
 - **Perfil de cada central** (Ch = percentil Choque, Cb = percentil Cobertura): Ambos (Ch y Cb ≥ 60), Choque (Ch ≥ 55 y al menos 15 sobre Cb), Cobertura (al revés), Equilibrado (ambos ≥ 40), Bajo y Sin datos.
-- **Veredicto:** Completa (hay un "Ambos"), Se complementan (hay un Choque y un Cobertura), Dos de choque, Dos de cobertura, Sin complemento y Datos incompletos (falta el puntaje de un titular y lo conocido no alcanza para decidir).
-- **Otros percentiles que la dispersión:** los puntajes salen de la corrida con `--max-missing 2` (48 centrales), así que difieren unos puntos de la gráfica principal (`--max-missing 0`, 43). Se hizo así para no perder titulares como Porozo, Felipe Sánchez, Tercero y Piovi.
+- **Veredicto:** Completa (hay un "Ambos"), Se complementan (hay un Choque y un Cobertura), Solo choque, Solo cobertura, Sin complemento y Datos incompletos (falta el puntaje de un titular y lo conocido no alcanza para decidir).
+- **Titulares sin puntaje:** Aldo Cruz (San Luis) no está en el CSV porque es lateral de posición; Diego Reyes (Querétaro) y Carlos Salcedo (Monterrey) tienen datos incompletos.
+- Sin `formaciones.csv`, el script estima la línea por minutos (`--write-formations` guarda esa estimación).
 
 ## Columnas del CSV
 
