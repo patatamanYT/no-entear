@@ -91,3 +91,28 @@ El montaje ahora sigue a la voz, como preveía el guion:
 - El tercer golpe pasa a 25.45 s, con «14 puntos».
 
 Nadie ha escuchado el resultado: los niveles son mediciones.
+
+## Versión 6 · voz tipo podcast
+
+Se aplicaron las skills sonido y tesseract-motion (guía de limpieza de voz). Se parte de la toma solo filtrada (graves dobles a 95 Hz) con el mismo corte de 0.11 s, no de la versión ya masterizada, para no apilar procesos.
+
+**Diagnóstico** (espectro promedio sobre las palabras, relativo a 1 kHz):
+- Caja en 500–630 Hz: +12/+13 dB.
+- Presencia en 2.5–4 kHz: −5/−6 dB.
+- Brillo en 5–10 kHz: de −13 a −22 dB.
+- Unos 26 dB entre palabras suaves y fuertes.
+
+**Cadena elegida** (variante B de tres probadas):
+1. −4.5 dB en 560 Hz y −1 dB en 250 Hz.
+2. +3 dB en 3.3 kHz y +2.5 dB en estante desde 9 kHz.
+3. Compresor 3:1 (umbral −28 dBFS, ataque 12 ms, salida 150 ms) y, después, otro 4:1 para picos.
+4. De-esser.
+5. Ganancia fija a −16 LUFS y limitador de picos a −1.5 dBFS.
+
+Archivo: assets/voz_santos_podcast.wav. En el montaje va a −1.2 dB. Mezcla final: −14.3 LUFS, LRA 2.5, pico −2.7 dBFS.
+
+**Lo que se descartó**
+- Una expansión para bajar el ruido entre frases: bajaba hasta 9 dB palabras suaves como «Un» y «eso».
+- Más reducción de ruido: quitaba consonantes.
+
+La compresión deja el ruido de fondo unos 28 dB por debajo de la voz, frente a los 36 dB de la toma filtrada. Todo lo anterior son mediciones: nadie ha escuchado el resultado.

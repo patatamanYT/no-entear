@@ -159,7 +159,7 @@ FONT = {
 # Escenas ajustadas a la toma de voz (voz_santos.wav, entra a 0.9 s): cada una
 # empieza ~120 ms antes de su primera palabra. Sin voz, el montaje original medía 49.5 s.
 TIMES = (4000, 4740, 5180, 3660, 8960, 5790, 5260, 7260, 9150)
-VOICE = ("voz_santos.wav", 900)
+VOICE = ("voz_santos_podcast.wav", 900)
 # Momentos dentro de escenas, en ms locales, tomados de la voz.
 PENALES = (2600, 3500, 4000)      # filas: «penales», «expulsiones», «1 de 6»
 RECUENTO = (4700, 6700, 7700)     # tarjeta, «dieciocho», «catorce»
@@ -324,9 +324,9 @@ class Cronica(Author):
         if (EDITOR / VOICE[0]).exists():
             with wave.open(str(EDITOR / VOICE[0]), "rb") as audio:
                 length = round(1000 * audio.getnframes() / audio.getframerate())
-            # −4 dB: la voz mono se duplica en estéreo; la mezcla queda cerca de −14 LUFS.
+            # La voz (−16 LUFS, mono) va a −1.2 dB: duplicada en estéreo, la mezcla queda cerca de −14 LUFS.
             self.add("createFxAudioLayer","Voz",start=VOICE[1],duration=length,
-                     sourceRange=dict(start=0,duration=length),volume=0.63,
+                     sourceRange=dict(start=0,duration=length),volume=0.87,
                      sourceIntrinsicDuration=length,source={"assetId":"voz"})
 
     def handoff(self, d):
