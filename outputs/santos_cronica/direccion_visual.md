@@ -73,4 +73,4 @@ La evaluación se hizo con fotogramas y tiras. Nadie juzgó el movimiento a velo
 
 ## Versión 4 · santos_cinematic_v4.mp4
 
-Es igual que la v3, con un cambio: en la escena 3, la foto de Acevedo se sustituye por una foto aportada por el usuario de un partido contra Atlas en el Corona. Ya no se repite la foto de Acevedo, que solo queda en la escena 7, en retrato cerrado. Como no se ha confirmado de qué partido ni de qué fecha es, se rotula «Foto aportada · fecha sin confirmar» y no se identifica a los jugadores. El crédito y el contexto están en fuentes_fotos.csv. El panel no revisó esta versión.
+Es igual que la v3, con un cambio: en la escena 3, la foto de Acevedo se sustituye por una foto aportada por el usuario de un partido contra Atlas en el Corona. Ya no se repite la foto de Acevedo, que solo queda en la escena 7, en retrato cerrado. Por decisión del usuario, la foto va sin texto encima; el crédito «Foto: aportada» aparece en la línea de fuentes. No se ha confirmado de qué partido ni de qué fecha es, así que no se atribuye un encuentro ni se identifica a los jugadores. El crédito y el contexto están en fuentes_fotos.csv. El panel no revisó esta versión.

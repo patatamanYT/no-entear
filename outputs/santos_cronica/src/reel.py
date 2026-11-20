@@ -388,10 +388,9 @@ class Cronica(Author):
             self.credits("FotMob/Opta · Foto: Club Santos Laguna",SAGE)
         elif shot == 3:
             self.section("PRIMERAS SIETE JORNADAS")
-            # Foto aportada por el usuario: partido y fecha sin confirmar, así se rotula.
+            # Foto aportada por el usuario, sin texto encima; el crédito va en la línea de fuentes.
             self.framed("partido-aportado",0,370,1080,440,focus=(1280,620),crop=1080/2560,frame_y=220,
                         push=1.025,push_ms=self.duration)
-            self.tag("FOTO APORTADA · FECHA SIN CONFIRMAR",96,770,30,limit=620)
             rect(0,795,1080,1125,IVORY,"El modelo entra sobre el partido")
             self.title("El arranque quedó corto.",96,890,90,INK,limit=848)
             line(1280,INK,x=97,w=846)
