@@ -1,0 +1,17 @@
+﻿jornada,fecha,rival,local_visita,goles_santos,goles_rival,resultado,puntos,formacion_santos,posesion_santos,tiros_santos,tiros_puerta_santos,tiros_rival,tiros_puerta_rival,xg_santos,xg_rival,xg_santos_sin_penales,xg_rival_sin_penales,grandes_ocasiones_santos,grandes_ocasiones_rival,ppda_santos,expulsion_rival,expulsion_santos,penales_a_favor,penales_en_contra,autogoles_a_favor,goles_primer_tiempo_santos,goles_primer_tiempo_rival,marcador_al_minuto_60,fuente_xg,fuente_url
+1,2026-07-18,Monterrey,V,2,3,P,0,4-2-3-1,44,11,3,19,13,2.04,1.82,2.04,1.82,3,4,N/D,N,N,0,0,0,1,3,1-3,FotMob,https://www.fotmob.com/matches/monterrey-vs-santos-laguna/21fx9s#1000014506
+2,2026-07-25,Atlas,L,0,1,P,0,4-2-3-1,57,11,1,11,5,0.78,1.17,0.78,1.17,2,4,N/D,N,N,0,0,0,0,0,0-0,FotMob,https://www.fotmob.com/matches/atlas-vs-santos-laguna/1q11us#1000014514
+3,2026-08-02,CF América,V,0,3,P,0,4-2-3-1,48,13,6,17,6,2.25,1.90,2.25,1.90,4,4,N/D,N,N,0,0,0,0,1,0-1,FotMob,https://www.fotmob.com/matches/cf-america-vs-santos-laguna/1q0qpu#1000014524
+4,2026-08-16,Chivas,L,0,1,P,0,5-3-2,39,11,2,12,5,0.71,1.58,0.71,0.79,0,2,N/D,N,N,0,1,0,0,0,0-0,FotMob,https://www.fotmob.com/matches/chivas-vs-santos-laguna/211sy1#1000014531
+5,2026-08-22,Puebla,V,2,3,P,0,4-2-3-1,61,4,2,17,7,0.37,1.02,0.37,1.02,0,1,N/D,N,N,0,0,1,1,1,2-2,FotMob,https://www.fotmob.com/matches/puebla-vs-santos-laguna/21f919#1000014535
+6,2026-08-29,Tigres,L,0,0,E,1,3-4-3,59,20,4,15,2,1.14,1.23,1.14,1.23,1,2,N/D,"S, 85",N,0,0,0,0,0,0-0,FotMob,https://www.fotmob.com/matches/santos-laguna-vs-tigres/28929w#1000014550
+7,2026-09-06,Cruz Azul,V,0,1,P,0,5-4-1,38,11,1,25,8,0.35,1.95,0.35,1.95,0,3,N/D,N,N,0,0,0,0,0,0-0,FotMob,https://www.fotmob.com/matches/cruz-azul-vs-santos-laguna/1q1czr#1000014561
+8,2026-09-13,FC Juárez,L,2,1,G,3,3-4-3,53,25,10,12,5,3.19,1.58,2.40,0.79,9,2,N/D,N,N,1,1,0,0,0,0-1,FotMob,https://www.fotmob.com/matches/santos-laguna-vs-fc-juarez/2r8eh3hu#1000014568
+9,2026-09-20,Toluca,V,3,2,G,3,5-4-1,54,22,6,24,9,1.86,3.45,1.86,3.45,1,6,N/D,"S, 45+7",N,0,0,0,1,2,1-2,FotMob,https://www.fotmob.com/matches/toluca-vs-santos-laguna/1qdr5f#1000014578
+10,2026-09-26,Pachuca,L,1,0,G,3,3-4-3,55,16,9,11,0,2.19,0.79,1.40,0.79,3,2,N/D,N,N,1,0,0,1,0,1-0,FotMob,https://www.fotmob.com/matches/pachuca-vs-santos-laguna/21fl5i#1000014583
+11,2026-10-11,Atlético de San Luis,V,2,1,G,3,5-4-1,44,17,8,16,3,2.48,0.73,2.48,0.73,4,3,N/D,N,N,0,0,0,1,1,1-1,FotMob,https://www.fotmob.com/matches/atletico-de-san-luis-vs-santos-laguna/1o5t71#1000014596
+12,2026-10-17,Querétaro FC,L,5,0,G,3,3-4-3,59,14,5,16,2,4.43,1.53,2.86,1.53,7,3,N/D,"S, 67",N,2,0,0,2,0,2-0,FotMob,https://www.fotmob.com/matches/queretaro-fc-vs-santos-laguna/slib9#1000014602
+13,2026-10-21,Pumas,L,2,0,G,3,3-4-3,65,9,2,5,1,1.81,0.14,0.23,0.14,2,0,N/D,"S, 2",N,2,0,0,1,0,1-0,FotMob,https://www.fotmob.com/matches/pumas-vs-santos-laguna/sm503#1000014615
+14,2026-10-25,Tijuana,V,1,4,P,0,5-4-1,58,12,3,15,7,0.47,3.19,0.47,3.19,0,5,N/D,N,N,0,0,0,0,2,0-2,FotMob,https://www.fotmob.com/matches/santos-laguna-vs-tijuana/6nr2gtj#1000014624
+15,2026-11-01,Necaxa,L,1,0,G,3,5-4-1,50,6,3,21,9,0.97,3.14,0.97,3.14,1,4,N/D,N,N,0,0,1,0,0,0-0,FotMob,https://www.fotmob.com/matches/necaxa-vs-santos-laguna/s0eh3#1000014632
+16,2026-11-06,Atlante,V,2,0,G,3,5-4-1,69,12,3,18,5,0.65,1.92,0.65,1.92,0,3,N/D,"S, 15; 90+5",N,0,0,0,0,0,0-0,FotMob,https://www.fotmob.com/matches/atlante-vs-santos-laguna/slar1#1000014636

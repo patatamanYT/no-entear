@@ -1,0 +1,54 @@
+﻿jornada,minuto,equipo,tipo_evento,jugador,asistente,fuente_url
+1,20,Monterrey,gol,Lucas Ocampos,Diego Rossi,https://www.fotmob.com/matches/monterrey-vs-santos-laguna/21fx9s#1000014506
+1,25,Monterrey,gol,Lucas Ocampos,Óliver Torres,https://www.fotmob.com/matches/monterrey-vs-santos-laguna/21fx9s#1000014506
+1,31,Monterrey,gol,Jesús Corona,Lucas Ocampos,https://www.fotmob.com/matches/monterrey-vs-santos-laguna/21fx9s#1000014506
+1,40,Santos Laguna,gol,Lucas Di Yorio,N/D,https://www.fotmob.com/matches/monterrey-vs-santos-laguna/21fx9s#1000014506
+1,90+6,Santos Laguna,gol,Eduardo Aguirre,Felipe Sánchez,https://www.fotmob.com/matches/monterrey-vs-santos-laguna/21fx9s#1000014506
+2,64,Atlas,gol,Édgar Zaldívar,N/D,https://www.fotmob.com/matches/atlas-vs-santos-laguna/1q11us#1000014514
+3,2,CF América,gol,Henry Martín,Dagoberto Espinoza,https://www.fotmob.com/matches/cf-america-vs-santos-laguna/1q0qpu#1000014524
+3,73,CF América,gol,Brian Rodríguez,Kevin Álvarez,https://www.fotmob.com/matches/cf-america-vs-santos-laguna/1q0qpu#1000014524
+3,75,Santos Laguna,roja,Renato Paiva,N/D,https://www.fotmob.com/matches/cf-america-vs-santos-laguna/1q0qpu#1000014524
+3,90,CF América,gol,Alejandro Cárdenas,Erick Sánchez,https://www.fotmob.com/matches/cf-america-vs-santos-laguna/1q0qpu#1000014524
+4,75,Chivas,penal_gol,Ricardo Marín,N/D,https://www.fotmob.com/matches/chivas-vs-santos-laguna/211sy1#1000014531
+4,90+7,Santos Laguna,roja,Miguel Pinto Santos,N/D,https://www.fotmob.com/matches/chivas-vs-santos-laguna/211sy1#1000014531
+5,4,Puebla,autogol,Facundo Almada,N/D,https://www.fotmob.com/matches/puebla-vs-santos-laguna/21f919#1000014535
+5,9,Puebla,gol,Eduardo Mustre,Carlos Baltazar,https://www.fotmob.com/matches/puebla-vs-santos-laguna/21f919#1000014535
+5,51,Santos Laguna,gol,Ezequiel Bullaude,Fran Villalba,https://www.fotmob.com/matches/puebla-vs-santos-laguna/21f919#1000014535
+5,53,Puebla,gol,Eduardo Mustre,Juan Pablo Vargas,https://www.fotmob.com/matches/puebla-vs-santos-laguna/21f919#1000014535
+5,62,Puebla,gol,Carlos Baltazar,Brayan Garnica,https://www.fotmob.com/matches/puebla-vs-santos-laguna/21f919#1000014535
+6,85,Tigres,amarilla_segunda,Fernando Gorriarán,N/D,https://www.fotmob.com/matches/santos-laguna-vs-tigres/28929w#1000014550
+7,89,Cruz Azul,gol,José Paradela,Andrés Montaño,https://www.fotmob.com/matches/cruz-azul-vs-santos-laguna/1q1czr#1000014561
+8,54,FC Juárez,penal_gol,Óscar Estupiñán,N/D,https://www.fotmob.com/matches/santos-laguna-vs-fc-juarez/2r8eh3hu#1000014568
+8,64,Santos Laguna,gol,Ezequiel Bullaude,Mauricio Cuevas,https://www.fotmob.com/matches/santos-laguna-vs-fc-juarez/2r8eh3hu#1000014568
+8,78,Santos Laguna,gol,Esteban Lozano,Ezequiel Bullaude,https://www.fotmob.com/matches/santos-laguna-vs-fc-juarez/2r8eh3hu#1000014568
+8,90,Santos Laguna,penal_fallado,Franco Pardo,N/D,https://www.fotmob.com/matches/santos-laguna-vs-fc-juarez/2r8eh3hu#1000014568
+9,25,Toluca,gol,Federico Viñas,Alexis Vega,https://www.fotmob.com/matches/toluca-vs-santos-laguna/1qdr5f#1000014578
+9,43,Toluca,gol,Paulinho,Alexis Vega,https://www.fotmob.com/matches/toluca-vs-santos-laguna/1qdr5f#1000014578
+9,45+1,Santos Laguna,gol,Ezequiel Bullaude,N/D,https://www.fotmob.com/matches/toluca-vs-santos-laguna/1qdr5f#1000014578
+9,45+7,Toluca,roja,Everardo López,N/D,https://www.fotmob.com/matches/toluca-vs-santos-laguna/1qdr5f#1000014578
+9,86,Santos Laguna,gol,Kevin Palacios,Fran Villalba,https://www.fotmob.com/matches/toluca-vs-santos-laguna/1qdr5f#1000014578
+9,90+5,Santos Laguna,gol,Fran Villalba,Mauricio Cuevas,https://www.fotmob.com/matches/toluca-vs-santos-laguna/1qdr5f#1000014578
+10,45+3,Santos Laguna,penal_gol,Fran Villalba,N/D,https://www.fotmob.com/matches/pachuca-vs-santos-laguna/21fl5i#1000014583
+11,19,Atlético de San Luis,gol,Óscar Macías,Sébastien Salles-Lamonge,https://www.fotmob.com/matches/atletico-de-san-luis-vs-santos-laguna/1o5t71#1000014596
+11,34,Santos Laguna,gol,Tahiel Jiménez,Ezequiel Bullaude,https://www.fotmob.com/matches/atletico-de-san-luis-vs-santos-laguna/1o5t71#1000014596
+11,64,Santos Laguna,gol,Tahiel Jiménez,N/D,https://www.fotmob.com/matches/atletico-de-san-luis-vs-santos-laguna/1o5t71#1000014596
+12,14,Santos Laguna,penal_fallado,Fran Villalba,N/D,https://www.fotmob.com/matches/queretaro-fc-vs-santos-laguna/slib9#1000014602
+12,29,Santos Laguna,gol,Tahiel Jiménez,N/D,https://www.fotmob.com/matches/queretaro-fc-vs-santos-laguna/slib9#1000014602
+12,44,Santos Laguna,gol,Eduardo Aguirre,Mauricio Cuevas,https://www.fotmob.com/matches/queretaro-fc-vs-santos-laguna/slib9#1000014602
+12,63,Santos Laguna,gol,Tahiel Jiménez,Ezequiel Bullaude,https://www.fotmob.com/matches/queretaro-fc-vs-santos-laguna/slib9#1000014602
+12,67,Querétaro FC,roja,Diego Reyes,N/D,https://www.fotmob.com/matches/queretaro-fc-vs-santos-laguna/slib9#1000014602
+12,87,Santos Laguna,penal_gol,Javier Güémez,N/D,https://www.fotmob.com/matches/queretaro-fc-vs-santos-laguna/slib9#1000014602
+12,90+3,Santos Laguna,gol,Tahiel Jiménez,Javier Abella,https://www.fotmob.com/matches/queretaro-fc-vs-santos-laguna/slib9#1000014602
+13,2,Pumas,roja,Nathan Silva,N/D,https://www.fotmob.com/matches/pumas-vs-santos-laguna/sm503#1000014615
+13,6,Santos Laguna,penal_gol,Eduardo Aguirre,N/D,https://www.fotmob.com/matches/pumas-vs-santos-laguna/sm503#1000014615
+13,80,Santos Laguna,penal_gol,Franco Pardo,N/D,https://www.fotmob.com/matches/pumas-vs-santos-laguna/sm503#1000014615
+14,13,Tijuana,gol,Francisco González,Adonis Preciado,https://www.fotmob.com/matches/santos-laguna-vs-tijuana/6nr2gtj#1000014624
+14,18,Tijuana,gol,Ignacio Rivero,N/D,https://www.fotmob.com/matches/santos-laguna-vs-tijuana/6nr2gtj#1000014624
+14,66,Santos Laguna,gol,Esteban Lozano,Ezequiel Bullaude,https://www.fotmob.com/matches/santos-laguna-vs-tijuana/6nr2gtj#1000014624
+14,69,Tijuana,gol,Ignacio Rivero,N/D,https://www.fotmob.com/matches/santos-laguna-vs-tijuana/6nr2gtj#1000014624
+14,72,Tijuana,gol,Adonis Preciado,Alan Vega,https://www.fotmob.com/matches/santos-laguna-vs-tijuana/6nr2gtj#1000014624
+15,72,Necaxa,autogol,Matías Espíndola,N/D,https://www.fotmob.com/matches/necaxa-vs-santos-laguna/s0eh3#1000014632
+16,15,Atlante,roja,Aaron Quirós,N/D,https://www.fotmob.com/matches/atlante-vs-santos-laguna/slar1#1000014636
+16,67,Santos Laguna,gol,Tahiel Jiménez,Ezequiel Bullaude,https://www.fotmob.com/matches/atlante-vs-santos-laguna/slar1#1000014636
+16,77,Santos Laguna,gol,Esteban Lozano,Mauricio Cuevas,https://www.fotmob.com/matches/atlante-vs-santos-laguna/slar1#1000014636
+16,90+5,Atlante,roja,Walter Portales,N/D,https://www.fotmob.com/matches/atlante-vs-santos-laguna/slar1#1000014636
