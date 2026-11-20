@@ -1,10 +1,10 @@
 # Descripción del Reel
 
-Santos Laguna y el torneo de los dos extremos 💚
+Intentamos explicar el Color Esperanza de Santos con datos 📊💚
 
-Lo que no cupo: la foto de Aleco con mariachi es del 2 de noviembre, tras vencer a Necaxa y meterse a la Liguilla. La canción que fue burla terminó en fiesta.
+Revisamos las 16 jornadas con FotMob/Opta y un modelo de goles esperados. Los números explican buena parte de la racha. La otra parte no sale en ninguna tabla.
 
-Datos: FotMob/Opta (J1–J16) y modelo xG. ¿Qué pesó más: el rebote, el equipo o la afición? 👇
+¿Tú cómo te la explicas? 👇
 
 #SantosLaguna #LigaMX #Apertura2026 #ColorEsperanza
 
