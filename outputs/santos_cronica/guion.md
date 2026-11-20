@@ -16,4 +16,4 @@ Lee los números de corrido. Haz una pausa breve antes de «Hay cosas que solo l
 | 0:36.5–0:43 | La canción en el Corona | Tras ganarle a Juárez, el tema sonó en el Corona. En noviembre, la afición ya lo coreaba. |
 | 0:43–0:49.5 | El símbolo | Los números explican la racha. La canción se volvió un símbolo. Hay cosas que solo la esperanza puede explicar. |
 
-En pantalla, la escena 8 muestra agosto, el triunfo del 13 de septiembre, que en noviembre la afición ya la corea y el crédito a Diego Torres. La escena 9 abre con «La canción no metió goles. Se volvió un símbolo» y reserva el remate para la frase sobre la esperanza.
+En pantalla, la escena 8 muestra un momento por golpe en el mismo sitio: AGO (Aleco Irarragorri la canta y llega la burla), 13 SEP (suena en el Corona tras el 2-1 a Juárez) y NOV (la afición ya la corea), con el crédito a Diego Torres. Los cambios de fecha están a 0:38.75 y 0:40.85; ajústalos a la toma de voz cuando exista. La escena 9 abre con «La canción no metió goles. Se volvió un símbolo» y reserva el remate para la frase sobre la esperanza.

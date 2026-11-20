@@ -470,8 +470,8 @@ class Cronica(Author):
         elif shot == 8:
             self.section("LO QUE PASÓ FUERA DE LA CANCHA",324,SAGE)
             self.picture("aleco",0,380,1080,608,arrive=1,end=1.015)
-            # La fecha de la foto aparece con su momento (NOV), no compite con AGO ni 13 SEP.
-            self.tag("FOTO · 2 NOV · TRAS SANTOS–NECAXA",101,926,43,limit=710,delay=4350,fade=200)
+            # La foto lleva su fecha toda la escena: no debe leerse como de agosto o septiembre.
+            self.tag("FOTO · 2 NOV · TRAS SANTOS–NECAXA",101,926,43,limit=710)
             rect(0,962,1080,958,FOREST,"Fondo de la cronología")
             self.title("Color Esperanza",96,1056,89,IVORY,limit=848)
             tx("Diego Torres",96,1110,41,SAGE,limit=848,delay=560,fade=220)

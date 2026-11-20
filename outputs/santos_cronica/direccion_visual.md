@@ -25,3 +25,48 @@ Esta versión atiende las dos sugerencias pendientes. Todo lo demás queda igual
 - **Escena 8.** Las tres entradas de la cronología se acortan, y el texto sube de 43 a 48 px y las fechas de 39 a 42 px. Quedan así: «Aleco la canta. Llega la burla.», «Suena en el Corona tras el 2-1 a Juárez.» y «La afición ya la corea.». La última sigue la línea del guion: «En noviembre, la afición ya lo coreaba». El detalle del Atlante sigue documentado en verificacion_numeros.csv.
 
 El proyecto editable es santos_cronica_v2.tsrct y se exportó con Tesseract 0.8.0. El original santos_cronica.tsrct, guardado con la 0.7.0, no se modificó. El MP4 se verificó por decodificación completa, duración (49.5 s), resolución (1080×1920, 30 fps) y revisión de fotogramas. Esta versión no pasó por panel de críticos ni por escucha humana. La voz sigue pendiente.
+
+## Versión 3 · santos_cinematic_v3.mp4
+
+Se aplicaron las tres propuestas de `referencias_opus.md` y un acabado de producción. Las decisiones fijas no cambian: 9 escenas, 49.5 s, vertical, Barlow Condensed recta, paleta, cifras, fotos reales, sin canción y el mismo cierre.
+
+**Propuestas aplicadas**
+- El primer acento sonoro pasa de 0.63 s, donde no aparecía nada, a 1.53 s: entran el 18 y la foto del festejo con corte seco.
+- El 18 sirve de hilo conductor. Al final de la escena 1 se retira todo lo demás y el 18 se encoge hasta su lugar en «J8–J13 · 18 de 18 puntos». La foto del festejo sigue continua a través del corte.
+- La escena 8 muestra un momento por golpe: AGO → 13 SEP → NOV en el mismo sitio, con una línea de texto y un marcador de avance. Cada momento dura unos 2.1 s.
+
+**Acabado**
+- Fotos a sangre desde el borde superior en las escenas 1, 2 y 7, fundidas hacia el color de fondo y con una sombra superior para los rótulos. La tribuna del cierre flota sobre el carbón.
+- Gradación común en todas las fotos (menos saturación, más cuerpo, viñeta suave), grano fino sobre todo el montaje y desenfoque de movimiento en lo que se desplaza.
+- Los titulares suben desde una línea de máscara. Las cabeceras llevan espaciado amplio y los rótulos de foto miden lo que mide su texto.
+- La escena 7 usa un retrato cerrado de Acevedo, distinto del plano abierto de la escena 3.
+- Corrección: desde la v1, la foto de la tribuna estaba deformada (escala 133 % × 160 %). Ahora tiene su proporción.
+
+**Textos aclarados**
+- Escena 4: «≈34% del salto se atribuye al rebote, según el modelo», con la definición de rebote.
+- Escena 6: «Explica ≈15–22% del salto, según el modelo».
+- Escena 7: «Además, los rivales colocaron peor sus tiros».
+- Escena 5: la tarjeta dice «J8–J13 · Recuento de marcadores» y la lista se queda atenuada.
+- Escena 2: «Primera vez en su historia» pasa a la cabecera.
+- Escena 8: «Aleco Irarragorri», como aparece en las fuentes, y la cabecera «Lo que pasó fuera de la cancha».
+
+**Revisión**
+
+Dos críticos independientes (director de arte y diseñador de información) revisaron en tres rondas: arte 7.2 → 7.4 → 7.4 e información 7.6 → 8.0 → 8.3. El mínimo del panel quedó en 7.4: no se alcanzó el 8.5. Después de la última ronda solo se cambió una cosa: el rótulo «Foto · 2 nov» vuelve a verse toda la escena 8 para no fechar mal la imagen.
+
+**Sugerencias pendientes**
+- Disolver el color de fondo carbón → bosque mientras viaja el 18.
+- Que la fecha de la escena 8 sea la protagonista: más grande y en marfil.
+- Un mismo tratamiento para la cabecera de las escenas 1 y 2.
+- Atenuar la lista de la escena 5 a un contraste de unos 4:1.
+- Unir en una línea el texto de las paradas de la escena 7.
+- Variar más la composición entre escenas, que comparten la misma retícula.
+
+**Necesita al usuario**
+- Una segunda foto verificada de portería o de partido, para no repetir la de Acevedo.
+- Fotos de mayor resolución para la escena 8 y el cierre.
+- Qué cubre «primera vez en su historia».
+- Si los 15 goles de «4 de 15» son de la racha o de la temporada.
+- Si el marcador «J13 · Santos 2–0 Pumas» es correcto: no está en verificacion_numeros.csv.
+
+La evaluación se hizo con fotogramas y tiras. Nadie juzgó el movimiento a velocidad real ni el sonido. La voz sigue pendiente.
