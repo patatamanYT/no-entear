@@ -217,7 +217,7 @@ class Cronica(Author):
         self.blurred.append(layer)
         return layer
 
-    def fade(self, y0, y1, color, *, up=False, peak=100):
+    def fade(self, y0, y1, color, *, up=False, peak=100, cover_above=False):
         # Degradado suave hacia el color de fondo (PNG con alfa generado por el script).
         # Hacia abajo, un relleno sólido tapa lo que el acercamiento de la foto saque del fundido.
         asset = f"fundido-{color[1:].lower()}-{'arriba' if up else 'abajo'}"
@@ -228,6 +228,8 @@ class Cronica(Author):
             self.keys(layer,"opacity",[(0,peak)])
         if not up:
             self.rect(0,y1-1,W,H-y1+1,color,"Fondo bajo el fundido")
+        if up and cover_above:
+            self.rect(0,0,W,y0+1,color,"Fondo sobre el fundido")
 
     def bleed(self, asset, bottom, *, delay=0, arrive=1, end=1.03, settle=True):
         # Foto a sangre desde el borde superior; el fundido inferior lo pone fade().
@@ -319,7 +321,7 @@ class Cronica(Author):
         tx, line, rect = self.txt,self.separator,self.rect
         if shot == 1:
             # Recorte sobre el cartel y los rostros: la afición ocupa el encuadre inicial.
-            self.framed("arranque-completo",0,0,1080,1060,focus=(600,380),crop=1.42,frame_y=560)
+            self.framed("arranque-completo",0,0,1080,1060,focus=(600,380),crop=1.42,frame_y=535)
             # Corte seco al festejo, sobre el primer golpe.
             self.bleed("celebracion",1060,delay=1530,end=1.03)
             self.fade(840,1062,INK)
@@ -336,10 +338,10 @@ class Cronica(Author):
             tx(f"punto en {d['start_n']} jornadas",99,1420,49,IVORY,limit=397)
             tx(f"puntos en {d['run_n']} victorias",550,1420,49,IVORY,delay=1530,fade=170,limit=385)
             self.group=owner
-            self.keys(board,"opacity",[(0,100),(3200,100),(3480,0)])
+            self.keys(board,"opacity",[(0,100),(3420,100),(3640,0)])
             score=tx(str(d["run"]),550,1320,269,SAGE,"number",delay=1530,fade=140)
             _, _, land_x = self.handoff(d)
-            go, arrive = 3420-1530, 3960-1530
+            go, arrive = 3600-1530, 3965-1530
             shrink = 100*46/269
             self.keys(score,"positionY",[(0,1360),(300,1320),(go,1320),(arrive,1380)])
             self.keys(score,"positionX",[(go,550),(arrive,land_x)])
@@ -407,7 +409,8 @@ class Cronica(Author):
             line(1084,RULE,weight=84)
             line(1084,PITCH,w=848*d["bounce"]/100,weight=84,delay=295,grow=650)
             tx("del salto se atribuye al rebote, según el modelo.",96,1282,54,INK,limit=844)
-            tx("Compara J1–J7 con J8–J13, por partido.",96,1370,46,GRAY,limit=844)
+            tx("Rebote: tras un mal arranque, volver hacia lo esperado.",96,1370,44,INK,limit=844)
+            tx("Compara J1–J7 con J8–J13, por partido.",96,1432,40,GRAY,limit=844)
             self.credits()
         elif shot == 5:
             self.section("LO QUE CAMBIÓ LOS MARCADORES",color=SAGE)
@@ -423,18 +426,17 @@ class Cronica(Author):
                 line(y-96,"#769084")
                 tx(number,96,y,69,SAGE,"number",delay=180+i*245,fade=140)
                 tx(label,327,y,48,IVORY,delay=180+i*245,fade=140,limit=614)
-            self.keys(details,"opacity",[(0,100),(2550,100),(2900,0)])
+            self.keys(details,"opacity",[(0,100),(2550,100),(2900,32)])
             self.group=owner
             recalc=self.add("createFxGroupLayer","Recuento que ocupa el plano",fx())
             self.group=recalc
             rect(96,1120,848,310,IVORY,"Franja del recuento")
-            tx("RECUENTO DE MARCADORES",117,1176,35,GRAY,"number")
+            tx(f"{d['spans'][1]} · RECUENTO DE MARCADORES",117,1176,35,GRAY,"number")
             tx(str(d["run"]),117,1309,147,FOREST,"number",delay=1070,fade=150)
             self.arrow(284,1255,75,FOREST,1440)
             counter=tx(f"{d['without']} puntos",404,1309,124,FOREST,"number",delay=1750,fade=170,limit=514)
             self.side_slide(counter,1309,24)
             tx("Sin goles de penal ni autogoles.",117,1390,48,INK,limit=800,delay=1750,fade=170)
-            self.keys(recalc,"positionY",[(0,0),(2580,0),(3100,-390)])
             self.group=owner
             self.credits(color=SAGE)
         elif shot == 6:
@@ -447,8 +449,8 @@ class Cronica(Author):
                 tx(f"{v:.1f}",946,y,110,color,"number",align="right",delay=wait+260,fade=190)
                 line(y+37,RULE,weight=15)
                 line(y+37,color,w=848*v/d["shots_run"],weight=15,delay=wait,grow=620)
-            tx("Explica ≈15–22% del salto, según el modelo.",96,1450,44,PITCH,limit=848)
-            tx("Tiros a puerta por partido, en promedio.",96,1497,34,GRAY,limit=848)
+            tx("Tiros a puerta por partido, en promedio.",96,1440,36,GRAY,limit=848)
+            tx("Explica ≈15–22% del salto, según el modelo.",96,1487,42,PITCH,limit=848)
             self.credits("FotMob/Opta · Tahiel Jiménez / Club Santos Laguna")
         elif shot == 7:
             self.framed("acevedo-partido",0,0,1080,1010,focus=(615,230),crop=1.5,frame_y=340,push=1.025,push_ms=self.duration)
@@ -463,12 +465,13 @@ class Cronica(Author):
                 tx(value,x,1280,108,IVORY,"number",delay=wait,fade=160,limit=340)
             tx("Puntos estimados acumulados por paradas.",96,1370,44,IVORY,limit=844)
             tx("Frente a lo esperado.",96,1425,43,SAGE,limit=844)
-            tx("Los rivales colocaron peor sus tiros.",96,1480,43,SAGE,limit=844)
+            tx("Además, los rivales colocaron peor sus tiros.",96,1480,43,SAGE,limit=844)
             self.credits("FotMob/Opta · Foto: MEXSPORT / Vanguardia",SAGE)
         elif shot == 8:
-            self.section("LO QUE PASÓ EN LA TRIBUNA",324,SAGE)
+            self.section("LO QUE PASÓ FUERA DE LA CANCHA",324,SAGE)
             self.picture("aleco",0,380,1080,608,arrive=1,end=1.015)
-            self.tag("FOTO · 2 NOV · TRAS SANTOS–NECAXA",101,926,43,limit=710)
+            # La fecha de la foto aparece con su momento (NOV), no compite con AGO ni 13 SEP.
+            self.tag("FOTO · 2 NOV · TRAS SANTOS–NECAXA",101,926,43,limit=710,delay=4350,fade=200)
             rect(0,962,1080,958,FOREST,"Fondo de la cronología")
             self.title("Color Esperanza",96,1056,89,IVORY,limit=848)
             tx("Diego Torres",96,1110,41,SAGE,limit=848,delay=560,fade=220)
@@ -477,7 +480,7 @@ class Cronica(Author):
             items = (("AGO","Aleco Irarragorri la canta. Llega la burla."),
                      ("13 SEP",f"Suena en el Corona tras el {d['juarez']} a Juárez."),
                      ("NOV","La afición ya la corea."))
-            beats = ((150,2000),(2000,4100),(4100,self.duration))
+            beats = ((150,2250),(2250,4350),(4350,self.duration))
             for index,((date,copy),(a,b)) in enumerate(zip(items,beats)):
                 last = index == len(items)-1
                 rect(96+76*index,1186,64,4,"#769084","Paso de la cronología")
@@ -497,7 +500,7 @@ class Cronica(Author):
             width,height = self.images["tribuna"]
             k = 1.6
             self.picture("tribuna",(W-width*k)/2,250,width*k,height*k,arrive=1,end=1.06)
-            self.fade(248,420,INK,up=True)
+            self.fade(270,440,INK,up=True,cover_above=True)
             self.fade(250+height*k-190,250+height*k+30,INK)
             for i,words in enumerate(("La canción no metió goles.", "Se volvió un símbolo.")):
                 y, wait = 1100+91*i, 150+140*i
