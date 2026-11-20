@@ -2,11 +2,9 @@
 
 Santos Laguna y el torneo de los dos extremos 💚
 
-El video cuenta qué cambió en la cancha. Lo que no cupo: la foto de Aleco con mariachi es del 2 de noviembre, tras ganarle a Necaxa, el triunfo que metió a Santos a la Liguilla. La canción que en agosto era burla terminó en fiesta.
+Lo que no cupo: la foto de Aleco con mariachi es del 2 de noviembre, tras vencer a Necaxa y meterse a la Liguilla. La canción que fue burla terminó en fiesta.
 
-Datos de FotMob/Opta (J1–J16) y un modelo de goles esperados (xG). Las cifras con ≈ son estimaciones.
-
-¿Qué pesó más para ti: el rebote, el equipo o la afición? 👇
+Datos: FotMob/Opta (J1–J16) y modelo xG. ¿Qué pesó más: el rebote, el equipo o la afición? 👇
 
 #SantosLaguna #LigaMX #Apertura2026 #ColorEsperanza
 
