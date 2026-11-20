@@ -36,7 +36,6 @@ class Author:
             self.id = 0
             self.fonts = {}
             self.images = {}
-            self.mask_id = 90000
             self.effect_id = 5000
             self.blurred = []
 
@@ -218,27 +217,27 @@ class Cronica(Author):
         self.blurred.append(layer)
         return layer
 
-    def soft_mask(self, layer, x, y, w, h, feather):
-        # Guía invisible: su contorno recorta la capa con borde suave.
-        guide = self.add("createFxRectLayer","Guía de fundido",fx(x,y),rect=dict(size=[w,h],fillColor=rgb("#FFFFFF")))
-        self.keys(guide,"opacity",[(0,0)])
-        self.mask_id += 1
-        self.actions.append(dict(type="setFxLayerMasks",compositionId="main",layerId=layer,masks=[
-            dict(id=self.mask_id,layer=guide,mode="add",feather=[0,feather],opacity=1,inverted=False,expansion=0)]))
+    def fade(self, y0, y1, color, *, up=False, peak=100):
+        # Degradado suave hacia el color de fondo (PNG con alfa generado por el script).
+        # Hacia abajo, un relleno sólido tapa lo que el acercamiento de la foto saque del fundido.
+        asset = f"fundido-{color[1:].lower()}-{'arriba' if up else 'abajo'}"
+        width,height = self.images[asset]
+        layer = self.add("createFxImageLayer","Fundido",fx(0,y0,scale=(100*W/width,100*(y1-y0)/height)),
+                         source=dict(assetId=asset,fit="none"))
+        if peak != 100:
+            self.keys(layer,"opacity",[(0,peak)])
+        if not up:
+            self.rect(0,y1-1,W,H-y1+1,color,"Fondo bajo el fundido")
 
-    def bleed(self, asset, bottom, *, delay=0, arrive=1, end=1.03, settle=True, feather=240):
-        # Foto a sangre desde el borde superior que se funde con el fondo antes de `bottom`.
+    def bleed(self, asset, bottom, *, delay=0, arrive=1, end=1.03, settle=True):
+        # Foto a sangre desde el borde superior; el fundido inferior lo pone fade().
         width,height = self.images[asset]
         k = max(W/width, bottom/height)
-        item = self.picture(asset,(W-width*k)/2,0,width*k,height*k,delay=delay,arrive=arrive,end=end,settle=settle)
-        self.soft_mask(item,-200,-600,W+400,bottom+600-feather*.55,feather)
-        return item
+        return self.picture(asset,(W-width*k)/2,0,width*k,height*k,delay=delay,arrive=arrive,end=end,settle=settle)
 
     def scrim(self, height=620, opacity=74):
         # Sombra superior para que los rótulos se lean sobre la foto.
-        layer = self.rect(0,-200,W,height+200,INK,"Sombra superior")
-        self.keys(layer,"opacity",[(0,opacity)])
-        self.soft_mask(layer,-200,-600,W+400,height+600-110,200)
+        self.fade(0,height,INK,up=True,peak=opacity)
 
     def tag(self, words, x, y, size, *, delay=0, duration=None, fade=0, limit=None):
         # Rótulo sobre foto: la caja mide lo que mide su texto.
@@ -320,10 +319,10 @@ class Cronica(Author):
         tx, line, rect = self.txt,self.separator,self.rect
         if shot == 1:
             # Recorte sobre el cartel y los rostros: la afición ocupa el encuadre inicial.
-            fans=self.framed("arranque-completo",0,0,1080,1060,focus=(600,380),crop=1.42,frame_y=560)
-            self.soft_mask(fans,-200,-600,W+400,1060+600-132,240)
+            self.framed("arranque-completo",0,0,1080,1060,focus=(600,380),crop=1.42,frame_y=560)
             # Corte seco al festejo, sobre el primer golpe.
             self.bleed("celebracion",1060,delay=1530,end=1.03)
+            self.fade(840,1062,INK)
             self.scrim()
             self.section("SANTOS LAGUNA / APERTURA 2026",342,IVORY)
             # Todo lo que no es el 18 se retira antes del corte; el 18 viaja a la escena 2.
@@ -351,6 +350,7 @@ class Cronica(Author):
         elif shot == 2:
             # La foto sigue el acercamiento de la escena 1 sin saltos.
             self.bleed("celebracion",1060,arrive=1.03,end=1.06,settle=False)
+            self.fade(840,1062,FOREST)
             self.scrim()
             self.section("APERTURA 2026 · PRIMERA VEZ EN SU HISTORIA",342,SAGE)
             self.title("Seis victorias seguidas.",96,1100,87,IVORY,limit=848)
@@ -359,6 +359,9 @@ class Cronica(Author):
                       d["games"][-3:])
             totals = (f"{d['start']} de {d['start_n']*3} puntos",
                       f"{d['run']} de {d['run_n']*3} puntos","Después de la racha")
+            # Las filas van en su propio grupo: aísla su render del fundido de la foto.
+            owner=self.group
+            self.group=self.add("createFxGroupLayer","Resultados",fx())
             for row, games in enumerate(blocks[:2]):
                 y = 1215 + 165*row
                 label = d["spans"][row]
@@ -378,6 +381,7 @@ class Cronica(Author):
                          outline=None if active else "#748A79",delay=wait)
                     tx(symbol,x+51,y+69,43,FOREST if active else IVORY,"number",
                        delay=wait,align="center")
+            self.group=owner
             self.credits("FotMob/Opta · Foto: Club Santos Laguna",SAGE)
         elif shot == 3:
             self.section("PRIMERAS SIETE JORNADAS")
@@ -447,8 +451,8 @@ class Cronica(Author):
             tx("Tiros a puerta por partido, en promedio.",96,1497,34,GRAY,limit=848)
             self.credits("FotMob/Opta · Tahiel Jiménez / Club Santos Laguna")
         elif shot == 7:
-            keeper=self.framed("acevedo-partido",0,0,1080,1010,focus=(615,230),crop=1.5,frame_y=470,push=1.025,push_ms=self.duration)
-            self.soft_mask(keeper,-200,-600,W+400,1010+600-132,240)
+            self.framed("acevedo-partido",0,0,1080,1010,focus=(615,230),crop=1.5,frame_y=340,push=1.025,push_ms=self.duration)
+            self.fade(790,1012,INK)
             self.scrim()
             self.section("EN LA PORTERÍA",330,SAGE)
             self.title("Carlos Acevedo",96,1086,96,IVORY,limit=846)
@@ -492,8 +496,9 @@ class Cronica(Author):
         else:
             width,height = self.images["tribuna"]
             k = 1.6
-            stand = self.picture("tribuna",(W-width*k)/2,250,width*k,height*k,arrive=1,end=1.06)
-            self.soft_mask(stand,-200,250+40,W+400,height*k-80,160)
+            self.picture("tribuna",(W-width*k)/2,250,width*k,height*k,arrive=1,end=1.06)
+            self.fade(248,420,INK,up=True)
+            self.fade(250+height*k-190,250+height*k+30,INK)
             for i,words in enumerate(("La canción no metió goles.", "Se volvió un símbolo.")):
                 y, wait = 1100+91*i, 150+140*i
                 layer = tx(words,96,y,76,IVORY,"head",delay=wait,duration=2760-wait,limit=848)
@@ -503,6 +508,24 @@ class Cronica(Author):
                 layer = tx(words,96,y,115,IVORY,"head",delay=wait,limit=847)
                 self.reveal(layer,y,115,delay=wait,enter=640)
             self.credits("Foto de archivo: Jpamanes · Wikimedia Commons",SAGE)
+
+
+def gradient_assets():
+    # PNG de 8×512 con alfa en curva suave; el color es el del fondo de cada escena.
+    made = {}
+    for color in (INK, FOREST):
+        for up in (False, True):
+            name = f"fundido_{color[1:].lower()}_{'arriba' if up else 'abajo'}.png"
+            image = Image.new("RGBA", (8, 512), ImageColor.getrgb(color) + (0,))
+            for y in range(512):
+                t = (y + .5) / 512
+                a = t*t*(3-2*t)
+                alpha = round(255 * ((1-a) if up else a))
+                for x in range(8):
+                    image.putpixel((x, y), ImageColor.getrgb(color) + (alpha,))
+            image.save(MEDIA / name)
+            made[f"fundido-{color[1:].lower()}-{'arriba' if up else 'abajo'}"] = name
+    return made
 
 
 def main():
@@ -528,6 +551,11 @@ def main():
             assert font["fontFamily"] == family, font
             embedded[filename] = font["assetId"]
         author.fonts[role]=embedded[filename]
+    for asset, name in gradient_assets().items():
+        file=MEDIA/name
+        run(cli,"project","import-asset","-p",project,"--file",file,"--asset-id",asset,"--kind","image")
+        with Image.open(file) as image:
+            author.images[asset]=image.size
     for asset, name in IMAGES.items():
         file=MEDIA/name
         run(cli,"project","import-asset","-p",project,"--file",file,"--asset-id",asset,"--kind","image")
