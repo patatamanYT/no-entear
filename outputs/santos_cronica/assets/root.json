@@ -1,1 +1,1 @@
-{"$schema": "https://jerboa.dev/schemas/fx-composition/editable/v1/document.schema.json", "colorManagement": {"workingSpace": "legacyDisplay"}, "composition": {"id": "main", "layers": [], "name": "Main"}, "dimensions": {"height": 1920, "width": 1080}, "duration": 49.5, "formatVersion": 1}
+{"$schema": "https://jerboa.dev/schemas/fx-composition/editable/v1/document.schema.json", "colorManagement": {"workingSpace": "legacyDisplay"}, "composition": {"id": "main", "layers": [], "name": "Main"}, "dimensions": {"height": 1920, "width": 1080}, "duration": 54.0, "formatVersion": 1}

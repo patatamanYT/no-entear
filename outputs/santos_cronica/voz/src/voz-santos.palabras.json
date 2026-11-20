@@ -1,0 +1,622 @@
+[
+ {
+  "text": "Un",
+  "startMs": 20,
+  "endMs": 190
+ },
+ {
+  "text": "punto",
+  "startMs": 390,
+  "endMs": 690
+ },
+ {
+  "text": "en",
+  "startMs": 690,
+  "endMs": 890
+ },
+ {
+  "text": "7",
+  "startMs": 890,
+  "endMs": 1180
+ },
+ {
+  "text": "jornadas",
+  "startMs": 1240,
+  "endMs": 1900
+ },
+ {
+  "text": "y",
+  "startMs": 2000,
+  "endMs": 2040
+ },
+ {
+  "text": "en",
+  "startMs": 2040,
+  "endMs": 2220
+ },
+ {
+  "text": "el",
+  "startMs": 2220,
+  "endMs": 2300
+ },
+ {
+  "text": "mismo",
+  "startMs": 2300,
+  "endMs": 2610
+ },
+ {
+  "text": "torneo",
+  "startMs": 2610,
+  "endMs": 3000
+ },
+ {
+  "text": "6",
+  "startMs": 3000,
+  "endMs": 3160
+ },
+ {
+  "text": "victorias",
+  "startMs": 3560,
+  "endMs": 3960
+ },
+ {
+  "text": "seguidas",
+  "startMs": 3960,
+  "endMs": 4640
+ },
+ {
+  "text": "por",
+  "startMs": 4640,
+  "endMs": 4840
+ },
+ {
+  "text": "primera",
+  "startMs": 4840,
+  "endMs": 5240
+ },
+ {
+  "text": "vez",
+  "startMs": 5240,
+  "endMs": 5430
+ },
+ {
+  "text": "en",
+  "startMs": 5440,
+  "endMs": 5600
+ },
+ {
+  "text": "su",
+  "startMs": 5600,
+  "endMs": 5760
+ },
+ {
+  "text": "historia.",
+  "startMs": 5760,
+  "endMs": 6120
+ },
+ {
+  "text": "¿Qué",
+  "startMs": 6140,
+  "endMs": 6680
+ },
+ {
+  "text": "cambió?",
+  "startMs": 6680,
+  "endMs": 7960
+ },
+ {
+  "text": "Primero",
+  "startMs": 7960,
+  "endMs": 8500
+ },
+ {
+  "text": "por",
+  "startMs": 8500,
+  "endMs": 8730
+ },
+ {
+  "text": "sus",
+  "startMs": 8730,
+  "endMs": 8960
+ },
+ {
+  "text": "ocasiones.",
+  "startMs": 8960,
+  "endMs": 9920
+ },
+ {
+  "text": "Se",
+  "startMs": 9920,
+  "endMs": 10080
+ },
+ {
+  "text": "esperaban",
+  "startMs": 10080,
+  "endMs": 10770
+ },
+ {
+  "text": "casi",
+  "startMs": 10880,
+  "endMs": 11120
+ },
+ {
+  "text": "8",
+  "startMs": 11120,
+  "endMs": 11400
+ },
+ {
+  "text": "puntos",
+  "startMs": 11400,
+  "endMs": 11800
+ },
+ {
+  "text": "y",
+  "startMs": 11800,
+  "endMs": 11900
+ },
+ {
+  "text": "solo",
+  "startMs": 11900,
+  "endMs": 12260
+ },
+ {
+  "text": "sacó",
+  "startMs": 12360,
+  "endMs": 12840
+ },
+ {
+  "text": "uno.",
+  "startMs": 13040,
+  "endMs": 13120
+ },
+ {
+  "text": "Por",
+  "startMs": 13140,
+  "endMs": 13340
+ },
+ {
+  "text": "eso,",
+  "startMs": 13510,
+  "endMs": 13730
+ },
+ {
+  "text": "cerca",
+  "startMs": 13730,
+  "endMs": 14070
+ },
+ {
+  "text": "de",
+  "startMs": 14180,
+  "endMs": 14270
+ },
+ {
+  "text": "un",
+  "startMs": 14270,
+  "endMs": 14420
+ },
+ {
+  "text": "tercio",
+  "startMs": 14420,
+  "endMs": 14880
+ },
+ {
+  "text": "del",
+  "startMs": 14880,
+  "endMs": 15020
+ },
+ {
+  "text": "salto",
+  "startMs": 15340,
+  "endMs": 15490
+ },
+ {
+  "text": "fue",
+  "startMs": 15490,
+  "endMs": 15720
+ },
+ {
+  "text": "puro",
+  "startMs": 15720,
+  "endMs": 16020
+ },
+ {
+  "text": "rebote.",
+  "startMs": 16020,
+  "endMs": 16800
+ },
+ {
+  "text": "Luego",
+  "startMs": 16800,
+  "endMs": 17330
+ },
+ {
+  "text": "hubo",
+  "startMs": 17330,
+  "endMs": 17750
+ },
+ {
+  "text": "circunstancias",
+  "startMs": 17750,
+  "endMs": 19250
+ },
+ {
+  "text": "a",
+  "startMs": 19250,
+  "endMs": 19360
+ },
+ {
+  "text": "favor,",
+  "startMs": 19360,
+  "endMs": 19680
+ },
+ {
+  "text": "penales",
+  "startMs": 19700,
+  "endMs": 20150
+ },
+ {
+  "text": "de",
+  "startMs": 20150,
+  "endMs": 20280
+ },
+ {
+  "text": "expulsiones",
+  "startMs": 20280,
+  "endMs": 20980
+ },
+ {
+  "text": "rivales.",
+  "startMs": 21030,
+  "endMs": 21580
+ },
+ {
+  "text": "Sin",
+  "startMs": 21580,
+  "endMs": 21910
+ },
+ {
+  "text": "penales",
+  "startMs": 21910,
+  "endMs": 22360
+ },
+ {
+  "text": "de",
+  "startMs": 22360,
+  "endMs": 22410
+ },
+ {
+  "text": "autogoles,",
+  "startMs": 22490,
+  "endMs": 23360
+ },
+ {
+  "text": "los",
+  "startMs": 23360,
+  "endMs": 23600
+ },
+ {
+  "text": "18",
+  "startMs": 23600,
+  "endMs": 24070
+ },
+ {
+  "text": "puntos",
+  "startMs": 24070,
+  "endMs": 24540
+ },
+ {
+  "text": "bajan",
+  "startMs": 24540,
+  "endMs": 24930
+ },
+ {
+  "text": "a",
+  "startMs": 24930,
+  "endMs": 25010
+ },
+ {
+  "text": "14.",
+  "startMs": 25010,
+  "endMs": 25760
+ },
+ {
+  "text": "Pero",
+  "startMs": 25760,
+  "endMs": 26150
+ },
+ {
+  "text": "el",
+  "startMs": 26150,
+  "endMs": 26280
+ },
+ {
+  "text": "equipo",
+  "startMs": 26280,
+  "endMs": 26458
+ },
+ {
+  "text": "también",
+  "startMs": 26718,
+  "endMs": 27301
+ },
+ {
+  "text": "cambió.",
+  "startMs": 27301,
+  "endMs": 28071
+ },
+ {
+  "text": "Tiró",
+  "startMs": 28071,
+  "endMs": 28380
+ },
+ {
+  "text": "más",
+  "startMs": 28461,
+  "endMs": 28671
+ },
+ {
+  "text": "a",
+  "startMs": 28671,
+  "endMs": 28751
+ },
+ {
+  "text": "puerta.",
+  "startMs": 28751,
+  "endMs": 29531
+ },
+ {
+  "text": "Eso",
+  "startMs": 29531,
+  "endMs": 29851
+ },
+ {
+  "text": "explica",
+  "startMs": 29851,
+  "endMs": 30271
+ },
+ {
+  "text": "cerca",
+  "startMs": 30271,
+  "endMs": 30540
+ },
+ {
+  "text": "de",
+  "startMs": 30641,
+  "endMs": 30691
+ },
+ {
+  "text": "una",
+  "startMs": 30691,
+  "endMs": 30891
+ },
+ {
+  "text": "quinta",
+  "startMs": 30891,
+  "endMs": 31091
+ },
+ {
+  "text": "parte.",
+  "startMs": 31200,
+  "endMs": 31531
+ },
+ {
+  "text": "Y",
+  "startMs": 31551,
+  "endMs": 31621
+ },
+ {
+  "text": "atrás,",
+  "startMs": 31921,
+  "endMs": 32271
+ },
+ {
+  "text": "Acevedo",
+  "startMs": 32271,
+  "endMs": 32921
+ },
+ {
+  "text": "pasó",
+  "startMs": 32921,
+  "endMs": 33290
+ },
+ {
+  "text": "de",
+  "startMs": 33290,
+  "endMs": 33430
+ },
+ {
+  "text": "restar",
+  "startMs": 33750,
+  "endMs": 34021
+ },
+ {
+  "text": "a",
+  "startMs": 34021,
+  "endMs": 34110
+ },
+ {
+  "text": "sumar.",
+  "startMs": 34110,
+  "endMs": 34690
+ },
+ {
+  "text": "Mientras",
+  "startMs": 34921,
+  "endMs": 35671
+ },
+ {
+  "text": "tanto,",
+  "startMs": 35671,
+  "endMs": 36330
+ },
+ {
+  "text": "en",
+  "startMs": 36330,
+  "endMs": 36400
+ },
+ {
+  "text": "la",
+  "startMs": 36400,
+  "endMs": 36521
+ },
+ {
+  "text": "tribuna,",
+  "startMs": 36521,
+  "endMs": 36811
+ },
+ {
+  "text": "en",
+  "startMs": 36811,
+  "endMs": 36970
+ },
+ {
+  "text": "agosto,",
+  "startMs": 37080,
+  "endMs": 37680
+ },
+ {
+  "text": "la",
+  "startMs": 37870,
+  "endMs": 38000
+ },
+ {
+  "text": "canción",
+  "startMs": 38241,
+  "endMs": 38521
+ },
+ {
+  "text": "era",
+  "startMs": 38521,
+  "endMs": 38741
+ },
+ {
+  "text": "burla.",
+  "startMs": 38741,
+  "endMs": 39290
+ },
+ {
+  "text": "En",
+  "startMs": 39351,
+  "endMs": 39481
+ },
+ {
+  "text": "septiembre",
+  "startMs": 39481,
+  "endMs": 40231
+ },
+ {
+  "text": "sonando",
+  "startMs": 40231,
+  "endMs": 40750
+ },
+ {
+  "text": "el",
+  "startMs": 40750,
+  "endMs": 40900
+ },
+ {
+  "text": "corona.",
+  "startMs": 40900,
+  "endMs": 41610
+ },
+ {
+  "text": "En",
+  "startMs": 41610,
+  "endMs": 41790
+ },
+ {
+  "text": "noviembre,",
+  "startMs": 41790,
+  "endMs": 42741
+ },
+ {
+  "text": "ya",
+  "startMs": 42841,
+  "endMs": 42970
+ },
+ {
+  "text": "la",
+  "startMs": 42970,
+  "endMs": 43131
+ },
+ {
+  "text": "coreaban.",
+  "startMs": 43131,
+  "endMs": 43991
+ },
+ {
+  "text": "Los",
+  "startMs": 44070,
+  "endMs": 44320
+ },
+ {
+  "text": "números",
+  "startMs": 44440,
+  "endMs": 44951
+ },
+ {
+  "text": "explican",
+  "startMs": 44951,
+  "endMs": 45671
+ },
+ {
+  "text": "buena",
+  "startMs": 45671,
+  "endMs": 45951
+ },
+ {
+  "text": "parte.",
+  "startMs": 46280,
+  "endMs": 46780
+ },
+ {
+  "text": "Lo",
+  "startMs": 46860,
+  "endMs": 47070
+ },
+ {
+  "text": "demás,",
+  "startMs": 47070,
+  "endMs": 47851
+ },
+ {
+  "text": "hay",
+  "startMs": 47851,
+  "endMs": 48040
+ },
+ {
+  "text": "cosas",
+  "startMs": 48131,
+  "endMs": 48580
+ },
+ {
+  "text": "que",
+  "startMs": 48580,
+  "endMs": 48851
+ },
+ {
+  "text": "solo",
+  "startMs": 48851,
+  "endMs": 49210
+ },
+ {
+  "text": "la",
+  "startMs": 49210,
+  "endMs": 49390
+ },
+ {
+  "text": "esperanza",
+  "startMs": 49390,
+  "endMs": 50180
+ },
+ {
+  "text": "puede",
+  "startMs": 50280,
+  "endMs": 50620
+ },
+ {
+  "text": "explicar.",
+  "startMs": 50981,
+  "endMs": 52545
+ }
+]

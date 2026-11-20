@@ -28,3 +28,7 @@ python src/reel_sin_tablas.py RUTA_A_TSRCT mi_reel.tsrct
 ```
 
 La escena 2 tarda más en renderizar que las demás, alrededor de 1.4 s por fotograma en CPU. La exportación completa tardó unos 3 minutos con Mesa lavapipe.
+
+## Versión 5 (con voz)
+
+Si `assets/voz_santos.wav` existe, `reel.py` lo importa y lo coloca a 0.9 s. TIMES, PENALES, RECUENTO, BEATS y CLOSE en `reel.py` están ajustados a esa toma. Con otra toma hay que recalcularlos a partir de `voz/src/voz-santos.palabras.json`. La limpieza se reproduce con la skill voz-whisper, filtrando antes la toma con `highpass=f=95,highpass=f=95`.

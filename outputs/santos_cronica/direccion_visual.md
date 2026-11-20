@@ -74,3 +74,20 @@ La evaluación se hizo con fotogramas y tiras. Nadie juzgó el movimiento a velo
 ## Versión 4 · santos_cinematic_v4.mp4
 
 Es igual que la v3, con un cambio: en la escena 3, la foto de Acevedo se sustituye por una foto aportada por el usuario de un partido contra Atlas en el Corona. Ya no se repite la foto de Acevedo, que solo queda en la escena 7, en retrato cerrado. Por decisión del usuario, la foto va sin texto encima; el crédito «Foto: aportada» aparece en la línea de fuentes. No se ha confirmado de qué partido ni de qué fecha es, así que no se atribuye un encuentro ni se identifica a los jugadores. El crédito y el contexto están en fuentes_fotos.csv. El panel no revisó esta versión.
+
+## Versión 5 · santos_cinematic_v5.mp4 (con voz)
+
+La voz del usuario (voz/toma_original_santos.mp3) se limpió con la skill voz-whisper:
+
+- **Ruido:** era un retumbe grave entre 20 y 300 Hz. Encima del preset se puso un filtro de graves doble a 95 Hz, que bajó el ruido de −45 a −56 dB sin quitar consonantes.
+- **Volumen final:** 52.7 s, −13.2 LUFS, pico −1.3 dBFS. Archivo: assets/voz_santos.wav.
+- **Transcripción:** Whisper small en español. Solo se corrigieron «rabote» → «rebote» y «Tiro» → «Tiró». No se tocó lo que Whisper oyó distinto al guion y que hay que escuchar: «penales de expulsiones», «sin penales de autogoles» y «sonando el Corona».
+
+El montaje ahora sigue a la voz, como preveía el guion:
+
+- La voz entra a 0.9 s y cada escena empieza unos 120 ms antes de su primera palabra.
+- La duración pasa de 49.5 s a **54.0 s**: la voz no se aceleró.
+- Siguen a la voz la lista de penales y la tarjeta 18 → 14 de la escena 5, las fechas de la escena 8 y el remate de la escena 9.
+- El tercer golpe pasa a 25.45 s, con «14 puntos».
+
+Nadie ha escuchado el resultado: los niveles son mediciones.

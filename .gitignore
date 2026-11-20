@@ -29,3 +29,4 @@ frontend/.eslintcache
 # Santos Reel scratch renders
 outputs/santos_cronica/.tesseract-work/
 outputs/santos_cronica/.*.jerboa-video-*
+outputs/santos_cronica/voz/.work/

@@ -32,7 +32,7 @@ class Author:
             self.media = media
             self.actions = []
             self.group = None
-            self.duration = 49500
+            self.duration = sum(TIMES)
             self.id = 0
             self.fonts = {}
             self.images = {}
@@ -156,15 +156,23 @@ FONT = {
     "number": ("BarlowCondensed-Bold.ttf", "Barlow Condensed", "Bold"),
     "body": ("BarlowCondensed-SemiBold.ttf", "Barlow Condensed SemiBold", "Regular"),
 }
-TIMES = (4000, 5000, 5000, 5000, 7000, 5500, 5000, 6500, 6500)
+# Escenas ajustadas a la toma de voz (voz_santos.wav, entra a 0.9 s): cada una
+# empieza ~120 ms antes de su primera palabra. Sin voz, el montaje original medía 49.5 s.
+TIMES = (4000, 4740, 5180, 3660, 8960, 5790, 5260, 7260, 9150)
+VOICE = ("voz_santos.wav", 900)
+# Momentos dentro de escenas, en ms locales, tomados de la voz.
+PENALES = (2600, 3500, 4000)      # filas: «penales», «expulsiones», «1 de 6»
+RECUENTO = (4700, 6700, 7700)     # tarjeta, «dieciocho», «catorce»
+BEATS = ((150, 2600), (2600, 4850), (4850, None))  # «agosto», «septiembre», «noviembre»
+CLOSE = 3800                      # «hay cosas que…»
 NAMES = ("De 1 a 18", "Seis seguidas", "Lo esperado", "El rebote", "Penales y rojas",
          "Tiros a puerta", "Acevedo", "La tribuna", "Esperanza")
 IMAGES = {"arranque-completo":"aficion_aportada.png",
           "celebracion":"celebracion.jpg", "tahiel":"tahiel.jpg", "aleco":"aleco.jpg",
           "acevedo-partido":"acevedo_partido.jpg", "tribuna":"tribuna.jpg",
           "partido-aportado":"partido_aportado.jpg"}
-# El primer golpe cae con la llegada del 18 y la foto del festejo.
-CUES = ((1530, "marca"), (4875, "marca"), (20920, "marca"))
+# Golpes: llegada del 18 (escena 1), sexta G (escena 2) y «14 puntos» (escena 5).
+CUES = ((1, 1530, "marca"), (2, 875, "marca"), (5, RECUENTO[2]+170, "marca"))
 
 
 class Cronica(Author):
@@ -305,12 +313,20 @@ class Cronica(Author):
                                                samplesPerFrame=16,adaptiveSampleLimit=128)))
         for layer in self.blurred:
             self.actions.append(dict(type="setFxLayerMotionBlur",compositionId="main",layerId=layer,enabled=True))
-        for time, asset in CUES:
+        starts = [sum(TIMES[:i]) for i in range(len(TIMES))]
+        for scene, local, asset in CUES:
+            time = starts[scene-1] + local
             with wave.open(str(EDITOR / f"{asset}.wav"), "rb") as audio:
                 length = round(1000 * audio.getnframes() / audio.getframerate())
             self.add("createFxAudioLayer",f"Acento · {time/1000:.3f} s", start=time, duration=length,
                      sourceRange=dict(start=0,duration=length),
                      sourceIntrinsicDuration=length,source={"assetId":asset})
+        if (EDITOR / VOICE[0]).exists():
+            with wave.open(str(EDITOR / VOICE[0]), "rb") as audio:
+                length = round(1000 * audio.getnframes() / audio.getframerate())
+            self.add("createFxAudioLayer","Voz",start=VOICE[1],duration=length,
+                     sourceRange=dict(start=0,duration=length),
+                     sourceIntrinsicDuration=length,source={"assetId":"voz"})
 
     def handoff(self, d):
         # Posición del 18 en la fila J8–J13 de la escena 2; ahí aterriza el 18 de la escena 1.
@@ -427,19 +443,20 @@ class Cronica(Author):
             for i,(number,label) in enumerate(rows):
                 y=700+i*143
                 line(y-96,"#769084")
-                tx(number,96,y,69,SAGE,"number",delay=180+i*245,fade=140)
-                tx(label,327,y,48,IVORY,delay=180+i*245,fade=140,limit=614)
-            self.keys(details,"opacity",[(0,100),(2550,100),(2900,32)])
+                tx(number,96,y,69,SAGE,"number",delay=PENALES[i],fade=140)
+                tx(label,327,y,48,IVORY,delay=PENALES[i],fade=140,limit=614)
+            self.keys(details,"opacity",[(0,100),(RECUENTO[0],100),(RECUENTO[0]+300,32)])
             self.group=owner
             recalc=self.add("createFxGroupLayer","Recuento que ocupa el plano",fx())
+            self.keys(recalc,"opacity",[(0,0),(RECUENTO[0],0),(RECUENTO[0]+300,100)])
             self.group=recalc
             rect(96,1120,848,310,IVORY,"Franja del recuento")
             tx(f"{d['spans'][1]} · RECUENTO DE MARCADORES",117,1176,35,GRAY,"number")
-            tx(str(d["run"]),117,1309,147,FOREST,"number",delay=1070,fade=150)
-            self.arrow(284,1255,75,FOREST,1440)
-            counter=tx(f"{d['without']} puntos",404,1309,124,FOREST,"number",delay=1750,fade=170,limit=514)
+            tx(str(d["run"]),117,1309,147,FOREST,"number",delay=RECUENTO[1],fade=150)
+            self.arrow(284,1255,75,FOREST,RECUENTO[1]+370)
+            counter=tx(f"{d['without']} puntos",404,1309,124,FOREST,"number",delay=RECUENTO[2],fade=170,limit=514)
             self.side_slide(counter,1309,24)
-            tx("Sin goles de penal ni autogoles.",117,1390,48,INK,limit=800,delay=1750,fade=170)
+            tx("Sin goles de penal ni autogoles.",117,1390,48,INK,limit=800,delay=RECUENTO[2],fade=170)
             self.group=owner
             self.credits(color=SAGE)
         elif shot == 6:
@@ -483,7 +500,7 @@ class Cronica(Author):
             items = (("AGO","Aleco Irarragorri la canta. Llega la burla."),
                      ("13 SEP",f"Suena en el Corona tras el {d['juarez']} a Juárez."),
                      ("NOV","La afición ya la corea."))
-            beats = ((150,2250),(2250,4350),(4350,self.duration))
+            beats = tuple((a, self.duration if b is None else b) for a,b in BEATS)
             for index,((date,copy),(a,b)) in enumerate(zip(items,beats)):
                 last = index == len(items)-1
                 rect(96+76*index,1186,64,4,"#769084","Paso de la cronología")
@@ -507,10 +524,10 @@ class Cronica(Author):
             self.fade(250+height*k-190,250+height*k+30,INK)
             for i,words in enumerate(("La canción no metió goles.", "Se volvió un símbolo.")):
                 y, wait = 1100+91*i, 150+140*i
-                layer = tx(words,96,y,76,IVORY,"head",delay=wait,duration=2760-wait,limit=848)
-                self.reveal(layer,y,76,delay=wait,duration=2760-wait,exit_at=2760-wait-400)
+                layer = tx(words,96,y,76,IVORY,"head",delay=wait,duration=CLOSE-80-wait,limit=848)
+                self.reveal(layer,y,76,delay=wait,duration=CLOSE-80-wait,exit_at=CLOSE-80-wait-400)
             for i,words in enumerate(("Hay cosas que", "solo la esperanza", "puede explicar.")):
-                y, wait = 1101+118*i, 2840+170*i
+                y, wait = 1101+118*i, CLOSE+170*i
                 layer = tx(words,96,y,115,IVORY,"head",delay=wait,limit=847)
                 self.reveal(layer,y,115,delay=wait,enter=640)
             self.credits("Foto de archivo: Jpamanes · Wikimedia Commons",SAGE)
@@ -544,7 +561,7 @@ def main():
     source=run(cli,"project","inspect","-p",project)
     if source["composition"]["layers"]:
         raise ValueError("Start with a new Tesseract document")
-    source["duration"]=49.5
+    source["duration"]=sum(TIMES)/1000
     root_json=MEDIA/"root.json"
     root_json.write_text(json.dumps(source),encoding="utf-8")
     run(cli,"project","commit","-p",project,"--file",root_json)
@@ -568,6 +585,8 @@ def main():
         with Image.open(file) as image:
             author.images[asset]=image.size
     run(cli,"project","import-asset","-p",project,"--file",EDITOR/"marca.wav","--asset-id","marca","--kind","audio")
+    if (EDITOR/VOICE[0]).exists():
+        run(cli,"project","import-asset","-p",project,"--file",EDITOR/VOICE[0],"--asset-id","voz","--kind","audio")
     author.build(data)
     action_file=MEDIA/"crónica_acciones.json"
     action_file.write_text(json.dumps(author.actions,ensure_ascii=False),encoding="utf-8")
