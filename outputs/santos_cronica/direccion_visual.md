@@ -80,7 +80,7 @@ Es igual que la v3, con un cambio: en la escena 3, la foto de Acevedo se sustitu
 La voz del usuario (voz/toma_original_santos.mp3) se limpió con la skill voz-whisper:
 
 - **Ruido:** era un retumbe grave entre 20 y 300 Hz. Encima del preset se puso un filtro de graves doble a 95 Hz, que bajó el ruido de −45 a −56 dB sin quitar consonantes.
-- **Volumen final:** 52.7 s, −13.2 LUFS, pico −1.3 dBFS. Archivo: assets/voz_santos.wav.
+- **Volumen final:** 52.7 s, −13.2 LUFS, pico −1.3 dBFS. Archivo: assets/voz_santos.wav. En el montaje la voz va a −4 dB, porque al pasar de mono a estéreo sube unos 3 dB. La mezcla medida queda en −14.2 LUFS con pico de −4.4 dBFS.
 - **Transcripción:** Whisper small en español. Solo se corrigieron «rabote» → «rebote» y «Tiro» → «Tiró». No se tocó lo que Whisper oyó distinto al guion y que hay que escuchar: «penales de expulsiones», «sin penales de autogoles» y «sonando el Corona».
 
 El montaje ahora sigue a la voz, como preveía el guion:

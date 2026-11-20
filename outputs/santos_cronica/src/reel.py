@@ -324,8 +324,9 @@ class Cronica(Author):
         if (EDITOR / VOICE[0]).exists():
             with wave.open(str(EDITOR / VOICE[0]), "rb") as audio:
                 length = round(1000 * audio.getnframes() / audio.getframerate())
+            # −4 dB: la voz mono se duplica en estéreo; la mezcla queda cerca de −14 LUFS.
             self.add("createFxAudioLayer","Voz",start=VOICE[1],duration=length,
-                     sourceRange=dict(start=0,duration=length),
+                     sourceRange=dict(start=0,duration=length),volume=0.63,
                      sourceIntrinsicDuration=length,source={"assetId":"voz"})
 
     def handoff(self, d):
