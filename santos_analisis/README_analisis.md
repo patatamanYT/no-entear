@@ -49,3 +49,16 @@ de la que proviene. Si cambian los datos, hay que volver a ejecutar el script y 
 - **Regresión a la media:** pesos de confiabilidad del xG a 7 partidos estimados con la varianza entre y dentro de
   equipos de la liga; el prior es la línea base histórica de Santos (`linea_base.csv`).
 - **npxG individual:** `xg` del jugador − 0.79 por penal ejecutado (según `eventos_partido.csv`).
+
+## v2 — datos adicionales (portero, defensa, construcción, roles, disponibilidad)
+
+- Datos nuevos en `data/` (su README se guardó como `data/README_datos_adicionales.md` para no sobrescribir el original).
+- Hipótesis y reglas de decisión pre-registradas: `output/v2/hipotesis_preregistradas.md`, confirmadas en git antes de calcular.
+- Ejecutar (no toca `output/` de v1):
+
+```bash
+python3 src/analisis_v2.py
+```
+
+- Salidas en `output/v2/`: `informe_v2.md`, `tablas_v2.xlsx` (hoja `filas_usadas_ND` con filas usadas y excluidas por prueba), `resultados_v2.json` y `v2_*.png`.
+- Reglas: ningún N/D se imputa ni se suma como cero (las filas N/D salen junto con sus minutos); no se usan las columnas 100 % N/D ni las muy incompletas; la tasa de paradas excluye J6 y J15; bootstrap de partidos (10 000 remuestreos, semilla 20261120); cortes J7/J8/J9 y exclusión de un partido como sensibilidad.
