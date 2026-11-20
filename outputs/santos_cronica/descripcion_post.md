@@ -1,14 +1,22 @@
 # Descripción del Reel
 
-Un punto en siete jornadas… y en el mismo torneo, seis victorias seguidas. Santos nunca lo había hecho. ¿Qué cambió? 💚
+Santos Laguna y el torneo de los dos extremos 💚
 
-Primero, sumó mucho menos de lo que sus ocasiones hacían esperar, así que parte del salto fue rebote. Luego hubo circunstancias a favor, con penales y expulsiones rivales. Pero el equipo también cambió: tiró más a puerta y Acevedo pasó de restar a sumar.
+El video cuenta qué cambió en la cancha. Lo que no cupo: la foto de Aleco con mariachi es del 2 de noviembre, tras ganarle a Necaxa, el triunfo que metió a Santos a la Liguilla. La canción que en agosto era burla terminó en fiesta.
 
-Y en la tribuna pasó otra cosa. «Color Esperanza» pasó de burla a canto de la afición. Los números explican buena parte. Lo demás… hay cosas que solo la esperanza puede explicar.
+Datos de FotMob/Opta (J1–J16) y un modelo de goles esperados (xG). Las cifras con ≈ son estimaciones.
 
 ¿Qué pesó más para ti: el rebote, el equipo o la afición? 👇
 
-#SantosLaguna #LigaMX #Apertura2026 #ColorEsperanza #Guerreros
+#SantosLaguna #LigaMX #Apertura2026 #ColorEsperanza
+
+**Criterios** (blogs de herramientas para creadores, 2026; orientativos):
+- La caption completa al video y no lo repite.
+- La primera línea, que es lo visible antes del «más», va corta y con la palabra clave.
+- De 150 a 300 caracteres en Reels de explicación.
+- De 3 a 5 hashtags relevantes.
+
+El dato de la Liguilla viene de TUDN y Publimetro (ver verificacion_numeros.csv, fila «Aleco canta con mariachi tras Necaxa»). Los créditos de las fotos van en un comentario fijado.
 
 ## Texto alternativo de la portada
 
