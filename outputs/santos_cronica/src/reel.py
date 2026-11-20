@@ -36,6 +36,8 @@ class Author:
             self.id = 0
             self.fonts = {}
             self.images = {}
+            self.effect_id = 5000
+            self.blurred = []
 
     def add(self, type_, name, transform=None, start=0, duration=None, grouped=True, **fields):
             self.id += 1
@@ -74,17 +76,32 @@ class Author:
                                     sourceRect=dict(x=0,y=0,width=w,height=h)))
         self.keys(item,"scaleX",[(0,100),(push_ms,100*push)])
         self.keys(item,"scaleY",[(0,100),(push_ms,100*push)])
+        self.grade(item)
         return item
 
-    def picture(self,asset,x,y,w,h,delay=0, tilt=0, *, zoom=True, arrive=.98, end=1.017):
-            width,height = self.images[asset]
-            sx,sy = 100*w/width,100*h/height
-            item = self.add("createFxImageLayer",asset,fx(x+w/2,y+h/2,scale=(sx,sy),anchor=(width/2,height/2),rotation=tilt),
+    def picture(self,asset,x,y,w,h,delay=0, tilt=0, *, zoom=True, arrive=.98, end=1.017, settle=True):
+        width,height = self.images[asset]
+        sx,sy = 100*w/width,100*h/height
+        item = self.add("createFxImageLayer",asset,fx(x+w/2,y+h/2,scale=(sx,sy),anchor=(width/2,height/2),rotation=tilt),
                         start=delay,source=dict(assetId=asset,fit="none"))
-            if zoom:
-                self.keys(item,"scaleX",[(0,sx*arrive),(430,sx),(self.duration-delay,sx*end)])
-                self.keys(item,"scaleY",[(0,sy*arrive),(430,sy),(self.duration-delay,sy*end)])
-            return item
+        if zoom:
+            mid = [(430,1)] if settle else []
+            self.keys(item,"scaleX",[(t,sx*f) for t,f in [(0,arrive),*mid,(self.duration-delay,end)]])
+            self.keys(item,"scaleY",[(t,sy*f) for t,f in [(0,arrive),*mid,(self.duration-delay,end)]])
+        self.grade(item)
+        return item
+
+    def effect(self, layer, **effect):
+        self.effect_id += 1
+        self.actions.append(dict(type="addFxLayerEffect",compositionId="main",layerId=layer,
+                                 effectId=self.effect_id,effect=effect))
+
+    def grade(self, layer):
+        # Un solo tratamiento para todas las fotos: menos saturación, más cuerpo y viñeta suave.
+        self.effect(layer,type="primaryGrade",semanticVersion=1,temperature=0,tint=0,exposure=0,
+                    contrast=.08,highlights=-.06,shadows=0,whites=0,blacks=-.02,
+                    saturation=-.16,vibrance=0)
+        self.effect(layer,type="vignette",amount=.35,feather=.8,radius=.9)
 
 def load_data(root):
     v1 = load_workbook(root / "output/tablas.xlsx", read_only=True, data_only=True)
@@ -145,24 +162,30 @@ NAMES = ("De 1 a 18", "Seis seguidas", "Lo esperado", "El rebote", "Penales y ro
 IMAGES = {"arranque-completo":"aficion_aportada.png",
           "celebracion":"celebracion.jpg", "tahiel":"tahiel.jpg", "aleco":"aleco.jpg",
           "acevedo-partido":"acevedo_partido.jpg", "tribuna":"tribuna.jpg"}
-CUES = ((630, "marca"), (4875, "marca"), (20920, "marca"))
+# El primer golpe cae con la llegada del 18 y la foto del festejo.
+CUES = ((1530, "marca"), (4875, "marca"), (20920, "marca"))
 
 
 class Cronica(Author):
+    def width(self, words, size, role="body", tracking=0):
+        file = FONT[role][0]
+        extra = tracking/1000*size*max(len(words)-1,0)
+        return ImageFont.truetype(self.media / "fonts" / file, size).getlength(words) + extra
+
     def txt(self, words, x, y, size, color=INK, role="body", *, delay=0, fade=0,
-            align="left", limit=None, duration=None):
+            align="left", limit=None, duration=None, tracking=0):
         file, family, style = FONT[role]
-        measure = ImageFont.truetype(self.media / "fonts" / file, size).getlength(words)
+        measure = self.width(words, size, role, tracking)
         if limit and measure > limit:
             size = int(size * limit / measure)
-            measure = ImageFont.truetype(self.media / "fonts" / file, size).getlength(words)
+            measure = self.width(words, size, role, tracking)
         start_x = x-measure if align == "right" else x-measure/2 if align == "center" else x
         if start_x < 80 or start_x+measure > 969 or y > 1560:
             raise ValueError(f"{words!r} outside margins ({start_x}, {start_x+measure}, {y})")
         layer = self.add("createFxTextLayer", words, fx(start_x, y), start=delay, duration=duration,
                          sourceText=dict(text=words, fontFamily=family, fontStyle=style,
                                          fontAssetId=self.fonts[role], fontSize=size,
-                                         fillColor=rgb(color), strokeWidth=0,
+                                         fillColor=rgb(color), strokeWidth=0, tracking=tracking,
                                          justification="left", disableAutoWrap=True))
         if fade:
             self.keys(layer, "opacity", [(0, 0), (fade, 100)])
@@ -177,7 +200,25 @@ class Cronica(Author):
         return self.rect(x,y,w,weight,color,"Filete",delay=delay,grow=grow)
 
     def section(self, text, y=328, color=GRAY):
-        self.txt(text, 96, y, 36, color, "number")
+        self.txt(text, 96, y, 36, color, "number", tracking=60)
+
+    def reveal(self, layer, y, size, *, delay=0, enter=520, exit_at=None, exit=380, duration=None):
+        # El texto sube desde una línea de máscara; con exit_at sale por arriba.
+        top, depth = y - size*1.02, size*1.36
+        matte = self.add("createFxRectLayer","Máscara · línea",fx(70,top),start=delay,duration=duration,
+                         rect=dict(size=[940,depth],fillColor=rgb("#FFFFFF")))
+        self.actions.append(dict(type="setFxLayerTrackMatte",compositionId="main",
+                                 layerId=layer,matteLayerId=matte,mode="alpha"))
+        keys = [(0,y+depth),(enter,y)]
+        if exit_at is not None:
+            keys += [(exit_at,y),(exit_at+exit,y-depth)]
+        self.keys(layer,"positionY",keys)
+        self.blurred.append(layer)
+        return layer
+
+    def title(self, words, x, y, size, color, *, delay=120, limit=None, **kw):
+        layer = self.txt(words, x, y, size, color, "head", delay=delay, limit=limit, **kw)
+        return self.reveal(layer, y, size, delay=delay, duration=kw.get("duration"))
 
     def credits(self, text=FOOT, color=GRAY):
         self.txt(text, 96, 1530, 29, color, limit=848)
@@ -198,11 +239,14 @@ class Cronica(Author):
                          start=delay,rect=shaft)
         self.keys(layer,"scaleX",[(0,0),(145,100)])
         tip = dict(size=[26,5],fillColor=rgb(color))
+        parts = [layer]
         for rotation in (135,-135):
             end = self.add("createFxRectLayer","Flecha · punta",
                            fx(x+length,y+2,rotation=rotation,anchor=(0,2.5)),
                            start=delay+115,rect=tip)
             self.keys(end,"opacity",[(0,0),(90,100)])
+            parts.append(end)
+        return parts
 
     def build(self, d):
         start = 0
@@ -216,12 +260,26 @@ class Cronica(Author):
             start += duration
 
         self.group = None
+        # Acabado común: grano fino de película sobre todo el montaje.
+        finish = self.add("createFxAdjustmentLayer","Acabado · grano",fx(),start=0,duration=sum(TIMES),grouped=False)
+        self.effect(finish,type="grain",amount=.7,size=1.0,softness=.3)
+        self.actions.append(dict(type="setFxCompositionMotionBlur",compositionId="main",
+                                 settings=dict(enabled=True,shutterAngle=180,shutterPhase=-90,
+                                               samplesPerFrame=16,adaptiveSampleLimit=128)))
+        for layer in self.blurred:
+            self.actions.append(dict(type="setFxLayerMotionBlur",compositionId="main",layerId=layer,enabled=True))
         for time, asset in CUES:
             with wave.open(str(EDITOR / f"{asset}.wav"), "rb") as audio:
                 length = round(1000 * audio.getnframes() / audio.getframerate())
             self.add("createFxAudioLayer",f"Acento · {time/1000:.3f} s", start=time, duration=length,
                      sourceRange=dict(start=0,duration=length),
                      sourceIntrinsicDuration=length,source={"assetId":asset})
+
+    def handoff(self, d):
+        # Posición del 18 en la fila J8–J13 de la escena 2; ahí aterriza el 18 de la escena 1.
+        rest = f" de {d['run_n']*3} puntos"
+        rest_x = 943 - self.width(rest, 46)
+        return rest, rest_x, rest_x - self.width(str(d["run"]), 46, "number")
 
     def content(self, shot, d):
         tx, line, rect = self.txt,self.separator,self.rect
@@ -232,21 +290,36 @@ class Cronica(Author):
             self.keys(photo,"opacity",[(0,0),(180,100)])
             rect(0,1060,1080,860,INK,"Campo del marcador")
             self.section("SANTOS LAGUNA / APERTURA 2026",342,IVORY)
+            # Todo lo que no es el 18 se retira antes del corte; el 18 viaja a la escena 2.
+            owner=self.group
+            board=self.add("createFxGroupLayer","Marcador que se retira",fx())
+            self.group=board
             rect(84,970,652,58,INK,"Rótulo del partido")
             tx("FOTO APORTADA · FECHA SIN CONFIRMAR",96,1013,35,IVORY,"number",duration=1530,limit=620)
             tx("J13 · SANTOS 2–0 PUMAS",96,1013,35,IVORY,"number",delay=1530,fade=150)
             tx(str(d["start"]),99,1320,269,IVORY,"number")
             self.arrow(342,1226,111,SAGE,1450)
-            score=tx(str(d["run"]),550,1320,269,SAGE,"number",delay=1530,fade=140)
-            self.side_slide(score,1320,40)
             tx(f"punto en {d['start_n']} jornadas",99,1420,49,IVORY,limit=397)
             tx(f"puntos en {d['run_n']} victorias",550,1420,49,IVORY,delay=1530,fade=170,limit=385)
+            self.group=owner
+            self.keys(board,"opacity",[(0,100),(3200,100),(3480,0)])
+            score=tx(str(d["run"]),550,1320,269,SAGE,"number",delay=1530,fade=140)
+            _, _, land_x = self.handoff(d)
+            go, arrive = 3420-1530, 3960-1530
+            shrink = 100*46/269
+            self.keys(score,"positionY",[(0,1360),(300,1320),(go,1320),(arrive,1380)])
+            self.keys(score,"positionX",[(go,550),(arrive,land_x)])
+            self.keys(score,"scaleX",[(go,100),(arrive,shrink)])
+            self.keys(score,"scaleY",[(go,100),(arrive,shrink)])
+            self.blurred.append(score)
             self.credits("FotMob/Opta · Fotos: aportada / Club Santos Laguna",SAGE)
         elif shot == 2:
-            self.section("APERTURA 2026",328,SAGE)
-            self.picture("celebracion",0,370,1080,720,arrive=1,end=1.03)
-            rect(0,1007,1080,913,FOREST,"Fondo de la racha")
-            tx("Seis victorias seguidas.",96,1100,87,IVORY,"head",limit=848)
+            # La foto sigue el acercamiento de la escena 1 sin saltos.
+            self.picture("celebracion",0,350,1080,720,arrive=1.03,end=1.06,settle=False)
+            self.section("APERTURA 2026",342,SAGE)
+            panel=rect(0,1007,1080,913,FOREST,"Fondo de la racha")
+            self.keys(panel,"positionY",[(0,1060),(450,1007)])
+            self.title("Seis victorias seguidas.",96,1100,87,IVORY,limit=848)
             blocks = (d["games"][:d["start_n"]],
                       d["games"][d["start_n"]:d["start_n"]+d["run_n"]],
                       d["games"][-3:])
@@ -257,7 +330,12 @@ class Cronica(Author):
                 label = d["spans"][row]
                 row_delay = 1500 if row==2 else 0
                 tx(label,98,y,41,SAGE,"number",delay=row_delay)
-                tx(totals[row],943,y,46,IVORY,align="right",delay=900 if row==1 else row_delay,fade=190 if row else 0)
+                if row == 1:
+                    rest, rest_x, land_x = self.handoff(d)
+                    tx(str(d["run"]),land_x,y,46,SAGE,"number")
+                    tx(rest,rest_x,y,46,IVORY,delay=900,fade=190)
+                else:
+                    tx(totals[row],943,y,46,IVORY,align="right",delay=row_delay)
                 for j, (_, symbol) in enumerate(games):
                     x = 97+j*120
                     active = row == 1
@@ -271,7 +349,7 @@ class Cronica(Author):
             self.section("PRIMERAS SIETE JORNADAS")
             self.picture("acevedo-partido",0,370,1080,608,arrive=1,end=1.025)
             rect(0,795,1080,1125,IVORY,"El modelo entra sobre el partido")
-            tx("El arranque quedó corto.",96,890,90,INK,"head",limit=848)
+            self.title("El arranque quedó corto.",96,890,90,INK,limit=848)
             line(1280,INK,x=97,w=846)
             cols = ((143,d["start"],"Puntos reales",BROWN,220),
                     (546,d["expected"],"Puntos esperados",PITCH,520))
@@ -286,7 +364,7 @@ class Cronica(Author):
             self.credits("FotMob/Opta · Foto: MEXSPORT / Vanguardia")
         elif shot == 4:
             self.section("UN ARRANQUE POR DEBAJO DE LO ESPERADO")
-            tx("El rebote",96,536,143,INK,"head")
+            self.title("El rebote",96,536,143,INK)
             tx(f"≈{d['bounce']:.0f}%",93,1011,283,PITCH,"number",delay=210,fade=160)
             line(1084,RULE,weight=84)
             line(1084,PITCH,w=848*d["bounce"]/100,weight=84,delay=295,grow=650)
@@ -296,7 +374,7 @@ class Cronica(Author):
             self.credits()
         elif shot == 5:
             self.section("LO QUE CAMBIÓ LOS MARCADORES",color=SAGE)
-            tx("Penales y rojas",96,522,123,IVORY,"head",limit=850)
+            self.title("Penales y rojas",96,522,123,IVORY,limit=850)
             rows=((f"{d['pens']} de {d['goals']}","goles de penal"),
                   (f"{d['reds']} de {d['run_n']}","partidos con roja rival"),
                   (f"{d['clean']} de {d['run_n']}","triunfos sin penal, roja ni autogol"))
@@ -326,7 +404,7 @@ class Cronica(Author):
             self.section("EN ATAQUE")
             self.picture("tahiel",0,370,1080,720,arrive=1,end=1.025)
             rect(0,1008,1080,912,IVORY,"Fondo de los remates")
-            tx("Más tiros a puerta.",96,1103,83,INK,"head")
+            self.title("Más tiros a puerta.",96,1103,83,INK)
             for y,label,v,color,wait in ((1215,"Arranque",d["shots_start"],BROWN,170),(1355,"Racha",d["shots_run"],PITCH,470)):
                 tx(label,97,y,49,INK)
                 tx(f"{v:.1f}",946,y,110,color,"number",align="right",delay=wait+260,fade=190)
@@ -338,7 +416,7 @@ class Cronica(Author):
         elif shot == 7:
             self.section("EN LA PORTERÍA",330,SAGE)
             self.picture("acevedo-partido",0,370,1080,608,arrive=1,end=1.012)
-            tx("Carlos Acevedo",96,1086,96,IVORY,"head",limit=846)
+            self.title("Carlos Acevedo",96,1086,96,IVORY,limit=846)
             val1=f"≈{d['keeper_start']:+.1f}".replace("-","−")
             val2=f"≈{d['keeper_run']:+.1f}".replace("-","−")
             for x,label,value,wait in ((96,"J1–J7 · Arranque",val1,170),(590,"J8–J13 · Racha",val2,420)):
@@ -354,26 +432,40 @@ class Cronica(Author):
             rect(84,875,748,72,INK,"Fecha visible de la foto de Aleco")
             tx("FOTO · 2 NOV · TRAS SANTOS–NECAXA",101,926,43,IVORY,"number",limit=710)
             rect(0,962,1080,958,FOREST,"Fondo de la cronología")
-            tx("Color Esperanza",96,1056,89,IVORY,"head",limit=848)
-            tx("Diego Torres",96,1110,41,SAGE,limit=848)
+            self.title("Color Esperanza",96,1056,89,IVORY,limit=848)
+            tx("Diego Torres",96,1110,41,SAGE,limit=848,delay=560,fade=220)
+            line(1160,"#769084")
+            # Un momento por golpe: la fecha cambia en el mismo sitio, como un marcador.
             items = (("AGO","Aleco la canta. Llega la burla."),
                      ("13 SEP",f"Suena en el Corona tras el {d['juarez']} a Juárez."),
                      ("NOV","La afición ya la corea."))
-            for index,(date,copy) in enumerate(items):
-                y=1194+112*index
-                delay=(160,1320,2650)[index]
-                line(y-56,"#769084")
-                tx(date,96,y,42,SAGE,"number",delay=delay,fade=175)
-                item=tx(copy,270,y,48,IVORY,delay=delay+65,fade=200,limit=677)
-                self.side_slide(item,y,16)
+            beats = ((150,1600),(1600,3800),(3800,self.duration))
+            for index,((date,copy),(a,b)) in enumerate(zip(items,beats)):
+                last = index == len(items)-1
+                rect(96+76*index,1186,64,4,"#769084","Paso de la cronología")
+                stay = b-a if last else b-a+380
+                big = tx(date,96,1350,150,SAGE,"number",delay=a,duration=stay)
+                self.reveal(big,1350,150,delay=a,duration=stay,exit_at=None if last else b-a)
+                sub = tx(copy,96,1440,52,IVORY,delay=a+90,duration=stay-90,limit=848)
+                self.reveal(sub,1440,52,delay=a+90,duration=stay-90,exit_at=None if last else b-a-90)
+            cursor = rect(96,1186,64,4,IVORY,"Paso activo")
+            moves = [(0,96)]
+            for index,(a,_) in enumerate(beats[1:],1):
+                moves += [(a,96+76*(index-1)),(a+300,96+76*index)]
+            self.keys(cursor,"positionX",moves)
+            self.blurred.append(cursor)
             self.credits("Fuentes: Fox Sports, Récord · Foto: zaraespinoza_ / Publimetro",SAGE)
         else:
             self.picture("tribuna",0,265,1080,690,arrive=1,end=1.06)
             rect(0,937,1080,983,INK,"Fondo del cierre")
-            self.lines(("La canción no metió goles.", "Se volvió un símbolo."),
-                       96,1100,76,91,IVORY,limit=848,duration=2760)
-            self.lines(("Hay cosas que", "solo la esperanza", "puede explicar."),
-                       96,1101,115,118,IVORY,delay=2840,fade=280,limit=847)
+            for i,words in enumerate(("La canción no metió goles.", "Se volvió un símbolo.")):
+                y, wait = 1100+91*i, 150+140*i
+                layer = tx(words,96,y,76,IVORY,"head",delay=wait,duration=2760-wait,limit=848)
+                self.reveal(layer,y,76,delay=wait,duration=2760-wait,exit_at=2760-wait-400)
+            for i,words in enumerate(("Hay cosas que", "solo la esperanza", "puede explicar.")):
+                y, wait = 1101+118*i, 2840+170*i
+                layer = tx(words,96,y,115,IVORY,"head",delay=wait,limit=847)
+                self.reveal(layer,y,115,delay=wait,enter=640)
             self.credits("Foto de archivo: Jpamanes · Wikimedia Commons",SAGE)
 
 

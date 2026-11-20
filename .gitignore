@@ -25,3 +25,6 @@ frontend/.eslintcache
 *.swp
 .idea/
 .vscode/
+
+# Santos Reel scratch renders
+outputs/santos_cronica/.tesseract-work/
