@@ -1,11 +1,14 @@
 # Descripción del Reel
 
-Santos llevaba un punto en siete jornadas. Luego ganó seis seguidos. ¿Qué cambió?  
-Ayudaron el rebote del mal arranque, los penales y las rojas rivales. Y Santos empezó a tirar más a puerta.  
-En la tribuna pasó otra cosa. La afición hizo suyo «Color Esperanza». Hay cosas que solo la esperanza puede explicar.  
-¿Qué pesó más para ti: la suerte, el equipo o la afición?
+Un punto en siete jornadas… y en el mismo torneo, seis victorias seguidas. Santos nunca lo había hecho. ¿Qué cambió? 💚
 
-#SantosLaguna #LigaMX #Apertura2026 #ColorEsperanza
+Primero, sumó mucho menos de lo que sus ocasiones hacían esperar, así que parte del salto fue rebote. Luego hubo circunstancias a favor, con penales y expulsiones rivales. Pero el equipo también cambió: tiró más a puerta y Acevedo pasó de restar a sumar.
+
+Y en la tribuna pasó otra cosa. «Color Esperanza» pasó de burla a canto de la afición. Los números explican buena parte. Lo demás… hay cosas que solo la esperanza puede explicar.
+
+¿Qué pesó más para ti: el rebote, el equipo o la afición? 👇
+
+#SantosLaguna #LigaMX #Apertura2026 #ColorEsperanza #Guerreros
 
 ## Texto alternativo de la portada
 
