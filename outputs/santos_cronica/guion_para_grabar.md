@@ -9,7 +9,7 @@ Un punto en siete jornadas… y en el mismo torneo,
 seis victorias seguidas, por primera vez en su historia. ¿Qué cambió?
 
 **0:09**  
-Primero, no era tan malo: por sus ocasiones, se esperaban casi ocho puntos. Sacó uno.
+Primero: por sus ocasiones, se esperaban casi ocho puntos. Sacó uno.
 
 **0:14**  
 Por eso, cerca de un tercio del salto fue puro rebote.

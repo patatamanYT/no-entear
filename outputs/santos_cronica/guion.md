@@ -8,7 +8,7 @@ Lee los números de corrido y con calma: unas 2.6 palabras por segundo. Haz una 
 |---|---|---|---|
 | 0:00–0:04 | El salto de 1 a 18 | Afición · 1 → 18 | Un punto en siete jornadas… y en el mismo torneo, |
 | 0:04–0:09 | Seis seguidas | Primera vez en su historia · J8–J13, 18 de 18 | seis victorias seguidas, por primera vez en su historia. ¿Qué cambió? |
-| 0:09–0:14 | Lo esperado | 1 real frente a 7.8 esperados | Primero, no era tan malo: por sus ocasiones, se esperaban casi ocho puntos. Sacó uno. |
+| 0:09–0:14 | Lo esperado | 1 real frente a 7.8 esperados | Primero: por sus ocasiones, se esperaban casi ocho puntos. Sacó uno. |
 | 0:14–0:19 | El rebote | ≈34% del salto | Por eso, cerca de un tercio del salto fue puro rebote. |
 | 0:19–0:26 | Penales y rojas | 4 de 15 · 3 de 6 · 1 de 6 · 18 → 14 | Luego, hubo circunstancias a favor: penales y expulsiones rivales. Sin penales ni autogoles, los dieciocho puntos bajan a catorce. |
 | 0:26–0:31.5 | Más tiros a puerta | 2.7 → 6.7 por partido · ≈15–22% | Pero el equipo también cambió: tiró más a puerta. Eso explica cerca de una quinta parte. |
@@ -28,4 +28,4 @@ Lee los números de corrido y con calma: unas 2.6 palabras por segundo. Haz una 
 - **Escena 7:** «pasó de restar a sumar» resume ≈−2.7 (arranque) y ≈+1.6 (racha), puntos estimados por paradas frente a lo esperado.
 - **Sin confirmar todavía**, así que la voz no lo menciona: el periodo de «4 de 15», qué cubre «primera vez en su historia» y el marcador «J13 · Santos 2–0 Pumas».
 - **Escena 9:** la voz no repite «La canción no metió goles. Se volvió un símbolo», que ya está en pantalla. «Lo demás…» lleva a la pausa y al remate.
-- **Recuento:** 126 palabras, unas 2.5 por segundo (~153 por minuto), y ninguna escena pasa de 3.0.
+- **Recuento:** 122 palabras, unas 2.5 por segundo (~148 por minuto), y ninguna escena pasa de 2.9.
