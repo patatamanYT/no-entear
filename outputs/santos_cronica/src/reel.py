@@ -161,7 +161,8 @@ NAMES = ("De 1 a 18", "Seis seguidas", "Lo esperado", "El rebote", "Penales y ro
          "Tiros a puerta", "Acevedo", "La tribuna", "Esperanza")
 IMAGES = {"arranque-completo":"aficion_aportada.png",
           "celebracion":"celebracion.jpg", "tahiel":"tahiel.jpg", "aleco":"aleco.jpg",
-          "acevedo-partido":"acevedo_partido.jpg", "tribuna":"tribuna.jpg"}
+          "acevedo-partido":"acevedo_partido.jpg", "tribuna":"tribuna.jpg",
+          "partido-aportado":"partido_aportado.jpg"}
 # El primer golpe cae con la llegada del 18 y la foto del festejo.
 CUES = ((1530, "marca"), (4875, "marca"), (20920, "marca"))
 
@@ -387,7 +388,10 @@ class Cronica(Author):
             self.credits("FotMob/Opta · Foto: Club Santos Laguna",SAGE)
         elif shot == 3:
             self.section("PRIMERAS SIETE JORNADAS")
-            self.picture("acevedo-partido",0,370,1080,608,arrive=1,end=1.025)
+            # Foto aportada por el usuario: partido y fecha sin confirmar, así se rotula.
+            self.framed("partido-aportado",0,370,1080,440,focus=(1280,620),crop=1080/2560,frame_y=220,
+                        push=1.025,push_ms=self.duration)
+            self.tag("FOTO APORTADA · FECHA SIN CONFIRMAR",96,770,30,limit=620)
             rect(0,795,1080,1125,IVORY,"El modelo entra sobre el partido")
             self.title("El arranque quedó corto.",96,890,90,INK,limit=848)
             line(1280,INK,x=97,w=846)
@@ -401,7 +405,7 @@ class Cronica(Author):
                 tx(title,x+160,1344,49,INK,align="center")
             tx("xG: goles estimados por la calidad del tiro.",96,1425,40,GRAY,limit=854)
             tx("Con el xG, el modelo estima los puntos.",96,1474,40,GRAY,limit=854)
-            self.credits("FotMob/Opta · Foto: MEXSPORT / Vanguardia")
+            self.credits("FotMob/Opta · Foto: aportada")
         elif shot == 4:
             self.section("QUÉ EXPLICA EL SALTO")
             self.title("El rebote",96,536,143,INK)
