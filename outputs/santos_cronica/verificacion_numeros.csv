@@ -1,0 +1,31 @@
+﻿escena,dato,pantalla,valor_exacto,fuente,nota
+1–7,Cobertura de datos,J1–J16,"[1, 16]",tablas.xlsx · 3_xpts_por_partido!A2:A17,
+1,Temporada,Apertura 2026,Apertura 2026,Santos Laguna https://www.clubsantos.mx/en/news/santos-laguna-derroto-a-pumas-y-sumo-6-victorias-consecutivas-por-primera-vez-en-su-historia | informe.md · encabezado,
+1–3,Puntos del arranque,1,1,tablas.xlsx · 3_xpts_por_bloque!C2,
+1–2,Jornadas del arranque,7,7,tablas.xlsx · 3_xpts_por_bloque!B2,
+"1, 2, 5",Puntos de la racha,18,18,tablas.xlsx · 3_xpts_por_bloque!C3,
+1–2,Victorias de la racha y primera vez,6 / primera,6,tablas.xlsx · 0_anclas!B8 | Santos Laguna https://www.clubsantos.mx/en/news/santos-laguna-derroto-a-pumas-y-sumo-6-victorias-consecutivas-por-primera-vez-en-su-historia,
+2,Máximo de puntos al arranque,21,21,tablas.xlsx · 3_xpts_por_bloque!B2,Tres por jornada
+2,Máximo de puntos en la racha,18,18,tablas.xlsx · 3_xpts_por_bloque!B3,Tres por jornada
+2,Tramos y resultados,J1–J7 / J8–J13 / J14–J16,J1 P J2 P J3 P J4 P J5 P J6 E J7 P J8 G J9 G J10 G J11 G J12 G J13 G J14 P J15 G J16 G,"tablas.xlsx · 3_xpts_por_bloque!A2:A3,A5 | tablas.xlsx · 3_xpts_por_partido!A2:D17",
+3–4,Puntos esperados del arranque,7.8,7.806,tablas.xlsx · 3_xpts_por_bloque!D2,Simulación con xG sin penal
+4,Parte del salto atribuida al rebote,≈34%,34.01,tablas.xlsx · 8_descomposicion_salto!C3,Depende del escenario
+5,Goles de penal,4,4,tablas.xlsx · 5_eventos_por_partido!C9:I14,Goles a favor del marcador real menos los del marcador sin eventos y menos los autogoles
+5,Goles a favor,15,15,tablas.xlsx · 0_anclas!B6,
+5,Partidos con roja rival,3,3,tablas.xlsx · 5_eventos_por_partido!E9:E14,
+5,Denominador de partidos y victorias,6,6,tablas.xlsx · 3_xpts_por_bloque!B3 | tablas.xlsx · 0_anclas!B8,
+5,"Victorias sin penal, roja rival ni autogol",1,1,tablas.xlsx · 5_eventos_por_bloque!G3,
+5,Puntos al quitar goles de penal y autogoles,14,14,tablas.xlsx · 5_eventos_por_bloque!C3,Recuento de marcadores modificados
+6,Tiros a puerta por partido (arranque),2.7,2.714,tablas.xlsx · 2_bloques_medias_IC!D30,
+6,Tiros a puerta por partido (racha),6.7,6.667,tablas.xlsx · 2_bloques_medias_IC!D31,
+6,Parte estimada del salto por mejora en ataque,Mejora estimada: ≈15–22% del salto,14.94,tablas.xlsx · 8_descomposicion_salto!C5 | informe.md · Conclusión,El escenario principal da 14.94%; el informe reporta un rango aproximado de 15–22%
+7,Puntos estimados por paradas (arranque),≈−2.7,-2.748,v2/tablas_v2.xlsx · D_sobre_rendimiento!E5,Promedio de dos órdenes de descomposición
+7,Puntos estimados por paradas (racha),≈+1.6,1.601,v2/tablas_v2.xlsx · D_sobre_rendimiento!E10,Promedio de dos órdenes de descomposición
+7,Colocación de los tiros rivales,Pantalla y narración: colocaron peor sus tiros,1.592,v2/tablas_v2.xlsx · D_sobre_rendimiento!E9,
+8,Video viral de Aleco y burla en el mal arranque,AGOSTO,2026-08,Fox Sports MX (23 ago 2026) https://www.foxsports.com.mx/2026/08/23/troleo-epico-del-puebla-se-burlan-de-santos-y-de-aleco-irarragorri-con-color-esperanza-video/ | Vanguardia (28 sep 2026) https://vanguardia.com.mx/opinion/aleco-y-el-inesperado-color-de-la-esperanza-BA23760320,
+8,Primera victoria y tema en el Corona,13 SEPT · 2-1,2026-09-13 · 2-1,Récord (13 sep 2026) https://www.record.com.mx/historia/santos-celebra-su-primera-victoria-con-color-esperanza-en-el-estadio-corona-2026091403272449751 | tablas.xlsx · 5_fuerza_rival_partido!B9; 3_xpts_por_partido!C9,
+8,Inicio de la racha de liga,Primer triunfo de la racha: 2-1,J8,tablas.xlsx · 3_xpts_por_partido!A9:D14 | Santos Laguna https://www.clubsantos.mx/en/news/santos-laguna-derroto-a-pumas-y-sumo-6-victorias-consecutivas-por-primera-vez-en-su-historia,La canción sonó después del partido
+8,Afición corea tras el triunfo ante Atlante al salir,NOV,2026-11-06 · Récord publicó el 8 nov,Récord (8 nov 2026) https://www.record.com.mx/historia/aleco-festeja-con-la-aficion-de-santos-al-ritmo-de-color-esperanza-tras-vencer-al-atlante-2026110820343545318 | tablas.xlsx · 5_fuerza_rival_partido!B17,
+8,Título e intérprete,Agosto y crédito · «Color Esperanza» · Diego Torres,Color Esperanza · Diego Torres,Sony Music Latin https://www.sonymusiclatin.com/artists/diego-torres/ | Récord (8 nov 2026) https://www.record.com.mx/historia/aleco-festeja-con-la-aficion-de-santos-al-ritmo-de-color-esperanza-tras-vencer-al-atlante-2026110820343545318,
+8–9,La afición adopta la canción como símbolo,Hoy la canta la afición,Canto colectivo documentado en el Corona y el Banorte,Vanguardia (28 sep 2026) https://vanguardia.com.mx/opinion/aleco-y-el-inesperado-color-de-la-esperanza-BA23760320 | Récord (8 nov 2026) https://www.record.com.mx/historia/aleco-festeja-con-la-aficion-de-santos-al-ritmo-de-color-esperanza-tras-vencer-al-atlante-2026110820343545318,
+8,Aleco canta con mariachi tras Necaxa,FOTO · 2 NOV · TRAS SANTOS–NECAXA,Partido 2026-11-01 · cobertura 2026-11-02,Publimetro (2 nov 2026) https://www.publimetro.com.mx/deportes/2026/11/02/de-las-burlas-a-la-liguilla-aleco-irarragorri-vuelve-a-cantar-color-esperanza-con-mariachi/ | TUDN https://www.tudn.com/futbol/liga-mx/aleco-irarragorri-celebra-con-mariachi-el-triunfo-de-santos-sobre-necaxa-que-los-mete-a-liguilla,Fecha de publicación de la imagen; el partido fue el 1 de noviembre

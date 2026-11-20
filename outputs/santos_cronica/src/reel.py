@@ -1,0 +1,418 @@
+"""Author the nine-scene Tesseract version of the Santos story."""
+import argparse
+import json
+from pathlib import Path
+import wave
+
+from PIL import Image, ImageFont, ImageColor
+from openpyxl import load_workbook
+import subprocess
+
+BASE = Path(__file__).resolve().parents[1]
+EDITOR = BASE / "assets"
+MEDIA = EDITOR
+EASE = dict(type="cubicBezier", x1=.20, y1=.78, x2=.24, y2=1)
+
+def run(cli, *args):
+    p = subprocess.run([str(cli), *map(str,args)], capture_output=True, encoding="utf-8", errors="replace")
+    if p.returncode:
+        raise RuntimeError(p.stderr + p.stdout[-5000:])
+    if p.stderr:
+        print(p.stderr.strip())
+    return json.loads(p.stdout)
+
+def rgb(color):
+    return [n/255 for n in ImageColor.getrgb(color)] + [1]
+
+def fx(x=0, y=0, *, scale=(100,100), anchor=(0,0), rotation=0, opacity=100):
+    return dict(position=[x,y], scale=list(scale), anchorPoint=list(anchor), rotation=rotation, opacity=opacity)
+
+class Author:
+    def __init__(self, media):
+            self.media = media
+            self.actions = []
+            self.group = None
+            self.duration = 49500
+            self.id = 0
+            self.fonts = {}
+            self.images = {}
+
+    def add(self, type_, name, transform=None, start=0, duration=None, grouped=True, **fields):
+            self.id += 1
+            action = dict(type=type_, compositionId="main", layerId=self.id, name=name,
+                          activeRange={"start":start,"duration":self.duration-start if duration is None else duration},
+                          insertIndex=0, **fields)
+            if transform is not None:
+                action["transform"] = transform
+            if grouped and self.group is not None:
+                action["parentLayerId"] = self.group
+            self.actions.append(action)
+            return self.id
+
+    def keys(self, layer, prop, values, kind="float", easing=EASE):
+            self.actions.append(dict(type="setFxPropertyKeyframes", compositionId="main",
+               property=dict(layerId=layer,propertyType=prop), keyframes=[
+                 {"id":f"{layer}-{prop}-{at}","layerTime":at,"easing":easing,
+                  "value":{"type":kind,"value":value}} for at,value in values]))
+
+    def rect(self,x,y,w,h,color,name,*,rounding=0,outline=None,delay=0,grow=0):
+            item = dict(size=[w,h], fillColor=rgb(color),roundness=rounding)
+            if outline:
+                item.update(fillEnabled=False,strokeEnabled=True,strokeColor=rgb(outline),strokeWidth=4)
+            layer = self.add("createFxRectLayer",name,fx(x,y),start=delay,rect=item)
+            if grow:
+                self.keys(layer,"scaleX",[(0,0),(grow,100)])
+            return layer
+
+    def framed(self,asset,x,y,w,h,focus,crop,*,frame_y=300,push=1.03,push_ms=1700):
+        # Frame w×h clips the photo; crop scales it around focus (source px) placed at frame_y px from the frame top.
+        width,height = self.images[asset]
+        cx = w/2 + (width/2 - focus[0])*crop
+        cy = frame_y + (height/2 - focus[1])*crop
+        item = self.add("createFxImageLayer",asset,fx(x+w/2,y,anchor=(w/2,0)),
+                        source=dict(assetId=asset,fit={"custom":{"scale":[crop,crop],"contentCenter":[cx,cy]}},
+                                    sourceRect=dict(x=0,y=0,width=w,height=h)))
+        self.keys(item,"scaleX",[(0,100),(push_ms,100*push)])
+        self.keys(item,"scaleY",[(0,100),(push_ms,100*push)])
+        return item
+
+    def picture(self,asset,x,y,w,h,delay=0, tilt=0, *, zoom=True, arrive=.98, end=1.017):
+            width,height = self.images[asset]
+            sx,sy = 100*w/width,100*h/height
+            item = self.add("createFxImageLayer",asset,fx(x+w/2,y+h/2,scale=(sx,sy),anchor=(width/2,height/2),rotation=tilt),
+                        start=delay,source=dict(assetId=asset,fit="none"))
+            if zoom:
+                self.keys(item,"scaleX",[(0,sx*arrive),(430,sx),(self.duration-delay,sx*end)])
+                self.keys(item,"scaleY",[(0,sy*arrive),(430,sy),(self.duration-delay,sy*end)])
+            return item
+
+def load_data(root):
+    v1 = load_workbook(root / "output/tablas.xlsx", read_only=True, data_only=True)
+    v2 = load_workbook(root / "output/v2/tablas_v2.xlsx", read_only=True, data_only=True)
+    blocks = v1["3_xpts_por_bloque"]
+    games = list(v1["3_xpts_por_partido"].values)[1:]
+    events = list(v1["5_eventos_por_partido"].values)[1:]
+    shots = v1["2_bloques_medias_IC"]
+    model = v2["D_sobre_rendimiento"]
+    racha = [row for row in games if blocks["B2"].value < row[0] <= blocks["B2"].value + blocks["B3"].value]
+    racha_eventos = [events[row[0] - 1] for row in racha]
+    # The score difference isolates scored penalties after subtracting own goals.
+    def goals(score):
+        return int(score.split("-")[0])
+
+    d = dict(
+        games=[(row[0], {0: "P", 1: "E", 3: "G"}[row[3]]) for row in games],
+        spans=[blocks[f"A{i}"].value for i in (2, 3, 5)],
+        start=blocks["C2"].value, run=blocks["C3"].value,
+        start_n=blocks["B2"].value, run_n=blocks["B3"].value,
+        expected=blocks["D2"].value, bounce=v1["8_descomposicion_salto"]["C3"].value,
+        goals=v1["0_anclas"]["B6"].value,
+        pens=sum(goals(row[2]) - goals(row[8]) - row[7] for row in racha_eventos),
+        reds=sum(row[4].startswith("S") for row in racha_eventos),
+        clean=v1["5_eventos_por_bloque"]["G3"].value,
+        without=v1["5_eventos_por_bloque"]["C3"].value,
+        shots_start=shots["D30"].value, shots_run=shots["D31"].value,
+        keeper_start=model["E5"].value, keeper_run=model["E10"].value,
+        placement=model["E9"].value, juarez=racha[0][2],
+        juarez_date=v1["5_fuerza_rival_partido"]["B9"].value.date().isoformat(),
+        atlante_date=v1["5_fuerza_rival_partido"]["B17"].value.date().isoformat(),
+        improve=v1["8_descomposicion_salto"]["C5"].value,
+    )
+    assert shots["A30"].value == shots["A31"].value == "Tiros a puerta"
+    assert model["B5"].value == model["B10"].value == "paradas_Acevedo"
+    v1.close()
+    v2.close()
+    return d
+
+IVORY = "#F1EDE1"
+INK = "#1B211D"
+FOREST = "#243E33"
+PITCH = "#355D4C"
+SAGE = "#B6C4AB"
+GRAY = "#535A51"
+RULE = "#A9AD9F"
+BROWN = "#80583A"
+W, H = 1080, 1920
+FOOT = "FotMob/Opta · J1–J16 · análisis propio"
+FONT = {
+    "head": ("BarlowCondensed-SemiBold.ttf", "Barlow Condensed SemiBold", "Regular"),
+    "number": ("BarlowCondensed-Bold.ttf", "Barlow Condensed", "Bold"),
+    "body": ("BarlowCondensed-SemiBold.ttf", "Barlow Condensed SemiBold", "Regular"),
+}
+TIMES = (4000, 5000, 5000, 5000, 7000, 5500, 5000, 6500, 6500)
+NAMES = ("De 1 a 18", "Seis seguidas", "Lo esperado", "El rebote", "Penales y rojas",
+         "Tiros a puerta", "Acevedo", "La tribuna", "Esperanza")
+IMAGES = {"arranque-completo":"aficion_aportada.png",
+          "celebracion":"celebracion.jpg", "tahiel":"tahiel.jpg", "aleco":"aleco.jpg",
+          "acevedo-partido":"acevedo_partido.jpg", "tribuna":"tribuna.jpg"}
+CUES = ((630, "marca"), (4875, "marca"), (20920, "marca"))
+
+
+class Cronica(Author):
+    def txt(self, words, x, y, size, color=INK, role="body", *, delay=0, fade=0,
+            align="left", limit=None, duration=None):
+        file, family, style = FONT[role]
+        measure = ImageFont.truetype(self.media / "fonts" / file, size).getlength(words)
+        if limit and measure > limit:
+            size = int(size * limit / measure)
+            measure = ImageFont.truetype(self.media / "fonts" / file, size).getlength(words)
+        start_x = x-measure if align == "right" else x-measure/2 if align == "center" else x
+        if start_x < 80 or start_x+measure > 969 or y > 1560:
+            raise ValueError(f"{words!r} outside margins ({start_x}, {start_x+measure}, {y})")
+        layer = self.add("createFxTextLayer", words, fx(start_x, y), start=delay, duration=duration,
+                         sourceText=dict(text=words, fontFamily=family, fontStyle=style,
+                                         fontAssetId=self.fonts[role], fontSize=size,
+                                         fillColor=rgb(color), strokeWidth=0,
+                                         justification="left", disableAutoWrap=True))
+        if fade:
+            self.keys(layer, "opacity", [(0, 0), (fade, 100)])
+        return layer
+
+    def lines(self, lines, x, y, size, step, color=INK, role="head", *, delay=0,
+              fade=0, limit=None, duration=None):
+        return [self.txt(line, x, y+step*i, size, color, role, delay=delay,
+                         fade=fade, limit=limit, duration=duration) for i,line in enumerate(lines)]
+
+    def separator(self, y, color=RULE, x=96, w=848, weight=2, *, delay=0, grow=0):
+        return self.rect(x,y,w,weight,color,"Filete",delay=delay,grow=grow)
+
+    def section(self, text, y=328, color=GRAY):
+        self.txt(text, 96, y, 36, color, "number")
+
+    def credits(self, text=FOOT, color=GRAY):
+        self.txt(text, 96, 1530, 29, color, limit=848)
+
+    def rise(self, x, baseline, w, height, color, label, delay):
+        # Keep the baseline fixed and animate only the vertical extent of the bar.
+        layer = self.add("createFxRectLayer", label,
+                         fx(x,baseline,anchor=(0,height)),
+                         start=delay,rect=dict(size=[w,height],fillColor=rgb(color)))
+        self.keys(layer,"scaleY",[(0,0),(670,100)])
+
+    def side_slide(self, layer, y, distance=30):
+        self.keys(layer,"positionY",[(0,y+distance),(300,y)])
+
+    def arrow(self,x,y,length,color,delay):
+        shaft = dict(size=[length,5],fillColor=rgb(color))
+        layer = self.add("createFxRectLayer","Flecha · trazo",fx(x,y),
+                         start=delay,rect=shaft)
+        self.keys(layer,"scaleX",[(0,0),(145,100)])
+        tip = dict(size=[26,5],fillColor=rgb(color))
+        for rotation in (135,-135):
+            end = self.add("createFxRectLayer","Flecha · punta",
+                           fx(x+length,y+2,rotation=rotation,anchor=(0,2.5)),
+                           start=delay+115,rect=tip)
+            self.keys(end,"opacity",[(0,0),(90,100)])
+
+    def build(self, d):
+        start = 0
+        for index, (name, duration) in enumerate(zip(NAMES, TIMES), 1):
+            self.group = self.add("createFxGroupLayer", f"{index:02d} · {name}",
+                                  fx(), start=start, duration=duration, grouped=False)
+            self.duration = duration
+            bg = {1:INK, 2:FOREST, 5:FOREST, 7:INK, 8:FOREST, 9:INK}.get(index,IVORY)
+            self.rect(0,0,W,H,bg,"Fondo")
+            self.content(index,d)
+            start += duration
+
+        self.group = None
+        for time, asset in CUES:
+            with wave.open(str(EDITOR / f"{asset}.wav"), "rb") as audio:
+                length = round(1000 * audio.getnframes() / audio.getframerate())
+            self.add("createFxAudioLayer",f"Acento · {time/1000:.3f} s", start=time, duration=length,
+                     sourceRange=dict(start=0,duration=length),
+                     sourceIntrinsicDuration=length,source={"assetId":asset})
+
+    def content(self, shot, d):
+        tx, line, rect = self.txt,self.separator,self.rect
+        if shot == 1:
+            # Recorte sobre el cartel y los rostros: la afición ocupa el encuadre inicial.
+            self.framed("arranque-completo",0,350,1080,710,focus=(600,380),crop=1.35)
+            photo=self.picture("celebracion",0,350,1080,720,delay=1530,arrive=1,end=1.03)
+            self.keys(photo,"opacity",[(0,0),(180,100)])
+            rect(0,1060,1080,860,INK,"Campo del marcador")
+            self.section("SANTOS LAGUNA / APERTURA 2026",342,IVORY)
+            rect(84,970,652,58,INK,"Rótulo del partido")
+            tx("FOTO APORTADA · FECHA SIN CONFIRMAR",96,1013,35,IVORY,"number",duration=1530,limit=620)
+            tx("J13 · SANTOS 2–0 PUMAS",96,1013,35,IVORY,"number",delay=1530,fade=150)
+            tx(str(d["start"]),99,1320,269,IVORY,"number")
+            self.arrow(342,1226,111,SAGE,1450)
+            score=tx(str(d["run"]),550,1320,269,SAGE,"number",delay=1530,fade=140)
+            self.side_slide(score,1320,40)
+            tx(f"punto en {d['start_n']} jornadas",99,1420,49,IVORY,limit=397)
+            tx(f"puntos en {d['run_n']} victorias",550,1420,49,IVORY,delay=1530,fade=170,limit=385)
+            self.credits("FotMob/Opta · Fotos: aportada / Club Santos Laguna",SAGE)
+        elif shot == 2:
+            self.section("APERTURA 2026",328,SAGE)
+            self.picture("celebracion",0,370,1080,720,arrive=1,end=1.03)
+            rect(0,1007,1080,913,FOREST,"Fondo de la racha")
+            tx("Seis victorias seguidas.",96,1100,87,IVORY,"head",limit=848)
+            blocks = (d["games"][:d["start_n"]],
+                      d["games"][d["start_n"]:d["start_n"]+d["run_n"]],
+                      d["games"][-3:])
+            totals = (f"{d['start']} de {d['start_n']*3} puntos",
+                      f"{d['run']} de {d['run_n']*3} puntos","Después de la racha")
+            for row, games in enumerate(blocks[:2]):
+                y = 1215 + 165*row
+                label = d["spans"][row]
+                row_delay = 1500 if row==2 else 0
+                tx(label,98,y,41,SAGE,"number",delay=row_delay)
+                tx(totals[row],943,y,46,IVORY,align="right",delay=900 if row==1 else row_delay,fade=190 if row else 0)
+                for j, (_, symbol) in enumerate(games):
+                    x = 97+j*120
+                    active = row == 1
+                    wait = 200 + 104*j if active else row_delay
+                    rect(x,y+22,103,67,SAGE if active else FOREST,f"Jornada · {symbol}",
+                         outline=None if active else "#748A79",delay=wait)
+                    tx(symbol,x+51,y+69,43,FOREST if active else IVORY,"number",
+                       delay=wait,align="center")
+            self.credits("Primera vez en su historia · Foto: Club Santos Laguna",SAGE)
+        elif shot == 3:
+            self.section("PRIMERAS SIETE JORNADAS")
+            self.picture("acevedo-partido",0,370,1080,608,arrive=1,end=1.025)
+            rect(0,795,1080,1125,IVORY,"El modelo entra sobre el partido")
+            tx("El arranque quedó corto.",96,890,90,INK,"head",limit=848)
+            line(1280,INK,x=97,w=846)
+            cols = ((143,d["start"],"Puntos reales",BROWN,220),
+                    (546,d["expected"],"Puntos esperados",PITCH,520))
+            for x, val, title, color, delay in cols:
+                bar_h=280*val/d["expected"]
+                self.rise(x,1280,320,bar_h,color,title,delay)
+                tx(f"{val:.1f}" if isinstance(val,float) else str(val),x+160,1262-bar_h,100,color,
+                   "number",align="center",delay=delay+430,fade=240)
+                tx(title,x+160,1344,49,INK,align="center")
+            tx("xG: goles estimados por la calidad del tiro.",96,1410,50,INK,limit=854)
+            tx("Con el xG, el modelo estima los puntos.",96,1472,50,INK,limit=854)
+            self.credits("FotMob/Opta · Foto: MEXSPORT / Vanguardia")
+        elif shot == 4:
+            self.section("UN ARRANQUE POR DEBAJO DE LO ESPERADO")
+            tx("El rebote",96,536,143,INK,"head")
+            tx(f"≈{d['bounce']:.0f}%",93,1011,283,PITCH,"number",delay=210,fade=160)
+            line(1084,RULE,weight=84)
+            line(1084,PITCH,w=848*d["bounce"]/100,weight=84,delay=295,grow=650)
+            tx("del salto de puntos, según el modelo.",96,1282,54,INK,limit=844)
+            tx("Ritmo de J1–J7 frente a J8–J13.",96,1370,52,INK,limit=844)
+            tx("Ambos expresados en seis partidos.",96,1435,50,INK,limit=844)
+            self.credits()
+        elif shot == 5:
+            self.section("LO QUE CAMBIÓ LOS MARCADORES",color=SAGE)
+            tx("Penales y rojas",96,522,123,IVORY,"head",limit=850)
+            rows=((f"{d['pens']} de {d['goals']}","goles de penal"),
+                  (f"{d['reds']} de {d['run_n']}","partidos con roja rival"),
+                  (f"{d['clean']} de {d['run_n']}","triunfos sin penal, roja ni autogol"))
+            owner=self.group
+            details=self.add("createFxGroupLayer","Eventos observados",fx())
+            self.group=details
+            for i,(number,label) in enumerate(rows):
+                y=700+i*143
+                line(y-96,"#769084")
+                tx(number,96,y,69,SAGE,"number",delay=180+i*245,fade=140)
+                tx(label,327,y,48,IVORY,delay=180+i*245,fade=140,limit=614)
+            self.keys(details,"opacity",[(0,100),(2550,100),(2900,0)])
+            self.group=owner
+            recalc=self.add("createFxGroupLayer","Recuento que ocupa el plano",fx())
+            self.group=recalc
+            rect(96,1120,848,310,IVORY,"Franja del recuento")
+            tx("RECUENTO DE MARCADORES",117,1176,35,GRAY,"number")
+            tx(str(d["run"]),117,1309,147,FOREST,"number",delay=1070,fade=150)
+            self.arrow(284,1255,75,FOREST,1440)
+            counter=tx(f"{d['without']} puntos",404,1309,124,FOREST,"number",delay=1750,fade=170,limit=514)
+            self.side_slide(counter,1309,24)
+            tx("Sin goles de penal ni autogoles.",117,1390,48,INK,limit=800,delay=1750,fade=170)
+            self.keys(recalc,"positionY",[(0,0),(2580,0),(3100,-390)])
+            self.group=owner
+            self.credits(color=SAGE)
+        elif shot == 6:
+            self.section("EN ATAQUE")
+            self.picture("tahiel",0,370,1080,720,arrive=1,end=1.025)
+            rect(0,1008,1080,912,IVORY,"Fondo de los remates")
+            tx("Más tiros a puerta.",96,1103,83,INK,"head")
+            for y,label,v,color,wait in ((1215,"Arranque",d["shots_start"],BROWN,170),(1355,"Racha",d["shots_run"],PITCH,470)):
+                tx(label,97,y,49,INK)
+                tx(f"{v:.1f}",946,y,110,color,"number",align="right",delay=wait+260,fade=190)
+                line(y+37,RULE,weight=15)
+                line(y+37,color,w=848*v/d["shots_run"],weight=15,delay=wait,grow=620)
+            tx("Promedio por partido",96,1445,35,GRAY)
+            tx("Mejora estimada: ≈15–22% del salto",96,1494,40,PITCH,limit=848)
+            self.credits("FotMob/Opta · Tahiel Jiménez / Club Santos Laguna")
+        elif shot == 7:
+            self.section("EN LA PORTERÍA",330,SAGE)
+            self.picture("acevedo-partido",0,370,1080,608,arrive=1,end=1.012)
+            tx("Carlos Acevedo",96,1086,96,IVORY,"head",limit=846)
+            val1=f"≈{d['keeper_start']:+.1f}".replace("-","−")
+            val2=f"≈{d['keeper_run']:+.1f}".replace("-","−")
+            for x,label,value,wait in ((96,"J1–J7 · Arranque",val1,170),(590,"J8–J13 · Racha",val2,420)):
+                tx(label,x,1170,43,SAGE,limit=382)
+                tx(value,x,1280,108,IVORY,"number",delay=wait,fade=160,limit=340)
+            tx("Puntos estimados acumulados por paradas.",96,1370,44,IVORY,limit=844)
+            tx("Frente a lo esperado.",96,1425,43,SAGE,limit=844)
+            tx("Los rivales colocaron peor sus tiros.",96,1480,43,SAGE,limit=844)
+            self.credits("FotMob/Opta · Foto: MEXSPORT / Vanguardia",SAGE)
+        elif shot == 8:
+            self.section("LO QUE PASÓ EN LA TRIBUNA",324,SAGE)
+            self.picture("aleco",0,380,1080,608,arrive=1,end=1.015)
+            rect(84,875,748,72,INK,"Fecha visible de la foto de Aleco")
+            tx("FOTO · 2 NOV · TRAS SANTOS–NECAXA",101,926,43,IVORY,"number",limit=710)
+            rect(0,962,1080,958,FOREST,"Fondo de la cronología")
+            tx("Color Esperanza",96,1056,89,IVORY,"head",limit=848)
+            tx("Diego Torres",96,1110,41,SAGE,limit=848)
+            items = (("AGO","Aleco la canta. Llega la burla."),
+                     ("13 SEP",f"Suena en el Corona tras el {d['juarez']} a Juárez."),
+                     ("NOV","La afición ya la corea."))
+            for index,(date,copy) in enumerate(items):
+                y=1194+112*index
+                delay=(160,1320,2650)[index]
+                line(y-56,"#769084")
+                tx(date,96,y,42,SAGE,"number",delay=delay,fade=175)
+                item=tx(copy,270,y,48,IVORY,delay=delay+65,fade=200,limit=677)
+                self.side_slide(item,y,16)
+            self.credits("Fuentes: Fox Sports, Récord · Foto: zaraespinoza_ / Publimetro",SAGE)
+        else:
+            self.picture("tribuna",0,265,1080,690,arrive=1,end=1.06)
+            rect(0,937,1080,983,INK,"Fondo del cierre")
+            self.lines(("La canción no metió goles.", "Se volvió un símbolo."),
+                       96,1100,76,91,IVORY,limit=848,duration=2760)
+            self.lines(("Hay cosas que", "solo la esperanza", "puede explicar."),
+                       96,1101,115,118,IVORY,delay=2840,fade=280,limit=847)
+            self.credits("Foto de archivo: Jpamanes · Wikimedia Commons",SAGE)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("cli",type=Path)
+    parser.add_argument("project",type=Path)
+    parser.add_argument("analysis",type=Path, help="Directorio santos_analisis descomprimido")
+    args=parser.parse_args()
+    cli, project=args.cli.resolve(),args.project.resolve()
+    source=run(cli,"project","inspect","-p",project)
+    if source["composition"]["layers"]:
+        raise ValueError("Start with a new Tesseract document")
+    source["duration"]=49.5
+    root_json=MEDIA/"root.json"
+    root_json.write_text(json.dumps(source),encoding="utf-8")
+    run(cli,"project","commit","-p",project,"--file",root_json)
+    data=load_data(args.analysis)
+    author=Cronica(MEDIA)
+    embedded = {}
+    for role,(filename, family, _) in FONT.items():
+        if filename not in embedded:
+            font=run(cli,"project","import-font","-p",project,"--file",MEDIA/"fonts"/filename)
+            assert font["fontFamily"] == family, font
+            embedded[filename] = font["assetId"]
+        author.fonts[role]=embedded[filename]
+    for asset, name in IMAGES.items():
+        file=MEDIA/name
+        run(cli,"project","import-asset","-p",project,"--file",file,"--asset-id",asset,"--kind","image")
+        with Image.open(file) as image:
+            author.images[asset]=image.size
+    run(cli,"project","import-asset","-p",project,"--file",EDITOR/"marca.wav","--asset-id","marca","--kind","audio")
+    author.build(data)
+    action_file=MEDIA/"crónica_acciones.json"
+    action_file.write_text(json.dumps(author.actions,ensure_ascii=False),encoding="utf-8")
+    applied=run(cli,"project","apply","-p",project,"--actions",action_file)
+    print(applied["appliedActions"], "actions")
+    print(run(cli,"project","check","-p",project))
+
+
+if __name__ == "__main__":
+    main()
