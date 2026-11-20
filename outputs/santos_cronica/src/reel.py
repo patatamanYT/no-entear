@@ -352,7 +352,7 @@ class Cronica(Author):
             self.bleed("celebracion",1060,arrive=1.03,end=1.06,settle=False)
             self.fade(840,1062,FOREST)
             self.scrim()
-            self.section("APERTURA 2026 · PRIMERA VEZ EN SU HISTORIA",342,SAGE)
+            self.tag("APERTURA 2026 · PRIMERA VEZ EN SU HISTORIA",96,342,36)
             self.title("Seis victorias seguidas.",96,1100,87,IVORY,limit=848)
             blocks = (d["games"][:d["start_n"]],
                       d["games"][d["start_n"]:d["start_n"]+d["run_n"]],
