@@ -132,3 +132,16 @@ El usuario pidió animaciones menos rápidas («se ve muy AI»). Cambios:
   - Cursor de la cronología: de 0.3 a 0.6 s.
 - **Sin «pops»:** los recuadros G entran con fundido, uno cada 0.15 s.
 - **Voz:** lo sincronizado con la voz conserva su inicio. El golpe de la sexta G se mueve con ella.
+
+## Versión 8 · voz con DeepFilterNet
+
+Con autorización del usuario, la toma filtrada (graves dobles a 95 Hz, mismo corte de 0.11 s) se pasó por DeepFilterNet3 con la skill media-denoise-ai: modelo de código abierto, MIT, ejecutado en CPU. El modelo se obtuvo del repositorio oficial porque la descarga directa estaba bloqueada. Después se aplicó la misma cadena tipo podcast (variante B).
+
+**Verificación:**
+- **Sincronía:** 0 ms de desfase por correlación cruzada y la misma duración, 52.695 s.
+- **Ruido:** pasa de −56 a −87 dB. Con la cadena podcast, la distancia entre voz y ruido sube de 28 a 68 dB.
+- **Palabras:** en las 100 que tienen voz real, la caída es pareja (−3.1 dB, compensada al normalizar) y ninguna pierde más de 3.5 dB extra. Las caídas mayores son tramos donde Whisper marcó mal el inicio de una palabra y en la toma solo había ruido.
+
+**Archivo:** assets/voz_santos_dfn_podcast.wav. **Mezcla:** −14.3 LUFS, pico −2.7 dBFS.
+
+Nadie lo ha escuchado. Hay que revisar que la voz no suene «metálica» o recortada al final de las frases, que es el defecto típico de los reductores de ruido con IA.

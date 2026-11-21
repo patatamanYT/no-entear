@@ -161,7 +161,7 @@ FONT = {
 # Escenas ajustadas a la toma de voz (voz_santos.wav, entra a 0.9 s): cada una
 # empieza ~120 ms antes de su primera palabra. Sin voz, el montaje original medía 49.5 s.
 TIMES = (4000, 4740, 5180, 3660, 8960, 5790, 5260, 7260, 9150)
-VOICE = ("voz_santos_podcast.wav", 900)
+VOICE = ("voz_santos_dfn_podcast.wav", 900)
 # Momentos dentro de escenas, en ms locales, tomados de la voz.
 PENALES = (2600, 3500, 4000)      # filas: «penales», «expulsiones», «1 de 6»
 RECUENTO = (4700, 6700, 7700)     # tarjeta, «dieciocho», «catorce»
