@@ -116,3 +116,19 @@ Archivo: assets/voz_santos_podcast.wav. En el montaje va a −1.2 dB. Mezcla fin
 - Más reducción de ruido: quitaba consonantes.
 
 La compresión deja el ruido de fondo unos 28 dB por debajo de la voz, frente a los 36 dB de la toma filtrada. Todo lo anterior son mediciones: nadie ha escuchado el resultado.
+
+## Versión 7 · movimiento más pausado
+
+El usuario pidió animaciones menos rápidas («se ve muy AI»). Cambios:
+
+- **Curva:** pasa de una salida brusca (0.20, 0.78, 0.24, 1) a una entrada y salida suaves (0.45, 0, 0.2, 1).
+- **Duraciones:**
+  - Titulares: de 0.52 a 0.9 s de entrada y de 0.38 a 0.6 s de salida.
+  - Fundidos: mínimo 0.35 s.
+  - Barras: de 0.67 a 1.1 s.
+  - Flechas: de 0.15 a 0.35 s.
+  - Deslizamientos: de 0.3 a 0.6 s, con menos recorrido.
+  - Viaje del 18: de 0.37 a 0.67 s.
+  - Cursor de la cronología: de 0.3 a 0.6 s.
+- **Sin «pops»:** los recuadros G entran con fundido, uno cada 0.15 s.
+- **Voz:** lo sincronizado con la voz conserva su inicio. El golpe de la sexta G se mueve con ella.

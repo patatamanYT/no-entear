@@ -11,7 +11,9 @@ import subprocess
 BASE = Path(__file__).resolve().parents[1]
 EDITOR = BASE / "assets"
 MEDIA = EDITOR
-EASE = dict(type="cubicBezier", x1=.20, y1=.78, x2=.24, y2=1)
+# Curva suave de entrada y salida: el movimiento acelera y frena sin golpes.
+EASE = dict(type="cubicBezier", x1=.45, y1=0, x2=.2, y2=1)
+SLOW = 1.8   # factor para entradas y fundidos cortos
 
 def run(cli, *args):
     p = subprocess.run([str(cli), *map(str,args)], capture_output=True, encoding="utf-8", errors="replace")
@@ -63,7 +65,7 @@ class Author:
                 item.update(fillEnabled=False,strokeEnabled=True,strokeColor=rgb(outline),strokeWidth=4)
             layer = self.add("createFxRectLayer",name,fx(x,y),start=delay,rect=item)
             if grow:
-                self.keys(layer,"scaleX",[(0,0),(grow,100)])
+                self.keys(layer,"scaleX",[(0,0),(grow*1.6,100)])
             return layer
 
     def framed(self,asset,x,y,w,h,focus,crop,*,frame_y=300,push=1.03,push_ms=1700):
@@ -85,7 +87,7 @@ class Author:
         item = self.add("createFxImageLayer",asset,fx(x+w/2,y+h/2,scale=(sx,sy),anchor=(width/2,height/2),rotation=tilt),
                         start=delay,source=dict(assetId=asset,fit="none"))
         if zoom:
-            mid = [(430,1)] if settle else []
+            mid = [(800,1)] if settle else []
             self.keys(item,"scaleX",[(t,sx*f) for t,f in [(0,arrive),*mid,(self.duration-delay,end)]])
             self.keys(item,"scaleY",[(t,sy*f) for t,f in [(0,arrive),*mid,(self.duration-delay,end)]])
         self.grade(item)
@@ -172,7 +174,7 @@ IMAGES = {"arranque-completo":"aficion_aportada.png",
           "acevedo-partido":"acevedo_partido.jpg", "tribuna":"tribuna.jpg",
           "partido-aportado":"partido_aportado.jpg"}
 # Golpes: llegada del 18 (escena 1), sexta G (escena 2) y «14 puntos» (escena 5).
-CUES = ((1, 1530, "marca"), (2, 875, "marca"), (5, RECUENTO[2]+170, "marca"))
+CUES = ((1, 1530, "marca"), (2, 200+150*5+250, "marca"), (5, RECUENTO[2]+300, "marca"))
 
 
 class Cronica(Author):
@@ -197,7 +199,7 @@ class Cronica(Author):
                                          fillColor=rgb(color), strokeWidth=0, tracking=tracking,
                                          justification="left", disableAutoWrap=True))
         if fade:
-            self.keys(layer, "opacity", [(0, 0), (fade, 100)])
+            self.keys(layer, "opacity", [(0, 0), (max(350, fade*SLOW), 100)])
         return layer
 
     def lines(self, lines, x, y, size, step, color=INK, role="head", *, delay=0,
@@ -211,7 +213,7 @@ class Cronica(Author):
     def section(self, text, y=328, color=GRAY):
         self.txt(text, 96, y, 36, color, "number", tracking=60)
 
-    def reveal(self, layer, y, size, *, delay=0, enter=520, exit_at=None, exit=380, duration=None):
+    def reveal(self, layer, y, size, *, delay=0, enter=900, exit_at=None, exit=600, duration=None):
         # El texto sube desde una línea de máscara; con exit_at sale por arriba.
         top, depth = y - size*1.02, size*1.36
         matte = self.add("createFxRectLayer","Máscara · línea",fx(70,top),start=delay,duration=duration,
@@ -258,7 +260,7 @@ class Cronica(Author):
             self.actions[-1]["activeRange"]["duration"] = duration
         text = self.txt(words,x,y,size,IVORY,"number",delay=delay,duration=duration,fade=fade,limit=limit)
         if fade:
-            self.keys(box,"opacity",[(0,0),(fade,100)])
+            self.keys(box,"opacity",[(0,0),(max(350, fade*SLOW),100)])
         return box, text
 
     def title(self, words, x, y, size, color, *, delay=120, limit=None, **kw):
@@ -273,23 +275,23 @@ class Cronica(Author):
         layer = self.add("createFxRectLayer", label,
                          fx(x,baseline,anchor=(0,height)),
                          start=delay,rect=dict(size=[w,height],fillColor=rgb(color)))
-        self.keys(layer,"scaleY",[(0,0),(670,100)])
+        self.keys(layer,"scaleY",[(0,0),(1100,100)])
 
-    def side_slide(self, layer, y, distance=30):
-        self.keys(layer,"positionY",[(0,y+distance),(300,y)])
+    def side_slide(self, layer, y, distance=18):
+        self.keys(layer,"positionY",[(0,y+distance),(600,y)])
 
     def arrow(self,x,y,length,color,delay):
         shaft = dict(size=[length,5],fillColor=rgb(color))
         layer = self.add("createFxRectLayer","Flecha · trazo",fx(x,y),
                          start=delay,rect=shaft)
-        self.keys(layer,"scaleX",[(0,0),(145,100)])
+        self.keys(layer,"scaleX",[(0,0),(350,100)])
         tip = dict(size=[26,5],fillColor=rgb(color))
         parts = [layer]
         for rotation in (135,-135):
             end = self.add("createFxRectLayer","Flecha · punta",
                            fx(x+length,y+2,rotation=rotation,anchor=(0,2.5)),
-                           start=delay+115,rect=tip)
-            self.keys(end,"opacity",[(0,0),(90,100)])
+                           start=delay+250,rect=tip)
+            self.keys(end,"opacity",[(0,0),(220,100)])
             parts.append(end)
         return parts
 
@@ -356,10 +358,10 @@ class Cronica(Author):
             tx(f"punto en {d['start_n']} jornadas",99,1420,49,IVORY,limit=397)
             tx(f"puntos en {d['run_n']} victorias",550,1420,49,IVORY,delay=1530,fade=170,limit=385)
             self.group=owner
-            self.keys(board,"opacity",[(0,100),(3420,100),(3640,0)])
+            self.keys(board,"opacity",[(0,100),(3100,100),(3550,0)])
             score=tx(str(d["run"]),550,1320,269,SAGE,"number",delay=1530,fade=140)
             _, _, land_x = self.handoff(d)
-            go, arrive = 3600-1530, 3965-1530
+            go, arrive = 3300-1530, 3965-1530
             shrink = 100*46/269
             self.keys(score,"positionY",[(0,1360),(300,1320),(go,1320),(arrive,1380)])
             self.keys(score,"positionX",[(go,550),(arrive,land_x)])
@@ -396,11 +398,13 @@ class Cronica(Author):
                 for j, (_, symbol) in enumerate(games):
                     x = 97+j*120
                     active = row == 1
-                    wait = 200 + 104*j if active else row_delay
-                    rect(x,y+22,103,67,SAGE if active else FOREST,f"Jornada · {symbol}",
-                         outline=None if active else "#748A79",delay=wait)
+                    wait = 200 + 150*j if active else row_delay
+                    box = rect(x,y+22,103,67,SAGE if active else FOREST,f"Jornada · {symbol}",
+                               outline=None if active else "#748A79",delay=wait)
+                    if active:
+                        self.keys(box,"opacity",[(0,0),(350,100)])
                     tx(symbol,x+51,y+69,43,FOREST if active else IVORY,"number",
-                       delay=wait,align="center")
+                       delay=wait,align="center",fade=200 if active else 0)
             self.group=owner
             self.credits("FotMob/Opta · Foto: Club Santos Laguna",SAGE)
         elif shot == 3:
@@ -446,10 +450,10 @@ class Cronica(Author):
                 line(y-96,"#769084")
                 tx(number,96,y,69,SAGE,"number",delay=PENALES[i],fade=140)
                 tx(label,327,y,48,IVORY,delay=PENALES[i],fade=140,limit=614)
-            self.keys(details,"opacity",[(0,100),(RECUENTO[0],100),(RECUENTO[0]+300,32)])
+            self.keys(details,"opacity",[(0,100),(RECUENTO[0],100),(RECUENTO[0]+650,32)])
             self.group=owner
             recalc=self.add("createFxGroupLayer","Recuento que ocupa el plano",fx())
-            self.keys(recalc,"opacity",[(0,0),(RECUENTO[0],0),(RECUENTO[0]+300,100)])
+            self.keys(recalc,"opacity",[(0,0),(RECUENTO[0],0),(RECUENTO[0]+650,100)])
             self.group=recalc
             rect(96,1120,848,310,IVORY,"Franja del recuento")
             tx(f"{d['spans'][1]} · RECUENTO DE MARCADORES",117,1176,35,GRAY,"number")
@@ -505,7 +509,7 @@ class Cronica(Author):
             for index,((date,copy),(a,b)) in enumerate(zip(items,beats)):
                 last = index == len(items)-1
                 rect(96+76*index,1186,64,4,"#769084","Paso de la cronología")
-                stay = b-a if last else b-a+380
+                stay = b-a if last else b-a+600
                 big = tx(date,96,1350,150,SAGE,"number",delay=a,duration=stay)
                 self.reveal(big,1350,150,delay=a,duration=stay,exit_at=None if last else b-a)
                 sub = tx(copy,96,1440,52,IVORY,delay=a+90,duration=stay-90,limit=848)
@@ -513,7 +517,7 @@ class Cronica(Author):
             cursor = rect(96,1186,64,4,IVORY,"Paso activo")
             moves = [(0,96)]
             for index,(a,_) in enumerate(beats[1:],1):
-                moves += [(a,96+76*(index-1)),(a+300,96+76*index)]
+                moves += [(a,96+76*(index-1)),(a+600,96+76*index)]
             self.keys(cursor,"positionX",moves)
             self.blurred.append(cursor)
             self.credits("Fuentes: Fox Sports, Récord · Foto: zaraespinoza_ / Publimetro",SAGE)
@@ -526,11 +530,11 @@ class Cronica(Author):
             for i,words in enumerate(("La canción no metió goles.", "Se volvió un símbolo.")):
                 y, wait = 1100+91*i, 150+140*i
                 layer = tx(words,96,y,76,IVORY,"head",delay=wait,duration=CLOSE-80-wait,limit=848)
-                self.reveal(layer,y,76,delay=wait,duration=CLOSE-80-wait,exit_at=CLOSE-80-wait-400)
+                self.reveal(layer,y,76,delay=wait,duration=CLOSE-80-wait,exit_at=CLOSE-80-wait-620)
             for i,words in enumerate(("Hay cosas que", "solo la esperanza", "puede explicar.")):
                 y, wait = 1101+118*i, CLOSE+170*i
                 layer = tx(words,96,y,115,IVORY,"head",delay=wait,limit=847)
-                self.reveal(layer,y,115,delay=wait,enter=640)
+                self.reveal(layer,y,115,delay=wait,enter=1100)
             self.credits("Foto de archivo: Jpamanes · Wikimedia Commons",SAGE)
 
 
